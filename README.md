@@ -1,8 +1,9 @@
 						SHS - Siesta Help Scripts
+						=========================
 
-							  version 0.01
+							  version 0.3
 			
-						(c) Andrey Sobolev, 2011
+						(c) Andrey Sobolev, 2011-2013
 						
 This python module is a set of routines designed to ease the way of making SIESTA 
 calculations, adding them to PBS queue and interpreting the results.
