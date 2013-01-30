@@ -1,0 +1,21 @@
+#!/bin/tcsh
+
+#PBS -N $DEFJOBNAME$
+#PBS -l nodes=$NODES$,walltime=$WALLTIME$
+#PBS -S /bin/sh
+#PBS -V
+
+#cd to the directory qsub was executed from
+cd $PBS_O_WORKDIR
+
+setenv SIESTA ~/bin/siesta
+setenv NUM `ls stdout/$SL$.* | wc -l`
+setenv NNODES `cat $PBS_NODEFILE | wc -l`
+
+if ( ! -d stdout ) then
+  mkdir stdout
+endif
+
+mpirun -n ${NNODES} ${SIESTA} < ./CALC.fdf >& stdout/$SL$.${NUM}.output 
+
+wait

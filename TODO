@@ -1,0 +1,23 @@
+
+Things to be done:
+
+ * CALCTYPE: Change calculation type (done, rev.30)
+ * CALC: Alter calculation (Calc, Geom, CType) 
+ * CALC: Start calculation job (submit to PBS)
+ * CALC: Restart calculation job (make sure that UseSaveData is set to True)
+ * GEOM: Read from ANI (multiple, done rev.125), OUT (multiple, done?), SPH
+   -> May be even integrate binary RHO file?
+ 
+ * CALC: Analyze calculation
+   -> RDF (done)
+   -> MSD (done), Diffusion quot
+   -> Voronoi (integrate in the suite)
+    -- May be Cython? Or pure C or Fortran?
+   -> W6 quot?
+   -> Spins? 
+     -- distribution around C atoms 
+   
+ * Use MPL or Chaco to draw graphs (Mayavi for Voronoi? (done))
+   -> MDE (done, rev.32)
+   -> RDF (partial?)
+   -> Diffusion (type-wise)

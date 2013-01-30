@@ -1,0 +1,22 @@
+#! /usr/bin/env python
+# -*- coding : utf8 -*-
+
+import os
+
+try:
+    from shs.calc import SiestaCalc
+    import shs.plot as Plot
+except (ImportError,):
+    from calc import SiestaCalc
+    import plot as Plot
+
+def plotmsd():
+    dir = os.getcwd()
+    c = SiestaCalc(dir, type = 'out', steps = range(-200, 0))
+    title, t, msd = c.msd()
+    Plot.plotrdf(title, t, msd, fname = 'MSD')
+    
+
+
+if __name__== '__main__':
+    plotmsd()
