@@ -1,7 +1,6 @@
-						SHS - Siesta Help Scripts
-						=========================
-
-							  version 0.3
+SHS - Siesta Help Scripts
+=========================
+version 0.3
 			
 						(c) Andrey Sobolev, 2011-2013
 						
