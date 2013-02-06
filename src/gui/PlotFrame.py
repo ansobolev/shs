@@ -7,7 +7,7 @@ from wx.lib.mixins.listctrl import getListCtrlSelection
 from wx.lib.pubsub import Publisher
 
 import matplotlib
-matplotlib.use('WXAgg')
+
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
