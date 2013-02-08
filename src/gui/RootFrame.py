@@ -99,7 +99,11 @@ class RootFrame(wx.Frame):
         ids = {root : self.CalcTree.AddRoot(root)}
         for (dirpath, dirnames, filenames) in os.walk(root):
             if interface.isCalcOfType(ctype, dn = dirnames, fn = filenames):
+                # find the number of steps in MDE file, quickly
+                nsteps = interface.GetNumMDESteps(dirpath)
                 ancdirs = dirpath.split('/')[r:]
+                if nsteps is not None:
+                    ancdirs[-1] += ' [%i]' % (nsteps)
                 ad = root
                 for ancdir in ancdirs:
                     d = os.path.join(ad, ancdir)
@@ -138,7 +142,7 @@ class RootFrame(wx.Frame):
 # calculation type        
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
 # calculation directory
-        cdir = os.sep.join(path[::-1])
+        cdir = os.sep.join(path[::-1]).split()[0]
         if not interface.isCalcOfType(ctype, dir = cdir):
             mbox.NoResults(cdir, ctype)
             return 1

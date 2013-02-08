@@ -3,7 +3,7 @@
 ''' The module providing interface from SHS to GUI
 '''
 
-import os
+import os, glob
 import numpy as np
 
 import shs.calc
@@ -174,6 +174,12 @@ def isCalcOfType(ctype, **kwargs):
                'pdos.xml' : [f for f in os.listdir(kwargs['dir']) if f == 'pdos.xml']}
     return options[ctype]
 
+def GetNumMDESteps(cdir):
+    mdefn = glob.glob(os.path.join(cdir, '*.MDE'))
+    if len(mdefn) == 0:
+        return None
+    nsteps = sum(1 for line in open(mdefn[0]) if line[0] != '#')
+    return nsteps
 
 def GetCalcInfo():
     pass
