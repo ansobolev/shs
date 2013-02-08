@@ -12,7 +12,7 @@
 ''' 
 
 import ngbr_numpy as MN
-import voronoi_numpy as MV
+import voronoi as MV
 
 def demo():
 	pass

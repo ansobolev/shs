@@ -221,7 +221,7 @@ class Geom():
         Input:
          -> pbc - whether to use periodic boundary conditions 
         '''
-        import voronoi.numpy.voronoi_numpy as VN
+        import voronoi.numpy.voronoi as VN
         vd = Dump.dump_shs()
         d = vd.shs_geom(self)
         self.vp = VN.model_voronoi(d)
