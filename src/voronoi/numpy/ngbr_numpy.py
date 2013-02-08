@@ -1,6 +1,13 @@
 #!/usr/bin/python 
 # __*__ coding: utf8 __*__
 
+#
+# This file is a part of Siesta Help Scripts
+#
+# (c) Andrey Sobolev, 2012
+#
+
+
 oneline = "Find nearest neighbors table"
 
 #import os

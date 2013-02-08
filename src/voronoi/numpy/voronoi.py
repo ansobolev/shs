@@ -1,6 +1,12 @@
 #!/usr/bin/env python 
 # __*__ coding: utf8 __*__
 
+#
+# This file is a part of Siesta Help Scripts
+#
+# (c) Andrey Sobolev, 2012
+#
+
 import numpy as np
 import scipy.spatial as ss
 
