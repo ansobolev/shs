@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 # -*- coding : utf8 -*-
 
-import os
+import os, timeit, time
 import numpy as N
+import pyvoro
 
 try:
     from shs.calc import SiestaCalc
@@ -14,18 +15,23 @@ except (ImportError,):
     import plot as Plot
 
 
+
+def vor_med(c):
+    return c.evol[0].voronoi()
+
 def voronoi_calc():
-    calc_dir = '../test'
-    c = SiestaCalc(calc_dir, type = 'out', steps = [-2,])
-#    c.evol[0].to_cell()
-    n = c.evol[0].filter('label','C')
-    r = c.evol[0].distance_to_group(n[0])
-    spin = N.abs(c.evol[0]['up'] - c.evol[0]['dn'])
-    c.evol[0].voronoi()
-    SIO.data2file([c.evol[0]['vol'], r, spin], ['Vol', 'R', 'Spin'], 'vol-r-spin.dat')
-#    Plot.scatter(c.evol[0]['vol'], N.abs(c.evol[0]['up']-c.evol[0]['dn']))
-    Plot.scatter3d(c.evol[0]['vol'], r, spin)
- 
+#    print timeit.repeat('vor_pv(c)', setup='from __main__ import vor_pv, c', repeat = 10, number = 10)
+    calc_dir = '/home/andrey/calc/FeC/Fe161C39/NVT/1'
+    c = SiestaCalc(calc_dir, dtype = 'out', steps = range(-10,0,1))
+
+    for i in range(10):
+        start = time.time()
+        pyvoro.compute_voronoi(
+        c.evol[i].atoms['crd'], # point positions
+        c.evol[i].vc, # limits
+         c.evol[i].vc[0,0]/4. # block size
+        )
+        print time.time() - start
+
 if __name__== '__main__':
     voronoi_calc()
-      
