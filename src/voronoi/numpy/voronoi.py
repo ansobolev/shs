@@ -10,7 +10,7 @@
 import numpy as np
 import scipy.spatial as ss
 
-from ngbr_numpy import model_ngbr
+from ngbr import model_ngbr
 from vp import vp
 
 # Functions:

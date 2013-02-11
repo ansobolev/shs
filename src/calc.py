@@ -1,6 +1,13 @@
 #! /usr/bin/env python
 # -*- coding : utf8 -*-
 
+#
+# This file is a part of Siesta Help Scripts
+#
+# (c) Andrey Sobolev, 2011-2013
+#
+
+
 import os, glob
 import numpy as N
 
@@ -192,23 +199,18 @@ class SiestaCalc(Calc):
         nspin = SIO.GetPDOSnspin(dom)
         ev = SIO.GetPDOSenergyValues(dom)
         names = ['energy']
-        data = [ev]
-        formats = ['f8']
+        data = []
         raw_names, raw_data = SIO.GetPDOSfromOrbitals(dom,species = [],ldict = {})
         if nspin == 2:
             for n, d in zip(raw_names, raw_data):
                 names.append(n + '_up')
                 data.append(d[::2])
-                formats.append('f8')
                 names.append(n + '_dn')
                 data.append(-1.0 * d[1::2])
-                formats.append('f8')
         elif nspin == 1:
             names += raw_names
-            data +=raw_data
-            formats += (['f8' for _ in names])
-        pdos = N.rec.fromarrays(data, formats = formats, names = names)
-        return pdos, {'nspin': nspin}
+            data += raw_data
+        return (names, ev, data), {'nspin': nspin}
 
     def cn(self, dr = 0.2, atype = None, ratio = 0.7):
         ''' Get full and partial atomic coordination numbers (type-wise);

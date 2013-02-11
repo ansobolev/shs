@@ -11,7 +11,7 @@
 ''' Voronoi tesselation module - numpy version
 ''' 
 
-import ngbr_numpy as MN
+import ngbr as MN
 import voronoi as MV
 
 def demo():

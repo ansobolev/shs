@@ -6,11 +6,11 @@ import scipy.spatial as ss
 try:
     from calc import SiestaCalc
     from voronoi.dump import dump_shs
-    from voronoi.numpy.ngbr_numpy import model_ngbr as MN
+    from voronoi.numpy.ngbr import model_ngbr as MN
 except (ImportError,):
     from shs.calc import SiestaCalc
     from shs.voronoi.dump import dump_shs
-    from shs.voronoi.numpy.ngbr_numpy import model_ngbr as MN
+    from shs.voronoi.numpy.ngbr import model_ngbr as MN
 
 def vp_vertex(pt):
     d,b,c,a = pt

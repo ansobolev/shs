@@ -10,7 +10,7 @@ import options as Opts
 import sio as SIO
 
 import voronoi.dump as Dump
-import voronoi.numpy.ngbr_numpy as NN
+import voronoi.numpy.ngbr as NN
 
 
 
