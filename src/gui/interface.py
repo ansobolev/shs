@@ -87,8 +87,9 @@ def get_dos(clist):
     dosdata = []
     dosinfo = []
     for c in clist:
-        d, info = c.dos()
-        dosdata.append(d)
+        (title, ev, dos), info = c.dos()
+        formats = ['f8' for _ in title]
+        dosdata.append(np.rec.fromarrays([ev] + dos, names = title, formats = formats))
         dosinfo.append(info)
     return dosdata, dosinfo
 

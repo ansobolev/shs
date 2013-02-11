@@ -187,8 +187,8 @@ class RootFrame(wx.Frame):
     def RunSLURMPress(self, event): # wxGlade: RootFrame.<event_handler>
         slurm = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'slurm', 'slurm.sh'))
         cdir = self.GetSelectionDir()
-        submit = subprocess.Popen([slurm, '-d=' + cdir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print submit.communicate()
+        submit = subprocess.Popen(['/bin/bash', slurm, '-d=' + cdir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        mbox.JobSubmit(submit.communicate())
 
     def PlotProperty(self, event): # wxGlade: RootFrame.<event_handler>
 # plot options - get all the data to plot
