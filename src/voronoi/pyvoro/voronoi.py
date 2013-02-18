@@ -49,6 +49,16 @@ class model_voronoi():
     def vp_faces(self):
         return None
     
+    def vp_neighbors(self, rm_small = False, eps = 0.05):
+        ''' Finds nearest neighbors according to VP tesselation
+        '''
+        if not hasattr(self, 'v'):
+            self.voronoi()
+        ngbrs = []
+        for iat, vi in enumerate(self.v):
+            ngbrs.append([iat,] + [fi['adjacent_cell'] for fi in vi['faces']])
+        return ngbrs
+    
     def vp_volumes(self, f, partial = False):
         ''' Returns volumes and total areas of VPs 
         '''
@@ -64,11 +74,20 @@ class model_voronoi():
         '''
         if not hasattr(self, 'v'):
             self.voronoi()
-        faces = [{} for _ in self.v]
+        areas = [{} for _ in self.v]
         for iat, vi in enumerate(self.v):
             for fi in vi['faces']:
                 jat = fi['adjacent_cell']
-                faces[iat][jat] = fi['area']
-                faces[jat][iat] = fi['area']
-        return faces
-        
+                areas[iat][jat] = fi['area']
+                areas[jat][iat] = fi['area']
+        return areas
+
+    def remove_small_faces(self, faces, areas, eps = 0.5):
+        ''' Removes all faces from self.v, area of which is less than eps 
+        '''
+        nat = len(self.v)
+        for iat in range(nat):
+            # Small faces
+            small_faces = [ngbr for ngbr in areas[iat].keys() if areas[iat][ngbr] < eps]
+            for sf in small_faces:
+                pass        
