@@ -98,22 +98,35 @@ def get_cn(clist):
     cndata = []
     cninfo = []
     for c in clist:
-        rdfvp, info = c.cn()
-        cndata.append(rdfvp)
+        (title, r, cn), info = c.cn()
+        formats = ['f8' for _ in title]
+        cndata.append(np.rec.fromarrays([r] + cn, names = title, formats = formats))
         cninfo.append(info)
     return cndata, cninfo
 
 def get_cnevolution(clist):
     'Returns time evolution of partial CNs'
     cn_evol = []
+    cne_info = []
     for c in clist:
-        title, x, pcne = c.pcn_evolution()
+        (title, x, pcne), info = c.pcn_evolution()
         formats = ['f8' for _ in title]        
         cn_evol.append(np.rec.fromarrays([x] + pcne, names = title, formats = formats))
-    return cn_evol, None
+        cne_info.append(info)
+    return cn_evol, cne_info
 
 def get_facearea(clist):
     'Returns partial VP face area distribution'
+    facedata = []
+    faceinfo = []
+    for c in clist:
+        (title, area, data), info = c.vp_facearea()
+        formats = ['f8' for _ in title]
+        facedata.append(np.rec.fromarrays([area] + data, names = title, formats = formats))
+        faceinfo.append(info)
+    return facedata, faceinfo
+
+    
     vp_fa = []
     for c in clist:
         vp_fa.append(c.vp_facearea())

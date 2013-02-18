@@ -227,26 +227,21 @@ class SiestaCalc(Calc):
 # make recarray out of data
         data = []
         names = []
-        formats = []
         for it in range(len(typs)):           
             tr = typrdf[it]
             hist, bin_edges = N.histogram(N.array(tr), bins = nbins, range = (0., r_max))
             data.append((hist/(steps * len(n[it]) * dr))[1:])
             names.append(typs[it])
-            formats.append('f8')
 
         for ip, pr in zip(parts,partrdf):
             n1 = len(n[typs.index(ip[0])])           
             hist, bin_edges = N.histogram(N.array(pr), bins = nbins, range = (0., r_max))
             data.append((hist/(steps * n1 * dr))[1:])
             names.append('-'.join(ip))
-            formats.append('f8')
         
-        data = [((bin_edges[:-1]+dr/2.))[1:],] + data
         names = ['R',] + names
-        formats = ['f8',] + formats
-        rdfvp = N.rec.fromarrays(data, formats = formats, names = names)
-        return rdfvp, pcn                     
+        r = (bin_edges[:-1]+dr/2.)[1:]
+        return (names, r, data), pcn                     
 
     def pcn_evolution(self, ratio = 0.7, part = True):
         title = ['step']
@@ -259,7 +254,7 @@ class SiestaCalc(Calc):
             title.append('-'.join(part))
             data.append(N.array(part_cn[part]))
         x = N.arange(len(data[0]))
-        return title, x, data
+        return (title, x, data), None
     
     def vp_facearea(self, da = 0.05, ratio = 0.7, part = True):
         'Returns partial face areas for calculations'
@@ -268,16 +263,13 @@ class SiestaCalc(Calc):
         nbins = a_max / da
 # make recarray out of data
         data = []
-        names = ['area'] + typs
-        formats = ['f8']
-
         for typfa in fa:
             hist, bin_edges = N.histogram(N.array(typfa), bins = nbins, range = (0., a_max))
             data.append(hist[1:])
-            formats.append('f8')
-        data = [((bin_edges[:-1]+da/2.))[1:],] + data
-        vp_fa = N.rec.fromarrays(data, formats = formats, names = names)
-        return vp_fa
+
+        names = ['area'] + typs
+        area = (bin_edges[:-1]+da/2.)[1:]
+        return (names, area, data), None                     
     
     def vp_totfacearea(self, da = 0.1, ratio = 0.7, part = True):
         'Returns total face areas for every VP'
