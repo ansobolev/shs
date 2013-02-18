@@ -200,8 +200,31 @@ class Geom():
         return dist
 
 # Voronoi tesselation routines ---    
-    def voronoi(self):
-        ''' Get voronoi tesselation of geometry
+    def voronoi(self, pbc = True, ratio = 0.5):
+        ''' Get Voronoi tesselation based on the libraries available:
+         -> numpy: QHull library
+         -> pyvoro: Python interface to Voro++ library (~3 times faster than Numpy)
+        
+        Input:
+         -> pbc - whether to use periodic boundary conditions 
+
+        '''
+        # import first pyvoro:
+        try:
+            import voronoi.pyvoro.voronoi as VN            
+            print 'Geom.Voronoi: Found pyvoro module!'
+        except ImportError:
+            import voronoi.numpy.voronoi as VN
+            print 'Geom.Voronoi: Failure finding pyvoro module, resorting to scipy.spatial.Delaunay'
+
+        vd = Dump.dump_shs()
+        d = vd.shs_geom(self)
+        self.vp = VN.model_voronoi(d)
+        self.vp.voronoi(pbc, ratio)
+    
+    
+    def voronoi_med(self):
+        ''' Get voronoi tesselation of geometry by pure python Medvedev algorithm
         '''
         vd = Dump.dump_shs()
         d = vd.shs_geom(self)
@@ -215,22 +238,10 @@ class Geom():
         self.add_fields('k_sph', N.array(k_sph))
         self.nb = pl_mv
 
-    def voronoi_np(self, pbc = True, ratio = 0.5):
-        ''' Finds Voronoi tesselation of geometry
-        Uses QHull library
-        Input:
-         -> pbc - whether to use periodic boundary conditions 
-        '''
-        import voronoi.numpy.voronoi as VN
-        vd = Dump.dump_shs()
-        d = vd.shs_geom(self)
-        self.vp = VN.model_voronoi(d)
-        self.vp.voronoi(pbc, ratio)
-        
     def voronoi_params(self, pbc = True, ratio = 0.5):
         ''' Finds parameters of Voronoi tesselation (face areas, volumes of VPs etc)
         '''
-        if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         vps = self.vp.separate_vp()
         for vp in vps:
             vp.remove_small_faces()
@@ -239,7 +250,7 @@ class Geom():
     def voronoi_facearea(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.05):
         ''' Finds face areas of Voronoi tesselation
         '''
-        if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         f = self.vp.vp_faces()        
         if rm_small:
             fa = self.vp.vp_face_area(f)
@@ -250,8 +261,8 @@ class Geom():
     def vp_totfacearea(self, pbc = True, ratio = 0.5):
         ''' Finds total face areas for resulting Voronoi polihedra 
         '''
-        if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
-        if hasattr(self.vp, 'vp_area'): return self.vp.vp_areas
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
+        if hasattr(self.vp, 'vp_area'): return self.vp.vp_area
         f = self.vp.vp_faces()        
         _, a = self.vp.vp_volumes(f, partial = False)
         return a
@@ -259,8 +270,8 @@ class Geom():
     def vp_totvolume(self, pbc = True, ratio = 0.5):
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
-        if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
-        if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volumes
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
+        if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volume
         f = self.vp.vp_faces()        
         v, _ = self.vp.vp_volumes(f, partial = False)
         return v
@@ -268,7 +279,7 @@ class Geom():
     def vp_ksph(self, pbc = True, ratio = 0.5):
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
-        if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if not hasattr(self.vp, 'vp_volume'): 
             f = self.vp.vp_faces()        
             v, a = self.vp.vp_volumes(f, partial = False)
