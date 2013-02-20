@@ -146,7 +146,7 @@ class SiestaCalc(Calc):
             title.append('Total RDF')
             r, rdf = self.evol.rdf(n)
             total_rdf.append(rdf)
-        return title, r, total_rdf
+        return (title, r, total_rdf), None
              
     def msd(self, atype = None):
         ''' Get MSD of evolution (type-wise)
@@ -164,7 +164,7 @@ class SiestaCalc(Calc):
                 title.append(ityp)
                 t, msd = self.evol.msd(n = n1)
                 total_msd.append(msd)
-        return title, t, total_msd
+        return (title, t, total_msd), None
     
     def vaf(self, atype = None):
         ''' Get VAF of evolution (type-wise)
@@ -182,9 +182,7 @@ class SiestaCalc(Calc):
                 title.append(ityp)
                 t, vaf = self.evol.vaf(n = n1)
                 total_vaf.append(vaf)
-        return title, t, total_vaf
-
-
+        return (title, t, total_vaf), None
 
     def dos(self, fname = ''):
         if not fname:
@@ -280,14 +278,11 @@ class SiestaCalc(Calc):
 # make recarray out of data
         data = []
         names = ['area'] + typs
-        formats = ['f8']        
         for typfa in tfa:
             hist, bin_edges = N.histogram(N.array(typfa), bins = nbins, range = (ta_min, ta_max))
             data.append(hist[1:]/float(len(typfa)))
-            formats.append('f8')
-        data = [((bin_edges[:-1]+da/2.))[1:],] + data
-        vp_fa = N.rec.fromarrays(data, formats = formats, names = names)
-        return vp_fa
+        area = (bin_edges[:-1]+da/2.)[1:]
+        return (names, area, data), None
     
     def vp_totvolume(self, dv = 0.05, ratio = 0.7, part = True):
         'Returns total volume for every VP'
@@ -298,14 +293,11 @@ class SiestaCalc(Calc):
 # make recarray out of data
         data = []
         names = ['vol'] + typs
-        formats = ['f8']        
         for typfa in tv:
             hist, bin_edges = N.histogram(N.array(typfa), bins = nbins, range = (tv_min, tv_max))
             data.append(hist[1:]/float(len(typfa)))
-            formats.append('f8')
-        data = [((bin_edges[:-1]+dv/2.))[1:],] + data
-        vp_v = N.rec.fromarrays(data, formats = formats, names = names)
-        return vp_v
+        vol = (bin_edges[:-1]+dv/2.)[1:]
+        return (names, vol, data), None
     
     def vp_ksph(self, dk=0.01, ratio = 0.7, part = True):
         'Returns sphericity coefficient for every VP'
@@ -316,43 +308,34 @@ class SiestaCalc(Calc):
 # make recarray out of data
         data = []
         names = ['ksph'] + typs
-        formats = ['f8']        
         for typk in tk:
             hist, bin_edges = N.histogram(N.array(typk), bins = nbins, range = (tk_min, tk_max))
             data.append(hist[1:]/float(len(typk)))
-            formats.append('f8')
-        data = [((bin_edges[:-1]+dk/2.))[1:],] + data
-        vp_k = N.rec.fromarrays(data, formats = formats, names = names)
-        return vp_k
+        ksph = (bin_edges[:-1]+dk/2.)[1:]
+        return (names, ksph, data), None
 
     def mmagmom(self):
         'Returns evolution of mean magnetic moment on atoms'
+        steps = self.evol.steps
         typs, tmm = self.evol.mmagmom()
-        data = [self.evol.steps,] + tmm
         names = ['step',] + typs
-        formats = ['f8',] + ['f8' for _ in typs]
-        mmm = N.rec.fromarrays(data, formats = formats, names = names)
-        return mmm
+        return (names, steps, tmm), None
         
     def mabsmagmom(self):
         'Returns evolution of mean magnetic moment on atoms'
+        steps = self.evol.steps
         typs, tmm = self.evol.mmagmom(abs_mm = True)
-        data = [self.evol.steps,] + tmm
         names = ['step',] + typs
-        formats = ['f8',] + ['f8' for _ in typs]
-        mmm = N.rec.fromarrays(data, formats = formats, names = names)
-        return mmm
+        return (names, steps, tmm), None
 
     def spinflips(self):
         'Returns the number of spin flips over time'
+        steps = self.evol.steps
         typs, sf = self.evol.spinflips()
-        data = [self.evol.steps,] + sf
         names = ['step',] + typs
-        formats = ['f8',] + ['f8' for _ in typs]
-        nsf = N.rec.fromarrays(data, formats = formats, names = names)
-        return nsf
+        return (names, steps, sf), None
     
-    def readmde(self):
+    def mde(self):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
         if len(mdef) != 1:
@@ -361,7 +344,7 @@ class SiestaCalc(Calc):
         mde = SIO.MDEFile(mdef[0])
         self.nsteps = mde.nsteps
         self.mdedata = mde.data
-        return self.mdedata
+        return (None, None, self.mdedata), None
     
     def animate(self):
         

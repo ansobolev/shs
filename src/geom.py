@@ -251,7 +251,7 @@ class Geom():
         ''' Finds total face areas for resulting Voronoi polihedra 
         '''
         if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
-        if hasattr(self.vp, 'vp_area'): return self.vp.vp_areas
+        if hasattr(self.vp, 'vp_area'): return self.vp.vp_area
         f = self.vp.vp_faces()        
         _, a = self.vp.vp_volumes(f, partial = False)
         return a
@@ -260,7 +260,7 @@ class Geom():
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
         if not hasattr(self,'vp'): self.voronoi_np(pbc, ratio)
-        if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volumes
+        if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volume
         f = self.vp.vp_faces()        
         v, _ = self.vp.vp_volumes(f, partial = False)
         return v
