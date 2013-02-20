@@ -438,10 +438,7 @@ class model_voronoi(model_ngbr):
             edges = np.ravel(edges)[np.in1d(np.ravel(edges), v)].reshape(edges.shape[0], 3)
             self.vp.append(vp(c,v,crd_v,edges,self.vp_face[c]))
         return self.vp
-            
-            
-
-    
+ 
 # TODO: doubling functions (plot_vp and plot_vps)  
     def plot_vp(self, atom):
         import networkx as nx

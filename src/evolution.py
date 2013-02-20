@@ -178,7 +178,8 @@ class Evolution():
         tot_ngbrs = []
         
         for g in self.geom:
-            g.voronoi_np(ratio = ratio)
+            if not hasattr(g, 'vp'):
+                g.voronoi(ratio = ratio)
             ngbrs = g.vp.vp_neighbors(rm_small = True, eps = 0.2)
 # all-to-all distance
             r = G.r(g.atoms['crd'], g.vc)
@@ -249,7 +250,8 @@ class Evolution():
         tot_ngbrs = []
         
         for g in self.geom:
-            g.voronoi_np(ratio = ratio)
+            if not hasattr(g, 'vp'):
+                g.voronoi(ratio = ratio)
             tot_ngbrs.append(g.vp.vp_neighbors())
         return self.partial_cn(typs, parts, n, tot_ngbrs, evol = True)
     
@@ -269,7 +271,7 @@ class Evolution():
         typ_fa = [[] for _ in typs]
                 
         for g in self.geom:
-            fa = g.voronoi_facearea(ratio = ratio, rm_small = True, eps = 0.15)
+            fa = g.voronoi_facearea(ratio = ratio, rm_small = True, eps = 0.5)
             for it, nt in enumerate(n):
                 typ_fa[it] += [area for jnt in nt for area in fa[jnt].values()]
         return typs, typ_fa
