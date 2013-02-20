@@ -247,7 +247,7 @@ class Geom():
             vp.remove_small_faces()
 # TODO: incomplete function        
         
-    def voronoi_facearea(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.05):
+    def voronoi_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
         ''' Finds face areas of Voronoi tesselation
         '''
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
