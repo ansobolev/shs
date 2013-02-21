@@ -41,7 +41,7 @@ class RootFrame(wx.Frame):
         self.PropChoice = wx.Choice(self, -1, choices=["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)", 
                                                        "Coordination numbers", "CNs time evolution", "Voronoi face area", "VP total face area", 
                                                        "VP total volume", "VP sphericity coefficient", "Mean magn moment", "Mean abs magn moment",
-                                                       "Number of spin flips"])
+                                                       "Number of spin flips","Topological indices"])
         self.PropChoiceBtn = wx.Button(self, -1, "Plot property")
         self.CreateStatusBar()
         

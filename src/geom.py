@@ -288,8 +288,15 @@ class Geom():
             a = self.vp.vp_area
         ksph = 36. * N.pi * v * v / (a * a * a)
         return ksph
+    
+    def vp_ti(self, pbc = True, ratio = 0.5):
+        ''' Finds topological indices of Voronoi polihedra
+        '''
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
+        ti = self.vp.vp_topological_indices()
+        return ti
 
-    def mmagmom(self, abs_mm):
+    def mmagmom(self, abs_mm = False):
         if abs_mm:
             return N.abs(self.atoms['up'] - self.atoms['dn'])
         else:

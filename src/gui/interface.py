@@ -47,7 +47,8 @@ def getdata(ptype, clist):
              10: Sc.vp_ksph,
              11: Sc.mmagmom,
              12: Sc.mabsmagmom,
-             13: Sc.spinflips
+             13: Sc.spinflips,
+             14: Sc.vp_ti
              }
     data = []
     info = []

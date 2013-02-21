@@ -163,7 +163,8 @@ class PlotFrame(wx.Frame):
              10: 'ksph',  # VP sphericity coefficients
              11: 'step', # mean magnetic moments
              12: 'step', # mean absolute magnetic moments
-             13: 'step'  # number of spin flips over time
+             13: 'step',  # number of spin flips over time
+             14: 'TI'     # Topological indices
              }
         self.x = x[msg.data[0]]
         self.initplot()
@@ -262,7 +263,7 @@ class PlotFrame(wx.Frame):
             if not self.fit.is_enough(len(self.fit_points)):
                 return
             self.canvas.Unbind(wx.EVT_LEFT_DCLICK)
-# fitting itself             
+# fitting itself
             p, x, y = self.fit.fit(self.fit_points)
             self.replot()
             ax = self.fig.gca()

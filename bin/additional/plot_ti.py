@@ -14,15 +14,15 @@ except (ImportError,):
 
 def ti():
 
-    calc_dir = '../../test'
-    c = SiestaCalc(calc_dir, type = 'ani', steps = [-1,])
+    calc_dir = '/home/andrey/calc/FeC/Fe161C39/NVT/1'
+    c = SiestaCalc(calc_dir, dtype = 'ani', steps = [-1,])
 
 # C atoms
     cats = c.evol[0].filter('label','C')
     ncats = len(cats[0]) 
     nsteps = 0
     for ist in range(len(c.evol.steps)):
-        c.evol[ist].voronoi_np()
+        c.evol[ist].voronoi()
         ti = c.evol[ist].vp.vp_topological_indices(atoms = cats[0])
         for iat, iti in enumerate(ti):
             if tuple(iti) == (0,3,6):

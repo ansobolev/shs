@@ -313,6 +313,29 @@ class SiestaCalc(Calc):
             data.append(hist[1:]/float(len(typk)))
         ksph = (bin_edges[:-1]+dk/2.)[1:]
         return (names, ksph, data), None
+    
+    def vp_ti(self, ratio = 0.7, part = True):
+        'Returns topological indices for VPs'
+        from collections import defaultdict
+        typs, ti = self.evol.vp_ti(ratio, part)
+        data = []
+        names = ['TI'] + typs
+
+        l = defaultdict(list)
+        d = [defaultdict(int) for _ in typs]
+        for ityp in range(len(typs)):
+            # Count number of VP occurrences    
+            for elt in ti[ityp]:
+                d[ityp][tuple(elt)] += 1
+        # For the sake of beautiful output    
+            for key in d[ityp].keys():
+                l[sum(key)].append(key)
+        x = [sorted(l[k]) + ['',] for k in sorted(l.keys())]
+        # flattening list
+        x = [l for sublist in x for l in sublist][:-1]
+        for di in d:
+            data.append([di[xi] for xi in x])
+        return (names, range(len(x)), data), {'x': x} 
 
     def mmagmom(self):
         'Returns evolution of mean magnetic moment on atoms'

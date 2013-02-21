@@ -113,6 +113,25 @@ class model_voronoi():
                 self.v[iat]['faces'].pop(sfi)
         return None
 
+    def vp_topological_indices(self, atoms = None):
+        ''' Finds topological indices (N3, N4, N5...) of resulting Voronoi polihedra 
+        Here N3 is the number of triangular faces of a given VP,
+        N4 - the number of quadrangular faces, N5 - the number of pentagonal faces etc. 
+        Input:
+         -> atoms - the list of atomic numbers (default: None)
+        
+        '''
+        if not hasattr(self, 'v'):
+            self.voronoi()
+        ti = []
+        nat = len(self.atoms)
+        if atoms is None:
+            atoms = range(nat)
+        for iat in atoms:
+            ni = np.array([len(fi['vertices']) for fi in self.v[iat]['faces']])
+            ti.append(np.bincount(ni)[3:])
+        return ti
+
 # area of polygon poly ((c) http://code.activestate.com/recipes/578276-3d-polygon-area/)
 def poly_area(poly):
     if len(poly) < 3: # not a plane - no area

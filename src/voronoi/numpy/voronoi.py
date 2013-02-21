@@ -597,14 +597,15 @@ class model_voronoi(model_ngbr):
         return verts[ind[0]]        
     
     def remove_small_faces(self, faces, areas, eps = 0.05):
-        nat = len(faces)
-        for iat in range(nat):
+        print 'Voronoi.numpy.remove_small_faces: Not implemented yet!'
+#        nat = len(faces)
+#        for iat in range(nat):
 # Small faces
-            small_faces = [ngbr for ngbr in areas[iat].keys() if areas[iat][ngbr] < eps]
-            for sf in small_faces:
+#            small_faces = [ngbr for ngbr in areas[iat].keys() if areas[iat][ngbr] < eps]
+#            for sf in small_faces:
 # Face vertices
-                fvs = faces[iat][sf]
-                faces[iat].pop(sf)
+#                fvs = faces[iat][sf]
+#                faces[iat].pop(sf)
 # VERY long cycle!!!
 #                for fv in fvs[1:]:                       
 #                    for jat in range(nat):

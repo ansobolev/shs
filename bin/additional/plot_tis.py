@@ -87,7 +87,7 @@ class RootFrame(wx.Frame):
         self.Centre()
 
     def PlotVP(self, evt):
-        self.calc.evol[0].voronoi_np()
+        self.calc.evol[0].voronoi()
         cats = []
         for i in self.CList.GetSelections():
             cats.append(int(self.CList.GetItems()[i]))
@@ -173,10 +173,7 @@ def getcalc(cdir, ctype, steps):
              '.output':'out',
              'pdos.xml':'fdf'}
     
-    return SiestaCalc(cdir, type = copts[ctype], steps = steps)
-
-
-
+    return SiestaCalc(cdir, dtype = copts[ctype], steps = steps)
 
 if __name__== '__main__':
     app = wx.PySimpleApp(0)

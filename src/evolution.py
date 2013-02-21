@@ -329,6 +329,25 @@ class Evolution():
             for it, nt in enumerate(n):
                 typ_k[it] += [tk[jnt] for jnt in nt]
         return typs, typ_k
+    
+    def vp_ti(self, ratio, part):
+        nat = len(self.geom[0].atoms)
+# full calculations         
+        typs = ['Total']
+        n = [range(nat)]
+        if part:
+            typs = self.geom[0].types['label'].tolist()
+# atomic numbers by type, atoms do not change their type throughout calculation 
+            n = [self.geom[0].filter('label',typ)[0] for typ in typs]
+# results storage
+        typ_ti = [[] for _ in typs]
+
+        for g in self.geom:
+            ti = g.vp_ti(ratio = ratio)
+            for it, nt in enumerate(n):
+                typ_ti[it] += [ti[jnt] for jnt in nt]
+        return typs, typ_ti
+
 
     def mmagmom(self, abs_mm = False, part = True):
         assert self.has_fields('up', 'dn')
