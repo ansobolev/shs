@@ -36,7 +36,7 @@ class RootFrame(wx.Frame):
         self.DownBtn = wx.Button(self, -1, ">>")
         self.UpBtn = wx.Button(self, -1, "<<")
         self.GetData = wx.Button(self, -1, "Get calc data")
-        self.RunSLURM = wx.Button(self, -1, "Run in SLURM")
+        self.Enqueue = wx.Button(self, -1, "Enqueue job")
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
         self.PropChoice = wx.Choice(self, -1, choices=["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)", 
                                                        "Coordination numbers", "CNs time evolution", "Voronoi face area", "VP total face area", 
@@ -53,7 +53,7 @@ class RootFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.DownBtnPress, self.DownBtn)
         self.Bind(wx.EVT_BUTTON, self.UpBtnPress, self.UpBtn)
         self.Bind(wx.EVT_BUTTON, self.GetDataBtnPress, self.GetData)
-        self.Bind(wx.EVT_BUTTON, self.RunSLURMPress, self.RunSLURM)
+        self.Bind(wx.EVT_BUTTON, self.EnqueuePress, self.Enqueue)
         self.Bind(wx.EVT_BUTTON, self.PlotProperty, self.PropChoiceBtn)
         # end wxGlade
         # initialize the tree
@@ -69,7 +69,7 @@ class RootFrame(wx.Frame):
         self.SetSize((820, 430))
         self.TypeRBox.SetSelection(1)
         self.PropChoice.SetSelection(4)
-        self.RunSLURM.Enable(False)
+        self.Enqueue.Enable(False)
         # end wxGlade
 
     def __do_layout(self):
@@ -86,7 +86,7 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(self.UpBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.GetData, 0, wx.ALL|wx.EXPAND, 5)
-        BtnSizer.Add(self.RunSLURM, 0, wx.ALL|wx.EXPAND, 5)
+        BtnSizer.Add(self.Enqueue, 0, wx.ALL|wx.EXPAND, 5)
         sizer_1.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
         sizer_2.Add(self.PropChoice, 0, wx.ADJUST_MINSIZE, 0)
@@ -135,9 +135,9 @@ class RootFrame(wx.Frame):
 # calculation directory
         cdir = self.GetSelectionDir() 
         if interface.isCalcOfType(ctype, dir = cdir):
-            self.RunSLURM.Enable()
+            self.Enqueue.Enable()
         else:
-            self.RunSLURM.Enable(False)
+            self.Enqueue.Enable(False)
 
     def TypeChange(self, event): # wxGlade: RootFrame.<event_handler>
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
@@ -184,11 +184,20 @@ class RootFrame(wx.Frame):
         print "Event handler `GetDataBtnPress' not implemented!"
         event.Skip()
 
-    def RunSLURMPress(self, event): # wxGlade: RootFrame.<event_handler>
-        slurm = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'slurm', 'slurm.sh'))
+    def EnqueuePress(self, event): # wxGlade: RootFrame.<event_handler>
+        import distutils.spawn
+        # find which queue system is implemented on cluster (qstat - PBS, sinfo - SLURM)
+        if distutils.spawn.find_executable('qstat') is not None:
+            q = 'pbs'
+        elif distutils.spawn.find_executable('sinfo') is not None:
+            q = 'slurm'
+        else:
+            mbox.JobSubmit(None, ())
+            return -1
+        comm = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', q, q + '.sh'))
         cdir = self.GetSelectionDir()
-        submit = subprocess.Popen(['/bin/bash', slurm, '-d=' + cdir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        mbox.JobSubmit(submit.communicate())
+        submit = subprocess.Popen(['/bin/bash', comm, '-d=' + cdir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        mbox.JobSubmit(q, submit.communicate())
 
     def PlotProperty(self, event): # wxGlade: RootFrame.<event_handler>
 # plot options - get all the data to plot

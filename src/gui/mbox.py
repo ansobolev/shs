@@ -20,9 +20,14 @@ def DataExported(ddir):
     wx.MessageBox('Data successfully exported to ' + ddir, 'Export successful', 
                   wx.OK | wx.ICON_INFORMATION)
 
-def JobSubmit(comm):
-    if 'Submitted batch job' in comm[0]:
-        wx.MessageBox(comm[0], 'Success', 
+def JobSubmit(q, comm):
+    if q is None:
+        wx.MessageBox('Haven\'t found any queue system', 'Failure', 
+                  wx.OK | wx.ICON_ERROR)
+        return None
+    else:
+        q_str = 'Used batch system: %s\n' % (q,)
+    wx.MessageBox(q_str + comm[0], 'Success', 
                   wx.OK | wx.ICON_INFORMATION)
     if comm[1] != '':
         wx.MessageBox(comm[1], 'Errors during submit', 
