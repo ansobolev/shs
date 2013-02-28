@@ -34,6 +34,23 @@ def getdata(ptype, clist):
     if clist == []:
         raise ValueError('interface.getdata: No calculations selected!')
 # plot options
+    iface = {0: simple,   # MDE
+             1: per_calc, # RDF
+             2: per_calc, # MSD
+             3: per_calc, # Velocity autocorrelation
+             4: per_calc, # DOS
+             5: per_calc, # Coordination numbers
+             6: per_calc, # CN time evolution
+             7: per_calc, # VP facearea
+             8: per_calc, # Total VP facearea
+             9: per_calc, # Total VP volume
+             10: per_calc, # VP sphericity coefficient
+             11: per_calc, # Mean magnetic moment
+             12: per_calc, # Mean absolute magnetic moment
+             13: per_calc, # Number of spin flips
+             14: var_x  # Topological indices
+             }
+    
     pdata = {0: Sc.mde,
              1: Sc.rdf,
              2: Sc.msd,
@@ -50,18 +67,60 @@ def getdata(ptype, clist):
              13: Sc.spinflips,
              14: Sc.vp_ti
              }
+    return iface[ptype](pdata[ptype], clist)
+        
+# interfaces per se
+def simple(fn, clist):
     data = []
     info = []
     for c in clist:
-        (title, x, data_i), info_i = pdata[ptype](c)
+        data_i, info_i = fn(c)
+        data.append(data_i)
         info.append(info_i)
-        if title is None:
-            data.append(data_i)
-            continue
+    return data, info
+ 
+def per_calc(fn, clist):
+    data = []
+    info = []
+    for c in clist:
+        (title, x, data_i), info_i = fn(c)
+        info.append(info_i)
         formats = ['f8' for _ in title]
         data.append(np.rec.fromarrays([x] + data_i, names = title, formats = formats))
     return data, info
-        
+
+def var_x(fn, clist, threshold = 0.5):
+    from collections import defaultdict
+    x = []
+    d = []
+    data = [[] for _ in clist]
+    info = [{} for _ in clist]
+    for c in clist:
+        title, data_i = fn(c)
+        d.append(data_i)
+
+        for data_ij in data_i:
+            for key_ij in data_ij.keys():
+                t = max(data_ij.values()) * threshold
+                if data_ij[key_ij] > t:
+                    x.append(key_ij)
+    x = list(set(x))
+    # For the sake of beautiful output    
+    l = defaultdict(list)
+    for key in x:
+        l[sum(key)].append(key)
+    x = [sorted(l[k]) + ['',] for k in sorted(l.keys())]
+    # flattening list
+    x = [l for sublist in x for l in sublist][:-1]
+    # cycle over calcs
+    for i, di in enumerate(d):
+        for dij in di:
+            data[i].append([dij[xi] for xi in x])
+        formats = ['f8' for _ in title]
+        data[i] = np.rec.fromarrays([range(len(x))] + data[i], names = title, formats = formats)
+        info[i]['x'] = x
+    return data, info
+
 def isCalcOfType(ctype, **kwargs):
     if 'fn' in kwargs.keys():
         options = {'.FDF' : [f for f in kwargs['fn'] if f.endswith('.fdf')],

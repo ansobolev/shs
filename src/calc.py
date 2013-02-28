@@ -321,21 +321,12 @@ class SiestaCalc(Calc):
         data = []
         names = ['TI'] + typs
 
-        l = defaultdict(list)
         d = [defaultdict(int) for _ in typs]
         for ityp in range(len(typs)):
             # Count number of VP occurrences    
             for elt in ti[ityp]:
                 d[ityp][tuple(elt)] += 1
-        # For the sake of beautiful output    
-            for key in d[ityp].keys():
-                l[sum(key)].append(key)
-        x = [sorted(l[k]) + ['',] for k in sorted(l.keys())]
-        # flattening list
-        x = [l for sublist in x for l in sublist][:-1]
-        for di in d:
-            data.append([di[xi] for xi in x])
-        return (names, range(len(x)), data), {'x': x} 
+        return names, d 
 
     def mmagmom(self):
         'Returns evolution of mean magnetic moment on atoms'
@@ -367,7 +358,7 @@ class SiestaCalc(Calc):
         mde = SIO.MDEFile(mdef[0])
         self.nsteps = mde.nsteps
         self.mdedata = mde.data
-        return (None, None, self.mdedata), None
+        return self.mdedata, None
     
     def animate(self):
         

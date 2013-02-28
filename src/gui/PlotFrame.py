@@ -214,6 +214,10 @@ class PlotFrame(wx.Frame):
             else:
                 for ds in self.data:
                     axes.plot(ds[self.x], ds[title])
+            if (self.info[i] is not None) and ('x' in self.info[i].keys()):
+                axes.set_xticks(ds[self.x])
+                self.fig.autofmt_xdate(rotation = 90)
+                axes.set_xticklabels(self.info[i]['x'])
         # get legend
         lines = self.fig.axes[0].get_lines()
         self.fig.legend(lines, self.leg, 1)
