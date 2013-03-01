@@ -6,7 +6,7 @@ import wx
 from wx.lib.mixins.listctrl import getListCtrlSelection
 from wx.lib.pubsub import Publisher 
 
-import StepsDialog as SD, PlotFrame as PF
+import StepsDialog as SD, PlotFrame as PF, CorrDialog as CD
 import interface
 import mbox
 
@@ -43,6 +43,8 @@ class RootFrame(wx.Frame):
                                                        "VP total volume", "VP sphericity coefficient", "Mean magn moment", "Mean abs magn moment",
                                                        "Number of spin flips","Topological indices"])
         self.PropChoiceBtn = wx.Button(self, -1, "Plot property")
+        self.CorrelateBtn = wx.Button(self, -1, "Correlations")
+        self.AnimateBtn = wx.Button(self, -1, "Animations")
         self.CreateStatusBar()
         
         self.__set_properties()
@@ -55,6 +57,8 @@ class RootFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.GetDataBtnPress, self.GetData)
         self.Bind(wx.EVT_BUTTON, self.EnqueuePress, self.Enqueue)
         self.Bind(wx.EVT_BUTTON, self.PlotProperty, self.PropChoiceBtn)
+        self.Bind(wx.EVT_BUTTON, self.Correlate, self.CorrelateBtn)
+        self.Bind(wx.EVT_BUTTON, self.Animate, self.AnimateBtn)
         # end wxGlade
         # initialize the tree
         self.buildTree(self.root,self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection()))
@@ -87,10 +91,15 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.GetData, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.Enqueue, 0, wx.ALL|wx.EXPAND, 5)
+        BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
+        BtnSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 5)
+        BtnSizer.Add(self.AnimateBtn, 0, wx.ALL|wx.EXPAND, 5)
+
         sizer_1.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
         sizer_2.Add(self.PropChoice, 0, wx.ADJUST_MINSIZE, 0)
         sizer_2.Add(self.PropChoiceBtn, 1, wx.ALIGN_RIGHT, 0)
+
         LeftSizer.Add(sizer_2, 0, wx.ALL|wx.EXPAND|wx.SHAPED, 5)
         sizer_1.Add(LeftSizer, 1, wx.EXPAND, 5)
         self.SetSizer(sizer_1)
@@ -214,6 +223,11 @@ class RootFrame(wx.Frame):
             self.pf.Show()
         Publisher().sendMessage(('data.plot'), msg)
 
+    def Correlate(self, event):
+        corr = ["X", "Y", "Z"]
+
+    def Animate(self, event):
+        pass
 
 # end of class RootFrame
 

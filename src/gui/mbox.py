@@ -33,7 +33,10 @@ def JobSubmit(q, comm):
         wx.MessageBox(comm[1], 'Errors during submit', 
                   wx.OK | wx.ICON_ERROR)
 
-
+def EmptyXY():
+    wx.MessageBox('Please provide both X and Y datasets', 'Warning', 
+                  wx.OK | wx.ICON_WARNING)
+    
 
 def ShowPlotInfo(leg, info):
     s = ''
