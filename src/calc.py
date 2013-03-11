@@ -41,6 +41,7 @@ class SiestaCalc(Calc):
         self.geom = G.Geom()
         # Default calctype = None
         self.ctype = CT.CalcType()
+        self.data = {}
         # reading calc if we have to
         if dtype is not None:
             self.dtype = dtype
@@ -271,48 +272,24 @@ class SiestaCalc(Calc):
     
     def vp_totfacearea(self, da = 0.1, ratio = 0.7, part = True):
         'Returns total face areas for every VP'
-        typs, tfa = self.evol.vp_totfacearea(ratio, part)
-        ta_max = N.ceil(max([i for typfa in tfa for i in typfa])/da) * da
-        ta_min = N.ceil(min([i for typfa in tfa for i in typfa])/da) * da
-        nbins = (ta_max - ta_min) / da
-# make recarray out of data
-        data = []
-        names = ['area'] + typs
-        for typfa in tfa:
-            hist, bin_edges = N.histogram(N.array(typfa), bins = nbins, range = (ta_min, ta_max))
-            data.append(hist[1:]/float(len(typfa)))
-        area = (bin_edges[:-1]+da/2.)[1:]
-        return (names, area, data), None
-    
+        d = self.evol.vp_totfacearea(ratio, part)
+        (names, area, data), info = d.histogram(da)
+        names = ['area',] + names
+        return (names, area, data), info
+   
     def vp_totvolume(self, dv = 0.05, ratio = 0.7, part = True):
         'Returns total volume for every VP'
-        typs, tv = self.evol.vp_totvolume(ratio, part)
-        tv_max = N.ceil(max([i for typv in tv for i in typv])/dv) * dv
-        tv_min = N.ceil(min([i for typv in tv for i in typv])/dv) * dv
-        nbins = (tv_max - tv_min) / dv
-# make recarray out of data
-        data = []
-        names = ['vol'] + typs
-        for typfa in tv:
-            hist, bin_edges = N.histogram(N.array(typfa), bins = nbins, range = (tv_min, tv_max))
-            data.append(hist[1:]/float(len(typfa)))
-        vol = (bin_edges[:-1]+dv/2.)[1:]
-        return (names, vol, data), None
+        d = self.evol.vp_totvolume(ratio, part)
+        (names, vol, data), info = d.histogram(dv)
+        names = ['vol',] + names
+        return (names, vol, data), info
     
-    def vp_ksph(self, dk=0.01, ratio = 0.7, part = True):
+    def vp_ksph(self, dk = 0.01, ratio = 0.7, part = True):
         'Returns sphericity coefficient for every VP'
-        typs, tk = self.evol.vp_ksph(ratio, part)
-        tk_max = N.ceil(max([i for typk in tk for i in typk])/dk) * dk
-        tk_min = N.ceil(min([i for typk in tk for i in typk])/dk) * dk
-        nbins = (tk_max - tk_min) / dk
-# make recarray out of data
-        data = []
-        names = ['ksph'] + typs
-        for typk in tk:
-            hist, bin_edges = N.histogram(N.array(typk), bins = nbins, range = (tk_min, tk_max))
-            data.append(hist[1:]/float(len(typk)))
-        ksph = (bin_edges[:-1]+dk/2.)[1:]
-        return (names, ksph, data), None
+        d = self.evol.vp_ksph(ratio, part)
+        (names, ksph, data), info = d.histogram(dk)
+        names = ['ksph',] + names
+        return (names, ksph, data), info
     
     def vp_ti(self, ratio = 0.7, part = True):
         'Returns topological indices for VPs'

@@ -5,6 +5,7 @@ import itertools
 import numpy as N
 
 import geom as G
+from data import Data
 
 
 ''' Container for working with files in FDF, XV, MDE, OUT format
@@ -277,59 +278,38 @@ class Evolution():
         return typs, typ_fa
         
     def vp_totfacearea(self, ratio, part):
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
+        result = []
+        for g in self.geom:
+            result.append(g.vp_totfacearea(ratio = ratio))
+        d = Data('per_atom', 'vp_totfacearea', y = result, y_label = 'Total')
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-# results storage
-        typ_tfa = [[] for _ in typs]
-        
-        for g in self.geom:
-            tfa = g.vp_totfacearea(ratio = ratio)
-            for it, nt in enumerate(n):
-                typ_tfa[it] += [tfa[jnt] for jnt in nt]
-        return typs, typ_tfa
-
+            d.make_partial(dict(zip(typs, n)))
+        return d
+    
     def vp_totvolume(self, ratio, part):
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
+        result = []
+        for g in self.geom:
+            result.append(g.vp_totvolume(ratio = ratio))
+        d = Data('per_atom', 'vp_totvolume', y = result, y_label = 'Total')
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-# results storage
-        typ_tv = [[] for _ in typs]
-        
-        for g in self.geom:
-            tv = g.vp_totvolume(ratio = ratio)
-            for it, nt in enumerate(n):
-                typ_tv[it] += [tv[jnt] for jnt in nt]
-        return typs, typ_tv
+            d.make_partial(dict(zip(typs, n)))
+        return d
 
     def vp_ksph(self, ratio, part):
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
+        result = []
+        for g in self.geom:
+            result.append(g.vp_ksph(ratio = ratio))
+        d = Data('per_atom', 'vp_ksph', y = result, y_label = 'Total')
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]
-# results storage
-        typ_k = [[] for _ in typs]
-        
-        for g in self.geom:
-            tk = g.vp_ksph(ratio = ratio)
-            for it, nt in enumerate(n):
-                typ_k[it] += [tk[jnt] for jnt in nt]
-        return typs, typ_k
-    
+            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
+            d.make_partial(dict(zip(typs, n)))
+        return d
+
     def vp_ti(self, ratio, part):
         nat = len(self.geom[0].atoms)
 # full calculations         
