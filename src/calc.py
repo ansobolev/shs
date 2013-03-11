@@ -359,6 +359,37 @@ class SiestaCalc(Calc):
         self.nsteps = mde.nsteps
         self.mdedata = mde.data
         return self.mdedata, None
+# Correlations ---
+    
+    def x(self):
+        ''' Return X-coordinate of atoms by type
+        '''
+        xs = []
+        for istep, (step, geom) in enumerate(self.evol):
+            xs.append([])
+            typs = geom.types['label'].tolist()
+# atomic numbers by type, atoms do not change their type throughout calculation 
+            n = [geom.filter('label',typ)[0] for typ in typs]
+            for ityp, typ in enumerate(typs):
+                xs[istep].append(geom.atoms['crd'][n[ityp]][:,0])
+        return (typs, None, xs), None
+                
+    def y(self):
+        ''' Return Y-coordinate of atoms by type
+        '''
+        ys = []
+        for istep, (step, geom) in enumerate(self.evol):
+            ys.append([])
+            typs = geom.types['label'].tolist()
+# atomic numbers by type, atoms do not change their type throughout calculation 
+            n = [geom.filter('label',typ)[0] for typ in typs]
+            for ityp, typ in enumerate(typs):
+                ys[istep].append(geom.atoms['crd'][n[ityp]][:,1])
+        return (typs, None, ys), None
+    
+    def z(self):
+        pass
+ 
     
     def animate(self):
         

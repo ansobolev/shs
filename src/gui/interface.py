@@ -25,6 +25,28 @@ def setvalue(cdir, label, value):
     c.opts[label].value = value
     return 0
 
+def getcorr(x, y, clist):
+    if clist == []:
+        raise ValueError('interface.getcorr: No calculations selected!')
+    # correlation plot options
+    pdata = {"X": Sc.x,
+             "Y": Sc.y, 
+             "Z": Sc.z, 
+             "Magnetic moment": Sc.mmagmom,
+             "Coordination number": Sc.cn,
+             "VP volume": Sc.vp_totvolume,
+             "VP area": Sc.vp_totfacearea
+             }
+    data = []
+    info = []
+    for c in clist:
+        (title, _, data_x), info_i = pdata[x](c)
+        (title, _, data_y), info_i = pdata[y](c)
+        info.append(info_i)
+        data.append([title, data_x, data_y])
+    return data, info
+
+
 def getdata(ptype, clist):
     """Returns data according to plot type from a list of calcs
     Input:

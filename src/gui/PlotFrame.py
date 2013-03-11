@@ -297,5 +297,17 @@ class PlotFrame(wx.Frame):
 
 # end of class PlotFrame
 
+class CorrFrame(PlotFrame):
 
-
+    def __init__(self, *args, **kwds):
+        PlotFrame.__init__(self, *args, **kwds)
+        Publisher().unsubscribe(self.plot,('data.plot'))
+        Publisher().subscribe(self.plot,('corr.plot'))
+    
+    def plot(self, msg):
+        print 'msg received:', msg
+        
+    def OnClose(self, evt):
+        Publisher().unsubscribe(self.plot,('corr.plot'))
+        self.Destroy()
+        

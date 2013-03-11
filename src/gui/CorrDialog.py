@@ -74,8 +74,8 @@ class CorrDialog(wx.Dialog):
             return -1
         self.Y.SetValue(self.CorrOpts.GetItems()[sel])
     
-    def GetInfo(self):
-        pass
+    def GetSets(self):
+        return self.X.GetValue(), self.Y.GetValue()
     
     def PassInfo(self, event):
         if self.X.GetValue() == "" or self.Y.GetValue() == "":

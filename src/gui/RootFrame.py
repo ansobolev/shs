@@ -224,7 +224,26 @@ class RootFrame(wx.Frame):
         Publisher().sendMessage(('data.plot'), msg)
 
     def Correlate(self, event):
-        corr = ["X", "Y", "Z"]
+        sets = ["X", "Y", "Z", "Magnetic moment", 
+                "Coordination number", "VP volume", "VP area"]
+        # enter dialog
+        dlg = CD.CorrDialog(None, sets = sets)
+        if dlg.ShowModal() == wx.ID_OK:
+            x, y = dlg.GetSets()
+# plot options - get all the data to plot
+        leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
+        t1 = time.clock()
+        data = interface.getcorr(x, y, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
+        self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
+        msg = [x, y, leg, data]
+        try:
+            self.cf.Raise()
+        except (AttributeError, wx._core.PyDeadObjectError):
+            self.cf = PF.CorrFrame(self)
+            self.cf.Show()
+        Publisher().sendMessage(('corr.plot'), msg)
+
+
 
     def Animate(self, event):
         pass
