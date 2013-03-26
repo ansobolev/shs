@@ -56,16 +56,16 @@ class Data():
         self.y = y
     
     def histogram(self, dy):
-        ''' Make histogram out of data
+        ''' Makes histogram out of data
         '''
         assert (self.dtype == 'per_atom' or self.dtype == 'hist')
-# flattening type lists
+        # flattening type lists
         y = [[i for step_y in yi for i in step_y] for yi in self.y]
-# global max and min
+        # global max and min
         y_max = np.ceil(max([i for typ_y in y for i in typ_y])/dy) * dy
         y_min = np.ceil(min([i for typ_y in y for i in typ_y])/dy) * dy
         nbins = (y_max - y_min) / dy
-# make recarray out of data
+        # make recarray out of data
         data = []
         for typ_y in y:
             hist, bin_edges = np.histogram(np.array(typ_y), bins = nbins, range = (y_min, y_max))
@@ -73,4 +73,38 @@ class Data():
         
         x = (bin_edges[:-1]+dy/2.)[1:]
         return (self.y_label, x, data), None
-        
+    
+    def evolution(self, steps = [], func = 'avg'):
+        ''' Calculates evolution of average value of data over the sequence of steps 
+        '''
+        assert (self.dtype == 'per_atom')
+        assert func in ['avg', 'cum_sum']
+        if func == 'avg':
+            func = avg
+        elif func == 'cum_sum':
+            func = cum_sum
+        # calculate average
+        data = func(self.y)
+        if len(steps) != 0:
+            x = steps
+        elif len(self.x) != 0:
+            x = self.x
+        else:
+            x = range(len(data[0]))
+        return (self.y_label, x, data), None        
+
+# Misc functions ---
+def avg(y):
+    'Computes average of a list or Numpy array l'
+    l = y[0][0]
+    if type(l) == np.ndarray:
+        avg = np.mean
+    else: 
+        avg = lambda x: sum(x) / float(len(x))
+    return [[avg(step_y) for step_y in yi] for yi in y]
+
+def cum_sum(y):
+    'Computes cumulative sum of a list or Numpy array l'
+    y_summed = [[sum(step_y) for step_y in yi] for yi in y]
+    return [np.cumsum(yi) for yi in y_summed]
+            

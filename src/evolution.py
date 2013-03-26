@@ -328,48 +328,34 @@ class Evolution():
                 typ_ti[it] += [ti[jnt] for jnt in nt]
         return typs, typ_ti
 
-
     def mmagmom(self, abs_mm = False, part = True):
         assert self.has_fields('up', 'dn')
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
+        result = []
+        for g in self.geom:
+            result.append(g.mmagmom(abs_mm))
+        d = Data('per_atom', 'mmagmom', y = result, y_label = 'Total')
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-# results storage
-        typ_mm = [[] for _ in typs]
-        for g in self.geom:
-            tmm = g.mmagmom(abs_mm)
-            for it, nt in enumerate(n):
-                typ_mm[it].append(N.mean(tmm[nt]))
-        return typs, typ_mm
-
+            d.make_partial(dict(zip(typs, n)))
+        return d
+       
     def spinflips(self, part = True):
         'Get spin flips'
         assert self.has_fields('up', 'dn')
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
+        prevmm = self.geom[0].mmagmom(abs_mm = False)
+        result = [N.zeros(len(prevmm))]
+        
+        for g in self.geom[1:]:
+            gmm = g.mmagmom(abs_mm = False)            
+            result.append((prevmm * gmm) < 0)
+            prevmm = gmm
+        d = Data('per_atom', 'spinflips', y = result, y_label = 'Total')
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-# results storage
-        typ_sf = [[0,] for _ in typs]
-        prevmm = self.geom[0].mmagmom(abs_mm = False)
-        for g in self.geom[1:]:
-            gmm = g.mmagmom(abs_mm = False)
-            for it, nt in enumerate(n):
-                nsf = len(N.where(prevmm[nt]*gmm[nt] < 0)[0])
-                typ_sf[it].append(typ_sf[it][-1] + nsf)
-            prevmm = gmm
-        return typs, typ_sf
-        
-        
+            d.make_partial(dict(zip(typs, n)))
+        return d
 
     def has_fields(self, *fields):
         'Returns True if all Geoms in  self.geom have these fields'

@@ -308,24 +308,27 @@ class SiestaCalc(Calc):
     def mmagmom(self):
         'Returns evolution of mean magnetic moment on atoms'
         steps = self.evol.steps
-        typs, tmm = self.evol.mmagmom()
-        names = ['step',] + typs
-        return (names, steps, tmm), None
+        d = self.evol.mmagmom()
+        (names, steps, magmom), info = d.evolution(steps, func = 'avg')
+        names = ['step',] + names
+        return (names, steps, magmom), info
         
     def mabsmagmom(self):
         'Returns evolution of mean magnetic moment on atoms'
         steps = self.evol.steps
-        typs, tmm = self.evol.mmagmom(abs_mm = True)
-        names = ['step',] + typs
-        return (names, steps, tmm), None
+        d = self.evol.mmagmom(abs_mm = True)
+        (names, steps, magmom), info = d.evolution(steps, func = 'avg')
+        names = ['step',] + names
+        return (names, steps, magmom), info
 
     def spinflips(self):
         'Returns the number of spin flips over time'
         steps = self.evol.steps
-        typs, sf = self.evol.spinflips()
-        names = ['step',] + typs
-        return (names, steps, sf), None
-    
+        d = self.evol.spinflips()
+        (names, steps, sf), info = d.evolution(steps, func = 'cum_sum')
+        names = ['step',] + names
+        return (names, steps, sf), info
+   
     def mde(self):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
