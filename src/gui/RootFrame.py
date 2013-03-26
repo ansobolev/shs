@@ -38,12 +38,17 @@ class RootFrame(wx.Frame):
         self.GetData = wx.Button(self, -1, "Get calc data")
         self.Enqueue = wx.Button(self, -1, "Enqueue job")
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.PropType = wx.Choice(self, -1, choices=["Function","Histogram","Time evolution"]) 
+
         self.PropChoice = wx.Choice(self, -1, choices=["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)", 
                                                        "Coordination numbers", "CNs time evolution", "Voronoi face area", "VP total face area", 
                                                        "VP total volume", "VP sphericity coefficient", "Mean magn moment", "Mean abs magn moment",
                                                        "Number of spin flips","Topological indices"])
+        self.CorrXChoice = wx.Choice(self, -1, choices=["1","2","3"])
+        self.CorrYChoice = wx.Choice(self, -1, choices=["1y","2y","3y"])
+        
         self.PropChoiceBtn = wx.Button(self, -1, "Plot property")
-        self.CorrelateBtn = wx.Button(self, -1, "Correlations")
+        self.CorrelateBtn = wx.Button(self, -1, "Plot correlations")
         self.AnimateBtn = wx.Button(self, -1, "Animations")
         self.CreateStatusBar()
         
@@ -80,7 +85,13 @@ class RootFrame(wx.Frame):
         # begin wxGlade: RootFrame.__do_layout
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
         LeftSizer = wx.BoxSizer(wx.VERTICAL)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+        
+        PropSizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_2 = wx.BoxSizer(wx.VERTICAL)
+        CorrSizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_3 = wx.BoxSizer(wx.VERTICAL)
+
+        
         BtnSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer.Add(self.CalcTree, 1, wx.EXPAND, 0)
@@ -92,15 +103,23 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(self.GetData, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.Enqueue, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
-        BtnSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.AnimateBtn, 0, wx.ALL|wx.EXPAND, 5)
 
         sizer_1.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
-        sizer_2.Add(self.PropChoice, 0, wx.ADJUST_MINSIZE, 0)
-        sizer_2.Add(self.PropChoiceBtn, 1, wx.ALIGN_RIGHT, 0)
+        
+        sizer_2.Add(self.PropType, 0, wx.ALL|wx.EXPAND, 0)
+        sizer_2.Add(self.PropChoice, 0, wx.ALL|wx.EXPAND, 0)
+        PropSizer.Add(sizer_2, 0, wx.ALL|wx.EXPAND, 2)
+        PropSizer.Add(self.PropChoiceBtn, 1, wx.ALL|wx.EXPAND, 2)
+        sizer_3.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
+        sizer_3.Add(self.CorrYChoice, 1, wx.ALL|wx.EXPAND, 0)
+        CorrSizer.Add(sizer_3, 1, wx.ALL|wx.EXPAND, 2)
+        CorrSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 2)
 
-        LeftSizer.Add(sizer_2, 0, wx.ALL|wx.EXPAND|wx.SHAPED, 5)
+        LeftSizer.Add(PropSizer, 0, wx.ALL|wx.EXPAND, 2)
+        LeftSizer.Add(CorrSizer, 0, wx.ALL|wx.EXPAND, 2)
+
         sizer_1.Add(LeftSizer, 1, wx.EXPAND, 5)
         self.SetSizer(sizer_1)
         self.Layout()
