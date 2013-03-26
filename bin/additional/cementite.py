@@ -38,7 +38,7 @@ def init_cementite():
     
     for i in range(300):
         G = Geom()
-        G.initialize('OR', bas_type, [3,3,3], alat, 'Ang', Basis = bas_crd, DistLevel = 0.)
+        G.initialize('OR', bas_type, [3,3,3], alat, 'Ang', Basis = bas_crd, DistLevel = 8.)
         write_ani(G, '.', 'FeC')
     write_xv(G, '.', 'FeC')
 

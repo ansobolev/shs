@@ -11,16 +11,17 @@ import shs.plot as Plot
 
 
 def ti_vs_distance():
-    steps = range(-200,0,12)
-    dir = '/home/andrey/calc/FeC/Fe175C25/NVT/4'
+    steps = range(-300,0,7)
+    dir = '/home/andrey/calc/Fe/Spin/MD/BCC/Fe1923'
     c = SiestaCalc(dir, dtype='ani', steps = steps)
-    nC = c.evol[0].filter('label','C')[0]
+#    nC = c.evol[0].filter('label','C')[0]
     nFe = c.evol[0].filter('label','Fe')[0]
     
     ti_closeFe = []
     for step, g in c.evol:
-        r = g.distance_to_group(nC)
-        n_closeFe = np.where(r[nFe] < 2.68)[0]
+#        r = g.distance_to_group(nC)
+        r = g.distance_to_group(nFe)
+        n_closeFe = np.where(r[nFe] < 2.53)[0]
         ti = g.vp_ti()
         ti_Fe = [ti[i] for i in nFe]
         ti_closeFe += [ti_Fe[i] for i in n_closeFe]
@@ -40,7 +41,7 @@ if __name__== '__main__':
     dir = '/home/andrey/Документы/Work/Conference/2013/ISVD-2013/data'
     l, d, ncats, nsteps = ti_vs_distance()
     # Output to file    
-    f= open(dir + '/Fe175C25.dat', 'w')
+    f= open(dir + '/Fe200.dat', 'w')
     for s in sorted(l.keys()):
         for key in sorted(l[s]):
             if d[key] * 100. /(ncats * nsteps) > 1.:
