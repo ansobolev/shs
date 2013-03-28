@@ -2,7 +2,8 @@
 # -*- coding : utf-8 -*-
 
 import os, glob, random
-import numpy as N
+import numpy as np
+import numpy.ma as ma
 
 import const as Const
 import errors as Err
@@ -39,7 +40,7 @@ class Geom():
         '''
         self.alat = 1.        
         self.unit = 'Ang'
-        self.vc = N.array([[1., 0., 0.], 
+        self.vc = np.array([[1., 0., 0.], 
                            [0., 1., 0.],
                            [0., 0., 1.]])
         self.atoms = None
@@ -74,14 +75,14 @@ class Geom():
         self.alat = self.opts['LatticeConstant'].value
         self.unit = self.opts['LatticeConstant'].unit
         try:
-            self.vc = N.array(self.opts['LatticeVectors'].value).astype(float) * self.alat
+            self.vc = np.array(self.opts['LatticeVectors'].value).astype(float) * self.alat
         except (KeyError,):
-            self.vc = N.eye(3, dtype='f4') * self.alat
-        self.types = N.rec.fromarrays(N.transpose(self.opts['ChemicalSpeciesLabel'].value), names = 'i,z,label', formats = '|i1,|i2,|S2')
-        acas = N.array(self.opts['AtomicCoordinatesAndAtomicSpecies'].value)
+            self.vc = np.eye(3, dtype='f4') * self.alat
+        self.types = np.rec.fromarrays(np.transpose(self.opts['ChemicalSpeciesLabel'].value), names = 'i,z,label', formats = '|i1,|i2,|S2')
+        acas = np.array(self.opts['AtomicCoordinatesAndAtomicSpecies'].value)
         crd = acas[:,0:3]
         typ = acas[:,3]
-        self.atoms = N.rec.fromarrays([crd, typ], names = 'crd,itype', formats = '|3f8,|i2')
+        self.atoms = np.rec.fromarrays([crd, typ], names = 'crd,itype', formats = '|3f8,|i2')
 # converting crd array to self.alat units
 # crd units dictionary
         cud = {'Ang' : 'Ang',
@@ -104,14 +105,14 @@ class Geom():
 # vc - convert from vcunit to aunit
         self.vc = convert(data.vc, inunit=data.vcunit, outunit=data.aunit)
 # now get types
-        ilabel, ind = N.unique(data.atoms['label'], return_index = True)
-        iz = N.array([Const.PeriodicTable[l] for l in ilabel])
+        ilabel, ind = np.unique(data.atoms['label'], return_index = True)
+        iz = np.array([Const.PeriodicTable[l] for l in ilabel])
         try:
             ityp = data.atoms['itype'][ind]
         except ValueError:
-            ityp = N.arange(len(iz)) + 1    
-        ilabel = N.array([Const.PeriodicTable[z] for z in iz])
-        self.types = N.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
+            ityp = np.arange(len(iz)) + 1    
+        ilabel = np.array([Const.PeriodicTable[z] for z in iz])
+        self.types = np.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
         if type(data.data) == type({}):
             for name, field in data.data.iteritems():
                 self.add_fields(name, field)
@@ -131,14 +132,14 @@ class Geom():
         self.alat = 1.
         self.unit = 'Bohr'
         xv = SIO.XVFile(xvf[0])
-        self.vc = N.array(xv.vc)
+        self.vc = np.array(xv.vc)
 # get atomic positions (in Bohr, I assume)
-        self.atoms = N.rec.fromarrays([xv.crd, xv.v, xv.ityp], names = 'crd,v,itype', formats = '|3f8,|3f8,|i2')
+        self.atoms = np.rec.fromarrays([xv.crd, xv.v, xv.ityp], names = 'crd,v,itype', formats = '|3f8,|3f8,|i2')
 # now get types
-        ityp, ind = N.unique(N.array(xv.ityp), return_index = True)
-        iz = N.array(xv.z)[ind]
-        ilabel = N.array([Const.PeriodicTable[z] for z in iz])
-        self.types = N.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
+        ityp, ind = np.unique(np.array(xv.ityp), return_index = True)
+        iz = np.array(xv.z)[ind]
+        ilabel = np.array([Const.PeriodicTable[z] for z in iz])
+        self.types = np.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
 
     def unsupported2geom(self, data):
         ''' Raise exception when one wants to read geometry from strange place
@@ -164,24 +165,24 @@ class Geom():
         ''' Filters geometry atoms by field name & value 
         '''
 # TODO: make filtering with other comparison operators
-        return N.where(self.atoms[name] == value)
+        return np.where(self.atoms[name] == value)
     
     def unique(self, name):
         ''' Returns a list of unique properties of the model 
         '''
-        return list(N.unique(self.atoms[name]))
+        return list(np.unique(self.atoms[name]))
 
 
     def to_cell(self):
         crd = self.atoms['crd']
         vc = self.vc
 # Get fractional coordinates
-        vc_inv = N.linalg.inv(vc)
-        crd_vc = N.dot(crd, vc_inv)
+        vc_inv = np.linalg.inv(vc)
+        crd_vc = np.dot(crd, vc_inv)
 # Fractional coordinates - to cell
         crd_vc[crd_vc > 1.] -= 1.
         crd_vc[crd_vc < 1.] += 1.
-        crd = N.dot(crd_vc, vc)
+        crd = np.dot(crd_vc, vc)
         self.atoms['crd'] = crd
         
 # End Auxiliary routines --- 
@@ -195,8 +196,8 @@ class Geom():
         ngroup = len(group)
         nat = len(self.atoms)
         rij = r(self.atoms['crd'], self.vc, n = (group, range(nat)))
-        dist = N.sqrt((rij**2.0).sum(axis = 1)) 
-        dist = N.min(dist.reshape(ngroup, nat), axis = 0)
+        dist = np.sqrt((rij**2.0).sum(axis = 1)) 
+        dist = np.min(dist.reshape(ngroup, nat), axis = 0)
         return dist
 
 # Voronoi tesselation routines ---    
@@ -233,9 +234,9 @@ class Geom():
         mv = ngbr.toMV()
         mv.make_voronoi(1)
         sq, vol, k_sph, pl_mv = mv.get_voronoi_param()
-        self.add_fields('sq', N.array(sq))
-        self.add_fields('vol', N.array(vol))
-        self.add_fields('k_sph', N.array(k_sph))
+        self.add_fields('sq', np.array(sq))
+        self.add_fields('vol', np.array(vol))
+        self.add_fields('k_sph', np.array(k_sph))
         self.nb = pl_mv
 
     def voronoi_params(self, pbc = True, ratio = 0.5):
@@ -247,7 +248,7 @@ class Geom():
             vp.remove_small_faces()
 # TODO: incomplete function        
         
-    def voronoi_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
+    def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
         ''' Finds face areas of Voronoi tesselation
         '''
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
@@ -256,7 +257,14 @@ class Geom():
             fa = self.vp.vp_face_area(f)
             f = self.vp.remove_small_faces(f, fa, eps)
         fa = self.vp.vp_face_area(f)
-        return fa
+        # here fa is the list of dictionaries, we make it a 2d numpy array
+        nat = len(fa)
+        fa_np = np.zeros((nat, nat), dtype = np.float)
+        for iat, ngbr in enumerate(fa):
+            for jat, area in ngbr.iteritems():
+                fa_np[iat, jat] = area
+        fa_np = ma.masked_values(fa_np, 0.)
+        return fa_np
     
     def vp_totfacearea(self, pbc = True, ratio = 0.5):
         ''' Finds total face areas for resulting Voronoi polihedra 
@@ -286,7 +294,7 @@ class Geom():
         else:
             v = self.vp.vp_volume
             a = self.vp.vp_area
-        ksph = 36. * N.pi * v * v / (a * a * a)
+        ksph = 36. * np.pi * v * v / (a * a * a)
         return ksph
     
     def vp_ti(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
@@ -302,7 +310,7 @@ class Geom():
 
     def mmagmom(self, abs_mm = False):
         if abs_mm:
-            return N.abs(self.atoms['up'] - self.atoms['dn'])
+            return np.abs(self.atoms['up'] - self.atoms['dn'])
         else:
             return self.atoms['up'] - self.atoms['dn']
     
@@ -347,7 +355,7 @@ class Geom():
                 'LatticeConstant' : [4, str(self.alat), self.unit],
                 'LatticeVectors' : [5, ] + array2block(self.vc),
                 'AtomicCoordinatesFormat' : [6, 'NotScaledCartesian'+self.unit],
-                'AtomicCoordinatesAndAtomicSpecies' : [7, ] + N.concatenate([self.atoms['crd'].T.astype('S20'), self.atoms['itype'][N.newaxis,:].astype('S2')], axis = 0).T.tolist()
+                'AtomicCoordinatesAndAtomicSpecies' : [7, ] + np.concatenate([self.atoms['crd'].T.astype('S20'), self.atoms['itype'][np.newaxis,:].astype('S2')], axis = 0).T.tolist()
                 }
         print 'Geom.Geom2Opts : Geometry data -> Options'
         self.opts = Opts.Options(data)
@@ -371,32 +379,32 @@ class Geom():
         self.unit = LCUnit
         if LatticeType != 'OR':
             LatticeConstant = [LatticeConstant] * 3
-        vc = N.array(SCellSize) * N.array(LatticeConstant)
-        self.vc = N.diag(vc)
+        vc = np.array(SCellSize) * np.array(LatticeConstant)
+        self.vc = np.diag(vc)
       
         crd = crd_list(LatticeType,SCellSize,LatticeConstant,Basis,DistLevel)
         nat = len(crd)
         if not ((type(Composition) == type({})) or (type(Composition) == type([]))):
             raise Err.NotImplementedError('Geom.Initialize : Composition has to be a dict or a list!')
         if type(Composition) == type([]):
-            c = N.array(Composition)
-            ntyp = len(N.unique(c))
-            i = N.arange(1, ntyp + 1)
-            label = N.unique(c)
-            z = N.array([Const.PeriodicTable[l] for l in label])
-            self.types = N.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')
+            c = np.array(Composition)
+            ntyp = len(np.unique(c))
+            i = np.arange(1, ntyp + 1)
+            label = np.unique(c)
+            z = np.array([Const.PeriodicTable[l] for l in label])
+            self.types = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')
             sc = SCellSize[0] * SCellSize[1] * SCellSize[2]
-            ityp = N.concatenate((c, ) * sc)
-            self.atoms = N.rec.fromarrays([crd, ityp], names = 'crd,itype', formats = '|3f8,|S2')
+            ityp = np.concatenate((c, ) * sc)
+            self.atoms = np.rec.fromarrays([crd, ityp], names = 'crd,itype', formats = '|3f8,|S2')
             return
         ntyp = len(Composition.keys())
-        i = N.arange(1, ntyp + 1)
-        label = N.array(Composition.keys())
-        z = N.array([Const.PeriodicTable[l] for l in label])
-        self.types = N.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')            
+        i = np.arange(1, ntyp + 1)
+        label = np.array(Composition.keys())
+        z = np.array([Const.PeriodicTable[l] for l in label])
+        self.types = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')            
 # now calculate number of atoms of each type
 # fractions
-        f = N.array([Composition[x] for x in self.types['label']])
+        f = np.array([Composition[x] for x in self.types['label']])
 # sum of fractions
         sf = sum(f)
         percask = f / float(sf) * 100.0
@@ -420,13 +428,13 @@ class Geom():
         print ''
         res = range(nat)
         random.shuffle(res)
-        ityp = N.ones(nat)
+        ityp = np.ones(nat)
 # atomic index (for type)
         ai = 0        
         for i in range(1, ntyp + 1):
             ityp[res[ai:ai + na[i-1]]] = i
             ai += na[i-1]
-        self.atoms = N.rec.fromarrays([crd, ityp], names = 'crd,itype', formats = '|3f8,|i2')
+        self.atoms = np.rec.fromarrays([crd, ityp], names = 'crd,itype', formats = '|3f8,|i2')
         
 # METHODS ---
     
@@ -515,8 +523,8 @@ def r(crd, vc, n = None):
      -> vc - lattice vectors
      -> n - a tuple of 2 crd index lists (or None if we need to find all-to-all distances) 
     ''' 
-    vc_inv = N.linalg.inv(vc)
-    crd_vc = N.dot(crd, vc_inv)
+    vc_inv = np.linalg.inv(vc)
+    crd_vc = np.dot(crd, vc_inv)
     if n is None:
         crd1 = crd_vc
         crd2 = crd_vc
@@ -533,5 +541,5 @@ def r(crd, vc, n = None):
     sij[sij < -0.5] += 1.0
 #    print sij.shape
     sij = sij.reshape(n1*n2, 3)
-    rij = N.dot(sij, vc)
+    rij = np.dot(sij, vc)
     return rij

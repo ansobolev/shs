@@ -256,19 +256,11 @@ class SiestaCalc(Calc):
         return (title, x, data), None
     
     def vp_facearea(self, da = 0.05, ratio = 0.7, part = True):
-        'Returns partial face areas for calculations'
-        typs, fa = self.evol.vp_facearea(ratio, part)
-        a_max = N.ceil(max([i for typfa in fa for i in typfa])/da) * da
-        nbins = a_max / da
-# make recarray out of data
-        data = []
-        for typfa in fa:
-            hist, bin_edges = N.histogram(N.array(typfa), bins = nbins, range = (0., a_max))
-            data.append(hist[1:])
-
-        names = ['area'] + typs
-        area = (bin_edges[:-1]+da/2.)[1:]
-        return (names, area, data), None                     
+        'Returns total face areas for every VP'
+        d = self.evol.vp_facearea(ratio, part)
+        (names, area, data), info = d.histogram(da)
+        names = ['area',] + ['-'.join(n) for n in names]
+        return (names, area, data), info
     
     def vp_totfacearea(self, da = 0.1, ratio = 0.7, part = True):
         'Returns total face areas for every VP'

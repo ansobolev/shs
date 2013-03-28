@@ -257,26 +257,18 @@ class Evolution():
         return self.partial_cn(typs, parts, n, tot_ngbrs, evol = True)
     
     def vp_facearea(self, ratio, part):
-        'Returns a dictionary of {part: [areas]} for evolution to make a histogram'
-
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
-# partial calculations
+        result = []
+        for g in self.geom:
+            result.append(g.vp_facearea(ratio = ratio, rm_small = True, eps = 0.5))
+        d = Data('hist', 'vp_facearea', y = result, y_label = 'Total')
+        # partial calculations
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-# results storage
-        typ_fa = [[] for _ in typs]
-                
-        for g in self.geom:
-            fa = g.voronoi_facearea(ratio = ratio, rm_small = True, eps = 0.5)
-            for it, nt in enumerate(n):
-                typ_fa[it] += [area for jnt in nt for area in fa[jnt].values()]
-        return typs, typ_fa
-        
+            # atomic numbers by type, atoms do not change their type throughout calculation 
+            n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
+            d.make_partial(dict(zip(typs, n)), pairwise = True)
+        return d
+       
     def vp_totfacearea(self, ratio, part):
         result = []
         for g in self.geom:

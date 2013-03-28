@@ -7,6 +7,7 @@
 # (c) Andrey Sobolev, 2013
 #
 
+import itertools
 import numpy as np
 
 
@@ -37,22 +38,41 @@ class Data():
         
         self.partial = partial
     
-    def make_partial(self, types):
+    def make_partial(self, types, pairwise = False):
         ''' Makes partial calculation from non-partial 
         '''
         if self.partial:
             return
-        
+       
         assert type(types) == type({})
         self.y_label = []
         y = []
-        
-        for (k,v) in types.iteritems():
-            self.y_label.append(k)
-            yi = []
-            for yj in self.y:
-                yi.append(yj[v])
-            y.append(yi)
+        typeind = {}
+        if pairwise:
+            nat = len(self.y[0])    
+            # adding atoms to existing types
+            for (t, nt) in types.iteritems():
+                self.y_label.append((t,))
+                typeind[(t,)] = (nt, np.arange(nat))
+            # expanding types by products
+            for (t1, t2) in itertools.product(types.keys(), types.keys()):
+                self.y_label.append((t1, t2))
+                typeind[(t1, t2)] = (types[t1], types[t2])
+            # data according to types
+            for t in self.y_label:
+                (n1, n2) = typeind[t]
+                yi = []
+                for yj in self.y:
+                    yi.append(yj[n1][:,n2].compressed())
+                y.append(yi)
+             
+        else:
+            for (k,v) in types.iteritems():
+                self.y_label.append(k)
+                yi = []
+                for yj in self.y:
+                    yi.append(yj[v])
+                y.append(yi)
         self.y = y
     
     def histogram(self, dy):
