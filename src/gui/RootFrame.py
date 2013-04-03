@@ -36,7 +36,7 @@ class RootFrame(wx.Frame):
         self.DownBtn = wx.Button(self, -1, ">>")
         self.UpBtn = wx.Button(self, -1, "<<")
         self.GetData = wx.Button(self, -1, "Get calc data")
-        self.Enqueue = wx.Button(self, -1, "Enqueue job")
+        self.btnEnqueue = wx.Button(self, -1, "Enqueue job")
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
         self.PropType = wx.Choice(self, -1, choices=["Function","Histogram","Time evolution"]) 
 
@@ -60,7 +60,7 @@ class RootFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.DownBtnPress, self.DownBtn)
         self.Bind(wx.EVT_BUTTON, self.UpBtnPress, self.UpBtn)
         self.Bind(wx.EVT_BUTTON, self.GetDataBtnPress, self.GetData)
-        self.Bind(wx.EVT_BUTTON, self.EnqueuePress, self.Enqueue)
+        self.Bind(wx.EVT_BUTTON, self.enqueuePress, self.btnEnqueue)
         self.Bind(wx.EVT_BUTTON, self.PlotProperty, self.PropChoiceBtn)
         self.Bind(wx.EVT_BUTTON, self.Correlate, self.CorrelateBtn)
         self.Bind(wx.EVT_BUTTON, self.Animate, self.AnimateBtn)
@@ -78,7 +78,7 @@ class RootFrame(wx.Frame):
         self.SetSize((820, 430))
         self.TypeRBox.SetSelection(1)
         self.PropChoice.SetSelection(4)
-        self.Enqueue.Enable(False)
+        self.btnEnqueue.Enable(False)
         # end wxGlade
 
     def __do_layout(self):
@@ -101,7 +101,7 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(self.UpBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.GetData, 0, wx.ALL|wx.EXPAND, 5)
-        BtnSizer.Add(self.Enqueue, 0, wx.ALL|wx.EXPAND, 5)
+        BtnSizer.Add(self.btnEnqueue, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.AnimateBtn, 0, wx.ALL|wx.EXPAND, 5)
 
@@ -146,7 +146,7 @@ class RootFrame(wx.Frame):
                     self.CalcTree.SortChildren(ids[ad])
                     ad = d
     
-    def GetSelectionDir(self):
+    def getSelectionDir(self):
         item =  self.CalcTree.GetSelection()
         parent = self.CalcTree.GetItemParent(item)
         path = [self.CalcTree.GetItemText(item)]
@@ -161,11 +161,11 @@ class RootFrame(wx.Frame):
 # calculation type        
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
 # calculation directory
-        cdir = self.GetSelectionDir() 
+        cdir = self.getSelectionDir() 
         if interface.isCalcOfType(ctype, dir = cdir):
-            self.Enqueue.Enable()
+            self.btnEnqueue.Enable()
         else:
-            self.Enqueue.Enable(False)
+            self.btnEnqueue.Enable(False)
 
     def TypeChange(self, event): # wxGlade: RootFrame.<event_handler>
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
@@ -190,7 +190,7 @@ class RootFrame(wx.Frame):
 # calculation type        
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
 # calculation directory
-        cdir = self.GetSelectionDir()
+        cdir = self.getSelectionDir()
         if not interface.isCalcOfType(ctype, dir = cdir):
             mbox.NoResults(cdir, ctype)
             return 1
@@ -212,7 +212,25 @@ class RootFrame(wx.Frame):
         print "Event handler `GetDataBtnPress' not implemented!"
         event.Skip()
 
-    def EnqueuePress(self, event): # wxGlade: RootFrame.<event_handler>
+    def enqueuePress(self, event): # wxGlade: RootFrame.<event_handler>
+        from sshutils import getMount, getDevice, getRemoteDir
+        # on which device are we?
+        cdir = self.getSelectionDir()
+        mpath = getMount(cdir)
+        devname, devtype = getDevice(mpath)
+        if 'ssh' in devtype:
+            user, hostdir = devname.split('@')
+            hostname, remotempath = hostdir.split(':')
+            remotedir = getRemoteDir(cdir, mpath, remotempath)
+            self.enqueueRemote(remotedir, hostname, user)
+        else:
+            self.enqueueLocal(cdir)
+
+    def enqueueLocal(self, cdir):
+        '''Enqueue a task on a local filesystem
+        Input:
+         -> cdir: calculation directory on a local filesystem 
+        '''
         import distutils.spawn
         # find which queue system is implemented on cluster (qstat - PBS, sinfo - SLURM)
         if distutils.spawn.find_executable('qstat') is not None:
@@ -223,10 +241,35 @@ class RootFrame(wx.Frame):
             mbox.JobSubmit(None, ())
             return -1
         comm = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', q, q + '.sh'))
-        cdir = self.GetSelectionDir()
+
         submit = subprocess.Popen(['/bin/bash', comm, '-d=' + cdir], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         mbox.JobSubmit(q, submit.communicate())
 
+    def enqueueRemote(self, cdir, host, user):
+        '''Enqueue a task on a remote filesystem
+        Input:
+         -> cdir: calculation directory on a remote filesystem 
+         -> host: host where to enqueue a task
+         -> user: user of a remote system who enqueues a task  
+        '''
+        from sshutils import getSSHClient, getQueue, copyFile, removeFile, runCommand
+        ssh = getSSHClient(host, user)
+        # find which queue system is implemented on cluster (qstat - PBS, sinfo - SLURM)
+        q = getQueue(ssh)
+        if q is None:
+            mbox.JobSubmit(None, ())
+            return None
+        # queue putter on a local machine
+        localdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', q))
+        putter = q + '.sh'
+        
+        sftp = copyFile(ssh, putter, localdir, cdir)
+        remotefile = os.path.join(cdir, putter)
+        stdout, stderr = runCommand(ssh, 'bash ' + remotefile + ' -d=' + cdir)
+        mbox.JobSubmit(q, ('\n'.join(stdout.readlines()), '\n'.join(stderr.readlines())))
+        removeFile(sftp, remotefile)
+        ssh.close()
+    
     def PlotProperty(self, event): # wxGlade: RootFrame.<event_handler>
 # plot options - get all the data to plot
         ptype = self.PropChoice.GetSelection()
@@ -261,8 +304,6 @@ class RootFrame(wx.Frame):
             self.cf = PF.CorrFrame(self)
             self.cf.Show()
         Publisher().sendMessage(('corr.plot'), msg)
-
-
 
     def Animate(self, event):
         pass
