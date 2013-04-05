@@ -196,7 +196,7 @@ class Geom():
         ngroup = len(group)
         nat = len(self.atoms)
         rij = r(self.atoms['crd'], self.vc, n = (group, range(nat)))
-        dist = np.sqrt((rij**2.0).sum(axis = 1)) 
+        dist = np.sqrt((rij**2.0).sum(axis = 1))
         dist = np.min(dist.reshape(ngroup, nat), axis = 0)
         return dist
 
@@ -247,7 +247,14 @@ class Geom():
         for vp in vps:
             vp.remove_small_faces()
 # TODO: incomplete function        
-        
+    
+    def vp_neighbors(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
+        'Finds neighbors of VP'
+        # WARNING: makes a lot of unnecessary work (ok if we work with up to several thousands of atoms)    
+        fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
+        fa_np[fa_np > 0] = 1.
+        return fa_np
+    
     def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
         ''' Finds face areas of Voronoi tesselation
         '''
@@ -258,6 +265,8 @@ class Geom():
             f = self.vp.remove_small_faces(f, fa, eps)
         fa = self.vp.vp_face_area(f)
         # here fa is the list of dictionaries, we make it a 2d numpy array
+        # with masked values 
+        # WARNING: O(nat^2 * nsteps) memory consumption!
         nat = len(fa)
         fa_np = np.zeros((nat, nat), dtype = np.float)
         for iat, ngbr in enumerate(fa):

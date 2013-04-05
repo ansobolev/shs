@@ -241,19 +241,14 @@ class SiestaCalc(Calc):
         names = ['R',] + names
         r = (bin_edges[:-1]+dr/2.)[1:]
         return (names, r, data), pcn                     
-
+   
     def pcn_evolution(self, ratio = 0.7, part = True):
-        title = ['step']
-        data = []
-        part_cn, typ_cn = self.evol.pcn_evolution(ratio, part)
-        for typ in typ_cn.keys():
-            title.append(typ)
-            data.append(N.array(typ_cn[typ]))
-        for part in part_cn.keys():
-            title.append('-'.join(part))
-            data.append(N.array(part_cn[part]))
-        x = N.arange(len(data[0]))
-        return (title, x, data), None
+        'Returns partial coordination numbers evolution'
+        steps = self.evol.steps
+        d = self.evol.pcn_evolution(ratio, part)
+        (names, pcn, data), info = d.evolution(steps, func = 'part_avg')
+        names = ['step',] + ['-'.join(n) for n in names]
+        return (names, pcn, data), info
     
     def vp_facearea(self, da = 0.05, ratio = 0.7, part = True):
         'Returns total face areas for every VP'

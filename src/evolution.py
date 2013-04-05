@@ -237,24 +237,17 @@ class Evolution():
 
     def pcn_evolution(self, ratio, part):
         'Returns time evolution of partial coordination numbers'
-        
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
-# partial calculations
+        result = []
+        for g in self.geom:
+            result.append(g.vp_neighbors(ratio = ratio, rm_small = False, eps = 0.5))
+        d = Data('hist', 'vp_pcn', y = result, y_label = 'Total')
+        # partial calculations
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-        parts = list(itertools.product(typs, typs))
-        tot_ngbrs = []
-        
-        for g in self.geom:
-            if not hasattr(g, 'vp'):
-                g.voronoi(ratio = ratio)
-            tot_ngbrs.append(g.vp.vp_neighbors())
-        return self.partial_cn(typs, parts, n, tot_ngbrs, evol = True)
+            # atomic numbers by type, atoms do not change their type throughout calculation 
+            n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
+            d.make_partial(dict(zip(typs, n)), pairwise = True)
+        return d
     
     def vp_facearea(self, ratio, part):
         result = []

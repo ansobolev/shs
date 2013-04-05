@@ -35,6 +35,7 @@ class Data():
         self.x_label = x_label
         self.y = y
         self.y_label = y_label
+        self.types = None
         
         self.partial = partial
     
@@ -45,6 +46,7 @@ class Data():
             return
        
         assert type(types) == type({})
+        self.types = types
         self.y_label = []
         y = []
         typeind = {}
@@ -97,14 +99,22 @@ class Data():
     def evolution(self, steps = [], func = 'avg'):
         ''' Calculates evolution of average value of data over the sequence of steps 
         '''
-        assert (self.dtype == 'per_atom')
-        assert func in ['avg', 'cum_sum']
+        assert (self.dtype == 'per_atom' or self.dtype == 'hist')
+        assert func in ['avg', 'cum_sum', 'part_avg']
         if func == 'avg':
-            func = avg
+            func = average
+            # to make it compatible with part_avg
+            types = None            
         elif func == 'cum_sum':
             func = cum_sum
+            # to make it compatible with part_avg
+            types = None
+        elif func == 'part_avg':
+            func = partial_average
+            # a list of numbers of atoms of the 1st types in self.y_label
+            types = [len(self.types[y[0]]) for y in self.y_label]
         # calculate average
-        data = func(self.y)
+        data = func(self.y, types)
         if len(steps) != 0:
             x = steps
         elif len(self.x) != 0:
@@ -114,7 +124,7 @@ class Data():
         return (self.y_label, x, data), None        
 
 # Misc functions ---
-def avg(y):
+def average(y, types = None):
     'Computes average of a list or Numpy array l'
     l = y[0][0]
     if type(l) == np.ndarray:
@@ -123,7 +133,13 @@ def avg(y):
         avg = lambda x: sum(x) / float(len(x))
     return [[avg(step_y) for step_y in yi] for yi in y]
 
-def cum_sum(y):
+def partial_average(y, types):
+    'Computes partial averages'
+    assert types is not None
+    assert len(y) == len(types)
+    return [[sum(step_y) / float(nat) for step_y in yi] for (nat, yi) in zip(types, y)]
+
+def cum_sum(y, types = None):
     'Computes cumulative sum of a list or Numpy array l'
     y_summed = [[sum(step_y) for step_y in yi] for yi in y]
     return [np.cumsum(yi) for yi in y_summed]
