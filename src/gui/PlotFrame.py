@@ -46,11 +46,11 @@ class MyCustomToolbar(NavigationToolbar):
         for axis in self.canvas.figure.get_axes():
 # axis title - the name of the file
             title = axis.get_title()
-            l = [t.get_text().split(os.sep) for t in self.canvas.figure.legends[0].get_texts()]
-            try:
+            l = [t.get_text() for t in self.canvas.figure.legends[0].get_texts()]
+            if os.sep in l[0]:
+                l = [t.split(os.sep) for t in l]
                 l = ['.'.join(t[1:3]) for t in l]
-            except:
-                pass
+            
 # getting data            
             x_max = 0
             y = []
@@ -61,7 +61,8 @@ class MyCustomToolbar(NavigationToolbar):
                     x = line.get_xdata()
                 y.append(line.get_ydata())
 # printing data to file
-            f = open(os.path.join(self.dirname, title + '.dat'), 'w')
+            f = open(os.path.join(self.dirname, title.replace('/','_') + '.dat'), 'w')
+            
             head = ['   X   '] + l
             hl = [len(t) for t in l]
             hf = '{0[0]:7} ' 

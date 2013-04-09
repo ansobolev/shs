@@ -21,7 +21,7 @@ ECHO_USAGE()
 }
 
 DIR=
-NODES=3
+NODES=2
 TIME=3-0:0:0
 MPI_LIST="i o"
 MPI=i
@@ -51,7 +51,7 @@ done
 # get all mpi-related stuff
 case $MPI in
   i)
-    MPI_MODULE=parallel/mpi.intel/4.0.3.008
+    MPI_MODULE=parallel/mpi.intel/4.1.0.024
     EXE_POSTFIX=impi
     ;;
   o) 

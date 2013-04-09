@@ -69,6 +69,19 @@ class model_voronoi():
         self.vp_area = np.array([vi['surface'] for vi in self.v])
         return self.vp_volume, self.vp_area
     
+    def vp_distance(self, f):
+        ''' Returns a dictionary of distances 
+        '''
+        if not hasattr(self, 'v'):
+            self.voronoi()
+        dists = [{} for _ in self.v]
+        for iat, vi in enumerate(self.v):
+            for fi in vi['faces']:
+                jat = fi['adjacent_cell']
+                dists[iat][jat] = fi['distance']
+                dists[jat][iat] = fi['distance']
+        return dists
+   
     def vp_face_area(self, f):
         ''' Returns a dictionary of face areas 
         '''
