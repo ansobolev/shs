@@ -77,21 +77,36 @@ class Data():
                 y.append(yi)
         self.y = y
     
-    def histogram(self, dy):
+    def histogram(self, dy, xmin = None, xmax = None, norm = 1.):
         ''' Makes histogram out of data
         '''
         assert (self.dtype == 'per_atom' or self.dtype == 'hist')
         # flattening type lists
         y = [[i for step_y in yi for i in step_y] for yi in self.y]
         # global max and min
-        y_max = np.ceil(max([i for typ_y in y for i in typ_y])/dy) * dy
-        y_min = np.ceil(min([i for typ_y in y for i in typ_y])/dy) * dy
+        if xmin is not None:
+            y_min = xmin
+        else:
+            y_min = np.ceil(min([i for typ_y in y for i in typ_y])/dy) * dy
+
+        if xmax is not None:
+            y_max = xmax
+        else:
+            y_max = np.ceil(max([i for typ_y in y for i in typ_y])/dy) * dy
+
         nbins = (y_max - y_min) / dy
         # make recarray out of data
         data = []
-        for typ_y in y:
-            hist, bin_edges = np.histogram(np.array(typ_y), bins = nbins, range = (y_min, y_max))
-            data.append(hist[1:]/float(len(typ_y)))
+        for iy, (y_label, y) in enumerate(zip(self.y_label, y)):
+            # norming (ugly hack)
+            if type(norm) == type([]): 
+                coeff = 1. / norm[iy]
+            elif norm == 1.:
+                coeff = 1. / float(len(typ_y))
+            else:
+                coeff = 1. / (norm * len(self.types[y_label[0]]))
+            hist, bin_edges = np.histogram(np.array(y), bins = nbins, range = (y_min, y_max))
+            data.append(hist[1:] * coeff)
         
         x = (bin_edges[:-1]+dy/2.)[1:]
         return (self.y_label, x, data), None

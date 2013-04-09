@@ -252,8 +252,28 @@ class Geom():
         'Finds neighbors of VP'
         # WARNING: makes a lot of unnecessary work (ok if we work with up to several thousands of atoms)    
         fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
+        # If there is a face (with non-zero area) between atoms, then they are neighbors
         fa_np[fa_np > 0] = 1.
         return fa_np
+    
+    def vp_distance(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
+        'Finds distances between VP neighbors'
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
+        f = self.vp.vp_faces()        
+        if rm_small:
+            fa = self.vp.vp_face_area(f)
+            f = self.vp.remove_small_faces(f, fa, eps)
+        dist = self.vp.vp_distance(f)
+        # here fa is the list of dictionaries, we make it a 2d numpy array
+        # with masked values 
+        # WARNING: O(nat^2 * nsteps) memory consumption!
+        nat = len(dist)
+        dist_np = np.zeros((nat, nat), dtype = np.float)
+        for iat, ngbr in enumerate(dist):
+            for jat, distance in ngbr.iteritems():
+                dist_np[iat, jat] = distance
+        dist_np = ma.masked_values(dist_np, 0.)
+        return dist_np
     
     def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
         ''' Finds face areas of Voronoi tesselation

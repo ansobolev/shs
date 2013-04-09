@@ -157,83 +157,19 @@ class Evolution():
         return t, vaf
                 
 # Evolution VP methods --- 
-    
-    def rdfvp(self, part = True, dr = 0.2, ratio = 0.5):
-        ''' Calc RDF for VP tesselation of the geometries, using geom's voronoi_np() method
-        '''        
 
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
-# partial calculations
+    def rdfvp(self, ratio, part):
+        result = []
+        for g in self.geom:
+            result.append(g.vp_distance(ratio = ratio, rm_small = False, eps = 0.5))
+        d = Data('hist', 'rdfvp', y = result, y_label = 'Total')
+        # partial calculations
         if part:
             typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-        parts = list(itertools.product(typs, typs))
-        
-        typrdf = [[] for _ in typs]
-        partrdf = [[] for _ in parts]
-# accumulate ngbrs for further use (in partial_cn)
-        tot_ngbrs = []
-        
-        for g in self.geom:
-            if not hasattr(g, 'vp'):
-                g.voronoi(ratio = ratio)
-            ngbrs = g.vp.vp_neighbors(rm_small = True, eps = 0.2)
-# all-to-all distance
-            r = G.r(g.atoms['crd'], g.vc)
-            r2 = ((r*r).sum(axis=1)**0.5).reshape(nat,nat)
-# full calculations
-            for it, typ in enumerate(typs): 
-                for iat in n[it]:
-                    r = r2[iat,ngbrs[iat]]
-                    typrdf[it] += r.flatten().tolist()
-        
-# partial calculations
-            for ip, part in enumerate(parts):
-                n1 = typs.index(part[0])
-                n2 = typs.index(part[1])
-                for iat in n[n1]:
-                    r = r2[iat, ngbrs[iat][N.in1d(ngbrs[iat],n[n2])]]
-                    partrdf[ip] += r.flatten().tolist()
-            tot_ngbrs.append(ngbrs)
-        info = self.partial_cn(typs, parts, n, tot_ngbrs)
-        return n, typs, parts, typrdf, partrdf, info
-    
-    def partial_cn(self, typs, parts, n, ngbrs, evol = False):
-        ''' Returns partial coordination numbers based on Voronoi tesselation
-        '''
-# partial neighbors init
-        png = [[] for _ in parts]
-# full neighbors init
-        fng = [[] for _ in typs]
-# just in case we need time evolution: 
-        if evol:
-            png_evol = [[] for _ in parts]
-            fng_evol = [[] for _ in typs]
-        for ngbr in ngbrs:
-# partial neighbors
-            for ip, part in enumerate(parts):
-                for iat in n[typs.index(part[0])]:
-                    png[ip].append(len(N.nonzero(N.in1d(ngbr[iat], n[typs.index(part[1])]))[0]) - (part[0] == part[1]))
-# full neighbors
-            for it, _ in enumerate(typs):
-                for iat in n[it]:
-                    fng[it].append(len(ngbr[iat]) - 1)      
-# time evolution
-            if evol:
-                for ip, pn in enumerate(png):
-                    png_evol[ip].append(float(sum(pn))/len(pn))
-                    png[ip] = []
-                for it,fn in enumerate(fng):
-                    fng_evol[it].append(float(sum(fn))/len(fn))
-                    fng[it] = []
-# returning two dicts - one with partial cns and one with full cns
-        if evol:
-            return dict(zip(parts, png_evol)), dict(zip(typs, fng_evol))
-        return dict(zip(parts, [float(sum(pn))/len(pn) for pn in png]) + zip(typs, [float(sum(fn))/len(fn) for fn in fng]))
+            # atomic numbers by type, atoms do not change their type throughout calculation 
+            n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
+            d.make_partial(dict(zip(typs, n)), pairwise = True)
+        return d
 
     def pcn_evolution(self, ratio, part):
         'Returns time evolution of partial coordination numbers'

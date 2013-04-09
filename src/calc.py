@@ -130,7 +130,7 @@ class SiestaCalc(Calc):
         total_rdf = []
 # get r_max
         vc = N.diag(self.evol[0].vc)
-        rmax = N.min(vc/1.6)
+        rmax = N.max(vc / 2.)
         if partial:
             if n is None:
 # get the list of atom types (from the first geometry in evolution)
@@ -211,36 +211,18 @@ class SiestaCalc(Calc):
             data += raw_data
         return (names, ev, data), {'nspin': nspin}
 
-    def cn(self, dr = 0.2, atype = None, ratio = 0.7):
+    def cn(self, dr = 0.2, ratio = 0.7, part = True):
         ''' Get full and partial atomic coordination numbers (type-wise);
         also return nearest neighbors RDF (found using VP analysis)
         In:
          -> dr (float) - bin width, with which RDFVP is built
          -> atype (int?) - atomic type we need to calculate CNs for
         '''
-        steps = len(self.evol.geom)
-        n, typs, parts, typrdf, partrdf, pcn = self.evol.rdfvp(part = True, dr = dr, ratio = ratio)
-
-        r_max = N.ceil(max([i for s in typrdf+partrdf for i in s])/dr) * dr
-        nbins = r_max / dr
-# make recarray out of data
-        data = []
-        names = []
-        for it in range(len(typs)):           
-            tr = typrdf[it]
-            hist, bin_edges = N.histogram(N.array(tr), bins = nbins, range = (0., r_max))
-            data.append((hist/(steps * len(n[it]) * dr))[1:])
-            names.append(typs[it])
-
-        for ip, pr in zip(parts,partrdf):
-            n1 = len(n[typs.index(ip[0])])           
-            hist, bin_edges = N.histogram(N.array(pr), bins = nbins, range = (0., r_max))
-            data.append((hist/(steps * n1 * dr))[1:])
-            names.append('-'.join(ip))
-        
-        names = ['R',] + names
-        r = (bin_edges[:-1]+dr/2.)[1:]
-        return (names, r, data), pcn                     
+        nsteps = len(self.evol.steps)
+        d = self.evol.rdfvp(ratio, part)
+        (names, rdf, data), info = d.histogram(dr, xmin = 0., norm = nsteps * dr)
+        names = ['R',] + ['-'.join(n) for n in names]
+        return (names, rdf, data), info
    
     def pcn_evolution(self, ratio = 0.7, part = True):
         'Returns partial coordination numbers evolution'
