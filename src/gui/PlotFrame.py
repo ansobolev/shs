@@ -149,25 +149,9 @@ class PlotFrame(wx.Frame):
     def plot(self, msg):
         self.calcs = msg.data[1]
         self.data = msg.data[2]
-        self.names = self.data[0].dtype.names[1:]  
+        # a number of tuples (x, y1, ... yn)
+        self.names = self.data[0][1].dtype.names
         self.info = msg.data[3]
-        x = {0: 'step',  # MDE
-             1: 'R',     # RDF
-             2: 'T',     # MSD
-             3: 'T',     # VAF
-             4: 'energy',# DOS
-             5: 'R',     # coordination numbers
-             6: 'step',  # coordination numbers time evolution
-             7: 'area',  # VP face areas
-             8: 'area',  # VP face areas
-             9: 'vol',   # VP volumes
-             10: 'ksph',  # VP sphericity coefficients
-             11: 'step', # mean magnetic moments
-             12: 'step', # mean absolute magnetic moments
-             13: 'step',  # number of spin flips over time
-             14: 'TI'     # Topological indices
-             }
-        self.x = x[msg.data[0]]
         self.initplot()
         self.replot()       
 
@@ -211,11 +195,11 @@ class PlotFrame(wx.Frame):
             axes.set_title(title)
             if self.ByCalcsChkBox.IsChecked():
                 for ns in self.names:
-                    axes.plot(self.data[igraph][self.x], self.data[igraph][ns])
+                    axes.plot(self.data[igraph][0], self.data[igraph][1][ns])
             else:
                 for ds in self.data:
-                    axes.plot(ds[self.x], ds[title])
-            if (self.info[i] is not None) and ('x' in self.info[i].keys()):
+                    axes.plot(ds[0], ds[1][title])
+            if (self.info is not None) and ('x' in self.info.keys()):
                 axes.set_xticks(ds[self.x])
                 self.fig.autofmt_xdate(rotation = 90)
                 axes.set_xticklabels(self.info[i]['x'])

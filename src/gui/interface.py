@@ -8,6 +8,21 @@ import numpy as np
 
 from shs.calc import SiestaCalc as Sc
 
+propChoice = {'func': ['mde', 'rdf', 'msd', 'vaf', 'dos'],
+            'per_atom': ['vp_totfacearea', 'vp_totvolume', 'vp_ksph', 'mmagmom',
+                         'mabsmagmom', 'spinflips', 'vp_ti'],
+            'hist_evol' : ['vp_facearea',],
+            'hist' : ['rdfvp',],
+            'evol' : ['vp_pcn',]
+            }
+settings = {'func': [{}, {}, {}, {}, {}],
+            'per_atom': [{'dx' : 0.1}, {'dx' : 0.05}, {'dx' : 0.005}, {},
+                         {}, {}, {}],
+            'hist_evol' : [{'dx' : 0.05, 'xmin' : 0.}], 
+            'hist' : [{'dx' : 0.1, 'xmin' : 0.}],
+            'evol' : [{'func' : 'part_avg'}]
+            }
+
 def getcalc(cdir, ctype, steps):
     copts = {'.FDF':'fdf',
              '.ANI':'ani',
@@ -25,91 +40,72 @@ def setvalue(cdir, label, value):
     c.opts[label].value = value
     return 0
 
-def getcorr(x, y, clist):
-    if clist == []:
-        raise ValueError('interface.getcorr: No calculations selected!')
-    # correlation plot options
-    pdata = {"X": Sc.x,
-             "Y": Sc.y, 
-             "Z": Sc.z, 
-             "Magnetic moment": Sc.mmagmom,
-             "Coordination number": Sc.cn,
-             "VP volume": Sc.vp_totvolume,
-             "VP area": Sc.vp_totfacearea
-             }
-    data = []
-    info = []
-    for c in clist:
-        (title, _, data_x), info_i = pdata[x](c)
-        (title, _, data_y), info_i = pdata[y](c)
-        info.append(info_i)
-        data.append([title, data_x, data_y])
-    return data, info
-
-
-def getdata(ptype, clist):
+def get_data(ptype, clist):
     """Returns data according to plot type from a list of calcs
     Input:
-     -> ptype (int) - plot type 
+     -> ptype (int, int) - plot type 
      -> clist (list) - a list of SiestaCalc instances 
     """
     if clist == []:
-        raise ValueError('interface.getdata: No calculations selected!')
-# plot options
-    iface = {0: simple,   # MDE
-             1: per_calc, # RDF
-             2: per_calc, # MSD
-             3: per_calc, # Velocity autocorrelation
-             4: per_calc, # DOS
-             5: per_calc, # Coordination numbers
-             6: per_calc, # CN time evolution
-             7: per_calc, # VP facearea
-             8: per_calc, # Total VP facearea
-             9: per_calc, # Total VP volume
-             10: per_calc, # VP sphericity coefficient
-             11: per_calc, # Mean magnetic moment
-             12: per_calc, # Mean absolute magnetic moment
-             13: per_calc, # Number of spin flips
-             14: var_x  # Topological indices
+        raise ValueError('interface.get_data: No calculations selected!')
+# dividing tuple
+    (ptype, pchoice) = ptype
+# plot interfaces
+    pIface = {0: function, 
+              1: histogram, 
+              2: time_evolution
              }
     
-    pdata = {0: Sc.mde,
-             1: Sc.rdf,
-             2: Sc.msd,
-             3: Sc.vaf,
-             4: Sc.dos,
-             5: Sc.cn,
-             6: Sc.pcn_evolution,
-             7: Sc.vp_facearea,
-             8: Sc.vp_totfacearea,
-             9: Sc.vp_totvolume,
-             10: Sc.vp_ksph,
-             11: Sc.mmagmom,
-             12: Sc.mabsmagmom,
-             13: Sc.spinflips,
-             14: Sc.vp_ti
-             }
-    return iface[ptype](pdata[ptype], clist)
-        
+    return pIface[ptype](pchoice, clist)
+
 # interfaces per se
-def simple(fn, clist):
+def function(pchoice, clist):
     data = []
-    info = []
+    # data kinds
+    kinds = ['func']
+    choices = [ci for k in kinds for ci in propChoice[k]]
+    choice = choices[pchoice]
     for c in clist:
-        data_i, info_i = fn(c)
-        data.append(data_i)
-        info.append(info_i)
+        d = c.get_data(choice)
+        (names, x, calc_data), info = d.function()
+        data.append((x, np.rec.fromarrays(calc_data, names = names)))
+        print x, calc_data
     return data, info
- 
-def per_calc(fn, clist):
+
+def histogram(pchoice, clist):
     data = []
-    info = []
+    # data kinds
+    kinds = ['hist', 'hist_evol', 'per_atom']
+    choices = [ci for k in kinds for ci in propChoice[k]]
+    # data settings
+    dsettings = [si for k in kinds for si in settings[k]]
+    choice = choices[pchoice]
+    setting = dsettings[pchoice]
+    # get histogram
+    dx = setting.pop('dx', 0.05)
     for c in clist:
-        (title, x, data_i), info_i = fn(c)
-        info.append(info_i)
-        formats = ['f8' for _ in title]
-        data.append(np.rec.fromarrays([x] + data_i, names = title, formats = formats))
+        # get Data instance 
+        d = c.get_data(choice)
+        (names, x, calc_data), info = d.histogram(dx, **setting) 
+        data.append((x, np.rec.fromarrays(calc_data, names = names)))
     return data, info
+
+
+def time_evolution(pchoice, clist):
+    data = []
+    kinds = ['evol', 'hist_evol', 'per_atom']
+    choices = [ci for k in kinds for ci in propChoice[k]]
+    # data settings
+    dsettings = [si for k in kinds for si in settings[k]]
+    choice = choices[pchoice]
+    setting = dsettings[pchoice]
+    
+    for c in clist:
+        d = c.get_data(choice)
+        (names, x, calc_data), info = d.evolution(**setting)
+        data.append((x, np.rec.fromarrays(calc_data, names = names)))
+    return data, info
+
 
 def var_x(fn, clist, threshold = 0.5):
     from collections import defaultdict
