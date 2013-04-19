@@ -93,7 +93,7 @@ class Data():
         assert (self.dtype == 'per_atom' or self.dtype == 'hist')
         xmin = kwds.pop('xmin', None)
         xmax = kwds.pop('xmax', None)
-        norm = kwds.pop('norm', 1.)
+        norm = kwds.pop('norm', 'nat')
         
         # flattening type lists
         y = [[i for step_y in yi for i in step_y] for yi in self.y]
@@ -111,8 +111,13 @@ class Data():
             # FIXME: norming (ugly hack)
             if type(norm) == type([]): 
                 coeff = 1. / norm[iy]
-            elif norm == 1.:
-                coeff = 1. / float(len(typ_y))
+            elif norm == 'unity':
+                # norm by unity
+                coeff = 1. / (dx * len(y))
+            elif norm == 'nat':
+                # norm by the number of atoms (for per-atom quantities)
+                nat = len(self.types[y_label])
+                coeff = nat / (dx * len(y))
             else:
                 coeff = 1. / (norm * len(self.types[y_label[0]]))
             hist, bin_edges = np.histogram(np.array(y), bins = nbins, range = (xmin, xmax))
@@ -148,8 +153,6 @@ class Data():
         data = func(self.y, types)
         if len(steps) != 0:
             x = steps
-#        elif len(self.x) != 0:
-#            x = self.x
         else:
             x = range(len(data[0]))
         if type(self.y_label[0]) == type(()):

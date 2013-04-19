@@ -158,74 +158,74 @@ class Evolution():
                 
 # Evolution VP methods --- 
 
-    def rdfvp(self, ratio, part):
+    def rdfvp(self, ratio, partial, **kwds):
         result = []
         for g in self.geom:
             result.append(g.vp_distance(ratio = ratio, rm_small = False, eps = 0.5))
         d = Data('hist', 'rdfvp', y = result, y_label = 'Total')
         # partial calculations
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             # atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
             d.make_partial(dict(zip(typs, n)), pairwise = True)
         return d
 
-    def pcn_evolution(self, ratio, part):
+    def pcn_evolution(self, ratio, partial, **kwds):
         'Returns time evolution of partial coordination numbers'
         result = []
         for g in self.geom:
             result.append(g.vp_neighbors(ratio = ratio, rm_small = False, eps = 0.5))
         d = Data('hist', 'vp_pcn', y = result, y_label = 'Total')
         # partial calculations
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             # atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
             d.make_partial(dict(zip(typs, n)), pairwise = True)
         return d
     
-    def vp_facearea(self, ratio, part):
+    def vp_facearea(self, ratio, partial, **kwds):
         result = []
         for g in self.geom:
             result.append(g.vp_facearea(ratio = ratio, rm_small = True, eps = 0.5))
         d = Data('hist', 'vp_facearea', y = result, y_label = 'Total')
         # partial calculations
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             # atomic numbers by type, atoms do not change their type throughout calculation 
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
             d.make_partial(dict(zip(typs, n)), pairwise = True)
         return d
        
-    def vp_totfacearea(self, ratio, part):
+    def vp_totfacearea(self, ratio, partial, **kwds):
         result = []
         for g in self.geom:
             result.append(g.vp_totfacearea(ratio = ratio))
         d = Data('per_atom', 'vp_totfacearea', y = result, y_label = 'Total')
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
             d.make_partial(dict(zip(typs, n)))
         return d
     
-    def vp_totvolume(self, ratio, part):
+    def vp_totvolume(self, ratio, partial, **kwds):
         result = []
         for g in self.geom:
             result.append(g.vp_totvolume(ratio = ratio))
         d = Data('per_atom', 'vp_totvolume', y = result, y_label = 'Total')
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
             d.make_partial(dict(zip(typs, n)))
         return d
 
-    def vp_ksph(self, ratio, part):
+    def vp_ksph(self, ratio, partial, **kwds):
         result = []
         for g in self.geom:
             result.append(g.vp_ksph(ratio = ratio))
         d = Data('per_atom', 'vp_ksph', y = result, y_label = 'Total')
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
             d.make_partial(dict(zip(typs, n)))
@@ -249,30 +249,31 @@ class Evolution():
                 typ_ti[it] += [ti[jnt] for jnt in nt]
         return typs, typ_ti
 
-    def mmagmom(self, abs_mm = False, part = True):
+    def mmagmom(self, ratio, partial, **kwds):
+        abs_mm = kwds.pop('abs_mm', False)
         assert self.has_fields('up', 'dn')
         result = []
         for g in self.geom:
             result.append(g.mmagmom(abs_mm))
         d = Data('per_atom', 'mmagmom', y = result, y_label = 'Total')
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
             d.make_partial(dict(zip(typs, n)))
         return d
        
-    def spinflips(self, part = True):
+    def spinflips(self, ratio, partial, **kwds):
         'Get spin flips'
         assert self.has_fields('up', 'dn')
+
         prevmm = self.geom[0].mmagmom(abs_mm = False)
         result = [N.zeros(len(prevmm))]
-        
         for g in self.geom[1:]:
             gmm = g.mmagmom(abs_mm = False)            
             result.append((prevmm * gmm) < 0)
             prevmm = gmm
         d = Data('per_atom', 'spinflips', y = result, y_label = 'Total')
-        if part:
+        if partial:
             typs = self.geom[0].types['label'].tolist()
             n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
             d.make_partial(dict(zip(typs, n)))

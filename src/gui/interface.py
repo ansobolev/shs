@@ -17,7 +17,7 @@ propChoice = {'func': ['mde', 'rdf', 'msd', 'vaf', 'dos'],
             }
 settings = {'func': [{}, {}, {}, {}, {}],
             'per_atom': [{'dx' : 0.1}, {'dx' : 0.05}, {'dx' : 0.005}, {},
-                         {}, {}, {}],
+                         {}, {'func': 'cum_sum'}, {}],
             'hist_evol' : [{'dx' : 0.05, 'xmin' : 0.}], 
             'hist' : [{'dx' : 0.1, 'xmin' : 0.}],
             'evol' : [{'func' : 'part_avg'}]
@@ -69,7 +69,6 @@ def function(pchoice, clist):
         d = c.get_data(choice)
         (names, x, calc_data), info = d.function()
         data.append((x, np.rec.fromarrays(calc_data, names = names)))
-        print x, calc_data
     return data, info
 
 def histogram(pchoice, clist):
@@ -101,6 +100,7 @@ def time_evolution(pchoice, clist):
     setting = dsettings[pchoice]
     
     for c in clist:
+        setting['steps'] = c.steps
         d = c.get_data(choice)
         (names, x, calc_data), info = d.evolution(**setting)
         data.append((x, np.rec.fromarrays(calc_data, names = names)))

@@ -55,7 +55,6 @@ class SiestaCalc(Calc):
           -> dtype  - data type (can be 'fdf' or 'out')
           -> steps - number of steps needed 
         '''
-
         act = {'fdf' : self.readfdf,
                'out' : self.readout, 
                'ani' : self.readani
@@ -85,6 +84,7 @@ class SiestaCalc(Calc):
         'Reading calculation options and geometry from output files'
         outfns = '*.output'
         outf = SIO.OUTFile(outfns, self.dir, steps)
+        self.steps = outf.steps
         self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
 
     def readani(self, steps):
@@ -92,6 +92,7 @@ class SiestaCalc(Calc):
         anifn =  glob.glob(os.path.join(self.dir, '*.ANI'))
         anif = SIO.ANIFile(anifn[0], steps)
         self.sl = anif.sl
+        self.steps = anif.steps
         self.evol = Evol.Evolution(anif.steps, anif.atoms, anif.vc, anif.aunit, anif.vcunit)
 
     def readunsupported(self, steps):
@@ -121,7 +122,7 @@ class SiestaCalc(Calc):
         ''' Returns information of desired type
         '''
         
-    def get_data(self, data_name, partial = True, **kwds):
+    def get_data(self, data_name, **kwds):
         ''' Get data by name
         '''
         # Returns data by dataname 
@@ -141,11 +142,15 @@ class SiestaCalc(Calc):
                   'spinflips' : self.evol.spinflips
                   }
         # ratio (for voronoi.numpy)
-        ratio = kwds.get('ratio', 0.5)
+        ratio = kwds.pop('ratio', 0.5)
+        partial = kwds.pop('partial', True)
+        # one more ugly hack
+        if data_name == 'mabsmagmom':
+            kwds['abs_mm'] = True
         # TODO:  returns data object (not implemented yet for TIs)
-        return choice[data_name](ratio, partial)
+        return choice[data_name](ratio, partial, **kwds)
         
-    def mde(self, *args):
+    def mde(self, *args, **kwds):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
         if len(mdef) != 1:
@@ -158,7 +163,7 @@ class SiestaCalc(Calc):
         return d
 #        return self.mdedata, None
         
-    def rdf(self, ratio = None, partial = True):
+    def rdf(self, ratio, partial, **kwds):
         ''' Get RDF of evolution
         In:
          -> partial (bool) - indicates whether we need partial RDF
@@ -188,7 +193,7 @@ class SiestaCalc(Calc):
         return d
 #        return (title, r, total_rdf), None
              
-    def msd(self, ratio = None, partial = True):
+    def msd(self, ratio, partial, **kwds):
         ''' Get MSD of evolution (type-wise)
         NB: As it uses only one cell vector set, when calculating MSD for NPT ensemble one should expect getting strange results. 
         In:
@@ -208,7 +213,7 @@ class SiestaCalc(Calc):
         return d
 #        return (title, t, total_msd), None
     
-    def vaf(self, ratio = None, partial = True):
+    def vaf(self, ratio, partial, **kwds):
         ''' Get VAF of evolution (type-wise)
         NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results. 
         In:
@@ -228,7 +233,7 @@ class SiestaCalc(Calc):
         return d
 #        return (title, t, total_vaf), None
 
-    def dos(self, *args):
+    def dos(self, *args, **kwds):
         if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
             fname = os.path.join(self.dir, 'pdos.xml')
         elif os.path.isfile(os.path.join(self.dir, self.sl + '.PDOS')):
