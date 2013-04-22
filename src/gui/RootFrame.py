@@ -293,17 +293,32 @@ class RootFrame(wx.Frame):
         pchoice = self.PropChoice.GetSelection()
         leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
         t1 = time.clock()
-        data, info = interface.get_data((ptype, pchoice), [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
+        data, info = interface.get_data(ptype, pchoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
         self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
         msg = [pchoice, leg, data, info]
         try:
             self.pf.Raise()
         except (AttributeError, wx._core.PyDeadObjectError):
-            self.pf = PF.PlotFrame(self)
+            self.pf = PF.PlotFuncFrame(self)
             self.pf.Show()
         Publisher().sendMessage(('data.plot'), msg)
 
     def Correlate(self, event):
+# correlate options - get all the data to plot
+        xchoice = self.CorrXChoice.GetSelection()
+        ychoice = self.CorrYChoice.GetSelection()
+        leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
+        t1 = time.clock()
+        data, info = interface.get_corr(xchoice, ychoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])
+        msg = [leg, data, info]
+        try:
+            self.cf.Raise()
+        except (AttributeError, wx._core.PyDeadObjectError):
+            self.cf = PF.PlotCorrFrame(self)
+            self.cf.Show()
+        Publisher().sendMessage(('corr.plot'), msg)
+        
+
         pass
         
     def Animate(self, event):

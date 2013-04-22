@@ -16,7 +16,7 @@ propChoice = {'func': ['mde', 'rdf', 'msd', 'vaf', 'dos'],
             'evol' : ['vp_pcn',]
             }
 settings = {'func': [{}, {}, {}, {}, {}],
-            'per_atom': [{'dx' : 0.1}, {'dx' : 0.05}, {'dx' : 0.005}, {},
+            'per_atom': [{'dx' : 0.2}, {'dx' : 0.05}, {'dx' : 0.005}, {},
                          {}, {'func': 'cum_sum'}, {}],
             'hist_evol' : [{'dx' : 0.05, 'xmin' : 0.}], 
             'hist' : [{'dx' : 0.1, 'xmin' : 0.}],
@@ -40,7 +40,7 @@ def setvalue(cdir, label, value):
     c.opts[label].value = value
     return 0
 
-def get_data(ptype, clist):
+def get_data(ptype, pchoice, clist):
     """Returns data according to plot type from a list of calcs
     Input:
      -> ptype (int, int) - plot type 
@@ -48,8 +48,6 @@ def get_data(ptype, clist):
     """
     if clist == []:
         raise ValueError('interface.get_data: No calculations selected!')
-# dividing tuple
-    (ptype, pchoice) = ptype
 # plot interfaces
     pIface = {0: function, 
               1: histogram, 
@@ -57,6 +55,31 @@ def get_data(ptype, clist):
              }
     
     return pIface[ptype](pchoice, clist)
+
+def get_corr(xchoice, ychoice, clist):
+    ''' Gets data for correlation plotting
+    Input:
+     -> xchoice (int) - x axis data
+     -> ychoice (int) - y axis data 
+     -> clist (list) - a list of SiestaCalc instances 
+
+    '''
+    if clist == []:
+        raise ValueError('interface.get_data: No calculations selected!')
+
+    data = []
+    xc = propChoice['per_atom'][xchoice]
+    yc = propChoice['per_atom'][ychoice]
+    for c in clist:
+        xd = c.get_data(xc)
+        yd = c.get_data(yc)
+        assert (xd.y_label == yd.y_label)
+        # flattening type lists
+        # TODO: check everything
+        x = [np.hstack([i for step_y in yi for i in step_y]) for yi in xd.y]
+        y = [np.hstack([i for step_y in yi for i in step_y]) for yi in yd.y]
+        data.append([np.array((xi, yi)) for (xi, yi) in zip(x, y)])
+    return data, xd.y_label
 
 # interfaces per se
 def function(pchoice, clist):

@@ -6,8 +6,7 @@ import wx
 from wx.lib.mixins.listctrl import getListCtrlSelection
 from wx.lib.pubsub import Publisher
 
-import matplotlib
-
+import matplotlib.cm as cm
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
@@ -83,10 +82,8 @@ class MyCustomToolbar(NavigationToolbar):
                 f.write(df.format(data) + '\n')
             f.close()
         mbox.DataExported(self.dirname)
-        
 
 class PlotFrame(wx.Frame):
-    title = 'Plot'
     
     def __init__(self, *args, **kwds):
         # begin wxGlade: PlotFrame.__init__
@@ -110,7 +107,6 @@ class PlotFrame(wx.Frame):
         self.Center()
         # end wxGlade
         self.PlotsCtrl.InsertColumn(0,'Data', width = 100)
-        Publisher().subscribe(self.plot,('data.plot'))
 
     def CreateMplFigure(self):
         self.panel = wx.Panel(self)
@@ -121,7 +117,7 @@ class PlotFrame(wx.Frame):
 
         self.axes = self.fig.add_subplot(111)
         self.toolbar = MyCustomToolbar(self.canvas)
-        
+
     def __set_properties(self):
         self.fitting = False
         self.fit_points = []
@@ -146,6 +142,29 @@ class PlotFrame(wx.Frame):
         self.panel.SetSizer(hbox)
         hbox.Fit(self)
 
+# Methods to be implemented in subclasses    
+    def ReplotBtnPress(self, evt):
+        self.replot()
+    
+    def InfoBtnPress(self, event):
+        pass
+    
+    def FitBtnPress(self, event):
+        pass
+    
+    def ByCalcsCheck(self, event):
+        pass
+
+    def OnClose(self, event):
+        pass
+
+class PlotFuncFrame(PlotFrame):
+    title = 'Plot'
+    
+    def __init__(self, *args, **kwds):
+        PlotFrame.__init__(self, *args, **kwds)
+        Publisher().subscribe(self.plot,('data.plot'))
+       
     def plot(self, msg):
         self.calcs = msg.data[1]
         self.data = msg.data[2]
@@ -208,9 +227,6 @@ class PlotFrame(wx.Frame):
         self.fig.legend(lines, self.leg, 1)
         self.canvas.draw()
 
-    def ReplotBtnPress(self, evt):
-        self.replot()
-        
     def InfoBtnPress(self, evt):
         if self.info is None:
             mbox.NoInfo()
@@ -282,15 +298,71 @@ class PlotFrame(wx.Frame):
 
 # end of class PlotFrame
 
-class CorrFrame(PlotFrame):
+class PlotCorrFrame(PlotFrame):
+    title = 'Correlations'
 
     def __init__(self, *args, **kwds):
         PlotFrame.__init__(self, *args, **kwds)
-        Publisher().unsubscribe(self.plot,('data.plot'))
         Publisher().subscribe(self.plot,('corr.plot'))
     
     def plot(self, msg):
-        print 'msg received:', msg
+        self.calcs = msg.data[0]
+        self.data = msg.data[1]
+        # a number of tuples (x, y1, ... yn)
+        # self.names = self.data[0][1].dtype.names
+        self.names = msg.data[2]
+        self.initplot()
+        self.replot()       
+
+    def initplot(self):
+        self.PlotsCtrl.DeleteAllItems()
+        if self.ByCalcsChkBox.IsChecked():
+            data = self.calcs
+            self.leg = self.names
+        else:
+            data = self.names
+            self.leg = self.calcs
+        for i, s in enumerate(data):
+            self.PlotsCtrl.InsertStringItem(i, s)
+        # adjusting column width
+        self.PlotsCtrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER) 
+        wh = self.PlotsCtrl.GetColumnWidth(0); 
+        self.PlotsCtrl.SetColumnWidth(0, wx.LIST_AUTOSIZE) 
+        wc = self.PlotsCtrl.GetColumnWidth(0); 
+        if wh > wc: 
+            self.PlotsCtrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER) 
+        
+        self.PlotsCtrl.Select(0, 1)
+
+    def replot(self):
+        sind = getListCtrlSelection(self.PlotsCtrl)
+        ng = len(sind)
+        ncols = round(ng**0.5)
+        if ncols == 0.:
+            ncols = 1.
+        nrows = math.ceil(ng / ncols)
+        self.fig.clear()
+        
+        for i, igraph in enumerate(sind):
+            color = iter(cm.get_cmap('prism')([x/24. for x in range(24)]))
+            title = self.PlotsCtrl.GetItemText(igraph)
+            axes = self.fig.add_subplot(nrows,ncols,i+1)
+            axes.set_title(title)
+            sdata = []
+            if self.ByCalcsChkBox.IsChecked():
+                for ins in range(len(self.names)):
+                    sdata.append(axes.scatter(self.data[igraph][ins][0], self.data[igraph][ins][1], c = next(color)))
+            else:
+                for ds in self.data:
+                    sdata.append(axes.scatter(ds[igraph][0], ds[igraph][1], c = next(color)))
+                    
+        # get legend
+        self.fig.legend(sdata, self.leg, scatterpoints = 1)
+        self.canvas.draw()
+
+    def ByCalcsCheck(self, evt):
+        self.initplot()
+        self.replot()
         
     def OnClose(self, evt):
         Publisher().unsubscribe(self.plot,('corr.plot'))
