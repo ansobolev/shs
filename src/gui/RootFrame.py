@@ -89,20 +89,19 @@ class RootFrame(wx.Frame):
 
     def __do_layout(self):
         # begin wxGlade: RootFrame.__do_layout
-        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         LeftSizer = wx.BoxSizer(wx.VERTICAL)
-        
-        PropSizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_2 = wx.BoxSizer(wx.VERTICAL)
-        CorrSizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
+        plotSizer = wx.FlexGridSizer(rows=2, cols=2, hgap=5, vgap=2)        
+        plotSizer.SetFlexibleDirection(wx.HORIZONTAL)
+        PropSizer = wx.BoxSizer(wx.VERTICAL)
+        CorrSizer = wx.BoxSizer(wx.VERTICAL)
         
         BtnSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer.Add(self.CalcTree, 1, wx.EXPAND, 0)
         RightSizer.Add(self.TypeRBox, 0, wx.EXPAND, 0)
-        sizer_1.Add(RightSizer, 1, wx.ALL|wx.EXPAND, 5)
+        mainSizer.Add(RightSizer, 1, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.DownBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.UpBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
@@ -111,23 +110,22 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.AnimateBtn, 0, wx.ALL|wx.EXPAND, 5)
 
-        sizer_1.Add(BtnSizer, 0, wx.EXPAND, 0)
+        mainSizer.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
         
-        sizer_2.Add(self.PropType, 0, wx.ALL|wx.EXPAND, 0)
-        sizer_2.Add(self.PropChoice, 0, wx.ALL|wx.EXPAND, 0)
-        PropSizer.Add(sizer_2, 0, wx.ALL|wx.EXPAND, 2)
-        PropSizer.Add(self.PropChoiceBtn, 1, wx.ALL|wx.EXPAND, 2)
-        sizer_3.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
-        sizer_3.Add(self.CorrYChoice, 1, wx.ALL|wx.EXPAND, 0)
-        CorrSizer.Add(sizer_3, 1, wx.ALL|wx.EXPAND, 2)
-        CorrSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 2)
+        PropSizer.Add(self.PropType, 1, wx.ALL|wx.EXPAND, 0)
+        PropSizer.Add(self.PropChoice, 1, wx.ALL|wx.EXPAND, 0)
+        plotSizer.Add(PropSizer, 1, wx.ALL|wx.EXPAND, 2)
+        plotSizer.Add(self.PropChoiceBtn, 0, wx.ALL|wx.EXPAND, 2)
+        CorrSizer.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
+        CorrSizer.Add(self.CorrYChoice, 1, wx.ALL|wx.EXPAND, 0)
+        plotSizer.Add(CorrSizer, 1, wx.ALL|wx.EXPAND, 2)
+        plotSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 2)
 
-        LeftSizer.Add(PropSizer, 0, wx.ALL|wx.EXPAND, 2)
-        LeftSizer.Add(CorrSizer, 0, wx.ALL|wx.EXPAND, 2)
+        LeftSizer.Add(plotSizer, 1, wx.ALL|wx.EXPAND, 2)
 
-        sizer_1.Add(LeftSizer, 1, wx.EXPAND, 5)
-        self.SetSizer(sizer_1)
+        mainSizer.Add(LeftSizer, 1, wx.ALL|wx.EXPAND, 5)
+        self.SetSizer(mainSizer)
         self.Layout()
         self.Centre()
         # end wxGlade
