@@ -39,13 +39,18 @@ class RootFrame(wx.Frame):
         self.btnEnqueue = wx.Button(self, -1, "Enqueue job")
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
         self.PropType = wx.Choice(self, -1, choices=["Function","Histogram","Time evolution"]) 
-
-        self.PropChoice = wx.Choice(self, -1, choices=["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)", 
-                                                       "Coordination numbers", "CNs time evolution", "Voronoi face area", "VP total face area", 
-                                                       "VP total volume", "VP sphericity coefficient", "Mean magn moment", "Mean abs magn moment",
-                                                       "Number of spin flips","Topological indices"])
-        self.CorrXChoice = wx.Choice(self, -1, choices=["1","2","3"])
-        self.CorrYChoice = wx.Choice(self, -1, choices=["1y","2y","3y"])
+        self.propChoices = {"function": ["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)"],
+                            "per_atom": ["VP total face area", "VP total volume", "VP sphericity coefficient", 
+                                        "Mean magn moment", "Mean abs magn moment", "Number of spin flips",
+                                        "Topological indices"],
+                            "hist_evol" : ["Voronoi face area",],
+                            "hist" : ["Coordination numbers",],
+                            "evol" : [ "CNs time evolution"]}
+        
+        self.PropChoice = wx.Choice(self, -1, choices = self.propChoices["function"])
+        
+        self.CorrXChoice = wx.Choice(self, -1, choices=self.propChoices["per_atom"])
+        self.CorrYChoice = wx.Choice(self, -1, choices=self.propChoices["per_atom"])
         
         self.PropChoiceBtn = wx.Button(self, -1, "Plot property")
         self.CorrelateBtn = wx.Button(self, -1, "Plot correlations")
@@ -55,6 +60,7 @@ class RootFrame(wx.Frame):
         self.__set_properties()
         self.__do_layout()
 
+        self.Bind(wx.EVT_CHOICE, self.propTypeChange, self.PropType)
         self.Bind(wx.EVT_RADIOBOX, self.TypeChange, self.TypeRBox)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChange, self.CalcTree)
         self.Bind(wx.EVT_BUTTON, self.DownBtnPress, self.DownBtn)
@@ -83,20 +89,19 @@ class RootFrame(wx.Frame):
 
     def __do_layout(self):
         # begin wxGlade: RootFrame.__do_layout
-        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         LeftSizer = wx.BoxSizer(wx.VERTICAL)
-        
-        PropSizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_2 = wx.BoxSizer(wx.VERTICAL)
-        CorrSizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
+        plotSizer = wx.FlexGridSizer(rows=2, cols=2, hgap=5, vgap=2)        
+        plotSizer.SetFlexibleDirection(wx.HORIZONTAL)
+        PropSizer = wx.BoxSizer(wx.VERTICAL)
+        CorrSizer = wx.BoxSizer(wx.VERTICAL)
         
         BtnSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer.Add(self.CalcTree, 1, wx.EXPAND, 0)
         RightSizer.Add(self.TypeRBox, 0, wx.EXPAND, 0)
-        sizer_1.Add(RightSizer, 1, wx.ALL|wx.EXPAND, 5)
+        mainSizer.Add(RightSizer, 1, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.DownBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.UpBtn, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
@@ -105,23 +110,22 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.AnimateBtn, 0, wx.ALL|wx.EXPAND, 5)
 
-        sizer_1.Add(BtnSizer, 0, wx.EXPAND, 0)
+        mainSizer.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
         
-        sizer_2.Add(self.PropType, 0, wx.ALL|wx.EXPAND, 0)
-        sizer_2.Add(self.PropChoice, 0, wx.ALL|wx.EXPAND, 0)
-        PropSizer.Add(sizer_2, 0, wx.ALL|wx.EXPAND, 2)
-        PropSizer.Add(self.PropChoiceBtn, 1, wx.ALL|wx.EXPAND, 2)
-        sizer_3.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
-        sizer_3.Add(self.CorrYChoice, 1, wx.ALL|wx.EXPAND, 0)
-        CorrSizer.Add(sizer_3, 1, wx.ALL|wx.EXPAND, 2)
-        CorrSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 2)
+        PropSizer.Add(self.PropType, 1, wx.ALL|wx.EXPAND, 0)
+        PropSizer.Add(self.PropChoice, 1, wx.ALL|wx.EXPAND, 0)
+        plotSizer.Add(PropSizer, 1, wx.ALL|wx.EXPAND, 2)
+        plotSizer.Add(self.PropChoiceBtn, 0, wx.ALL|wx.EXPAND, 2)
+        CorrSizer.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
+        CorrSizer.Add(self.CorrYChoice, 1, wx.ALL|wx.EXPAND, 0)
+        plotSizer.Add(CorrSizer, 1, wx.ALL|wx.EXPAND, 2)
+        plotSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 2)
 
-        LeftSizer.Add(PropSizer, 0, wx.ALL|wx.EXPAND, 2)
-        LeftSizer.Add(CorrSizer, 0, wx.ALL|wx.EXPAND, 2)
+        LeftSizer.Add(plotSizer, 1, wx.ALL|wx.EXPAND, 2)
 
-        sizer_1.Add(LeftSizer, 1, wx.EXPAND, 5)
-        self.SetSizer(sizer_1)
+        mainSizer.Add(LeftSizer, 1, wx.ALL|wx.EXPAND, 5)
+        self.SetSizer(mainSizer)
         self.Layout()
         self.Centre()
         # end wxGlade
@@ -166,6 +170,17 @@ class RootFrame(wx.Frame):
             self.btnEnqueue.Enable()
         else:
             self.btnEnqueue.Enable(False)
+
+    def propTypeChange(self, event):
+        # property type
+        ptype = self.PropType.GetSelection()
+        choice = {0: ["function",],
+                  1: ["hist", "hist_evol", "per_atom"],
+                  2: ["evol", "hist_evol", "per_atom"]}
+        props = [p for pc in choice[ptype] for p in self.propChoices[pc]]
+        self.PropChoice.SetItems(props)
+        self.PropChoice.SetSelection(0)
+         
 
     def TypeChange(self, event): # wxGlade: RootFrame.<event_handler>
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
@@ -272,39 +287,38 @@ class RootFrame(wx.Frame):
     
     def PlotProperty(self, event): # wxGlade: RootFrame.<event_handler>
 # plot options - get all the data to plot
-        ptype = self.PropChoice.GetSelection()
+        ptype = self.PropType.GetSelection()
+        pchoice = self.PropChoice.GetSelection()
         leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
         t1 = time.clock()
-        data, info = interface.getdata(ptype, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
+        data, info = interface.get_data(ptype, pchoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
         self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
-        msg = [ptype, leg, data, info]
+        msg = [pchoice, leg, data, info]
         try:
             self.pf.Raise()
         except (AttributeError, wx._core.PyDeadObjectError):
-            self.pf = PF.PlotFrame(self)
+            self.pf = PF.PlotFuncFrame(self)
             self.pf.Show()
         Publisher().sendMessage(('data.plot'), msg)
 
     def Correlate(self, event):
-        sets = ["X", "Y", "Z", "Magnetic moment", 
-                "Coordination number", "VP volume", "VP area"]
-        # enter dialog
-        dlg = CD.CorrDialog(None, sets = sets)
-        if dlg.ShowModal() == wx.ID_OK:
-            x, y = dlg.GetSets()
-# plot options - get all the data to plot
+# correlate options - get all the data to plot
+        xchoice = self.CorrXChoice.GetSelection()
+        ychoice = self.CorrYChoice.GetSelection()
         leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
         t1 = time.clock()
-        data = interface.getcorr(x, y, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
-        self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
-        msg = [x, y, leg, data]
+        data, info = interface.get_corr(xchoice, ychoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])
+        msg = [leg, data, info]
         try:
             self.cf.Raise()
         except (AttributeError, wx._core.PyDeadObjectError):
-            self.cf = PF.CorrFrame(self)
+            self.cf = PF.PlotCorrFrame(self)
             self.cf.Show()
         Publisher().sendMessage(('corr.plot'), msg)
+        
 
+        pass
+        
     def Animate(self, event):
         pass
 

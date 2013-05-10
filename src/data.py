@@ -17,19 +17,23 @@ class Data():
     '''    
     
     def __init__(self, dtype, name, partial = False, 
-                 x = None, x_label = None, y = None, y_label = None):
+                 x = None, x_label = None, y = None, y_label = None, data = None):
         
         dtypes = ['func', 'per_atom', 'hist'] 
         assert dtype in dtypes
-        assert y is not None
-        assert y_label is not None
+        # data is a numpy record array (if not None)
+        assert (y is not None and y_label is not None) or data is not None
         
         self.dtype = dtype 
         
         if dtype == 'func':
-            assert x is not None
             assert x_label is not None
-
+            if data is not None:
+                y_label = data.dtype.names[1:]
+                # TODO: check if x_label always is the 1st in dtype.names 
+                x = data[x_label]
+                y = [data[iy] for iy in y_label]
+                
         self.name = name
         self.x = x
         self.x_label = x_label
@@ -77,45 +81,62 @@ class Data():
                 y.append(yi)
         self.y = y
     
-    def histogram(self, dy, xmin = None, xmax = None, norm = 1.):
+    def function(self):
+        ''' Returns function data
+        '''
+        assert self.dtype == 'func'
+        return (self.y_label, self.x, self.y), None
+    
+    def histogram(self, dx, **kwds):
         ''' Makes histogram out of data
         '''
         assert (self.dtype == 'per_atom' or self.dtype == 'hist')
+        xmin = kwds.pop('xmin', None)
+        xmax = kwds.pop('xmax', None)
+        norm = kwds.pop('norm', 'nat')
+        
         # flattening type lists
         y = [[i for step_y in yi for i in step_y] for yi in self.y]
         # global max and min
-        if xmin is not None:
-            y_min = xmin
-        else:
-            y_min = np.ceil(min([i for typ_y in y for i in typ_y])/dy) * dy
+        if xmin is None:
+            xmin = np.ceil(min([i for typ_y in y for i in typ_y])/dx) * dx
 
-        if xmax is not None:
-            y_max = xmax
-        else:
-            y_max = np.ceil(max([i for typ_y in y for i in typ_y])/dy) * dy
+        if xmax is None:
+            xmax = np.ceil(max([i for typ_y in y for i in typ_y])/dx) * dx
 
-        nbins = (y_max - y_min) / dy
+        nbins = (xmax - xmin) / dx
         # make recarray out of data
         data = []
         for iy, (y_label, y) in enumerate(zip(self.y_label, y)):
-            # norming (ugly hack)
+            # FIXME: norming (ugly hack)
             if type(norm) == type([]): 
                 coeff = 1. / norm[iy]
-            elif norm == 1.:
-                coeff = 1. / float(len(typ_y))
+            elif norm == 'unity':
+                # norm by unity
+                coeff = 1. / (dx * len(y))
+            elif norm == 'nat':
+                # norm by the number of atoms (for per-atom quantities)
+                nat = len(self.types[y_label])
+                coeff = nat / (dx * len(y))
             else:
                 coeff = 1. / (norm * len(self.types[y_label[0]]))
-            hist, bin_edges = np.histogram(np.array(y), bins = nbins, range = (y_min, y_max))
+            hist, bin_edges = np.histogram(np.array(y), bins = nbins, range = (xmin, xmax))
             data.append(hist[1:] * coeff)
         
-        x = (bin_edges[:-1]+dy/2.)[1:]
+        x = (bin_edges[:-1]+dx/2.)[1:]
+        if type(self.y_label[0]) == type(()):
+            self.y_label = ['-'.join(n) for n in self.y_label]
         return (self.y_label, x, data), None
     
-    def evolution(self, steps = [], func = 'avg'):
+    def evolution(self, **kwds):
         ''' Calculates evolution of average value of data over the sequence of steps 
         '''
+        steps = kwds.pop('steps', [])
+        func = kwds.pop('func', 'avg')
+       
         assert (self.dtype == 'per_atom' or self.dtype == 'hist')
         assert func in ['avg', 'cum_sum', 'part_avg']
+        
         if func == 'avg':
             func = average
             # to make it compatible with part_avg
@@ -132,10 +153,10 @@ class Data():
         data = func(self.y, types)
         if len(steps) != 0:
             x = steps
-        elif len(self.x) != 0:
-            x = self.x
         else:
             x = range(len(data[0]))
+        if type(self.y_label[0]) == type(()):
+            self.y_label = ['-'.join(n) for n in self.y_label]
         return (self.y_label, x, data), None        
 
 # Misc functions ---

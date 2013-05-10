@@ -18,6 +18,7 @@ import geom as G
 import options as Opts
 import plot as Plot
 import sio as SIO
+from data import Data
 import vtkxml.xml_write as VTKxml
 
 class Calc():
@@ -54,7 +55,6 @@ class SiestaCalc(Calc):
           -> dtype  - data type (can be 'fdf' or 'out')
           -> steps - number of steps needed 
         '''
-
         act = {'fdf' : self.readfdf,
                'out' : self.readout, 
                'ani' : self.readani
@@ -84,12 +84,15 @@ class SiestaCalc(Calc):
         'Reading calculation options and geometry from output files'
         outfns = '*.output'
         outf = SIO.OUTFile(outfns, self.dir, steps)
+        self.steps = outf.steps
         self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
 
     def readani(self, steps):
         'Reading calculation options and geometry from output files'
         anifn =  glob.glob(os.path.join(self.dir, '*.ANI'))
         anif = SIO.ANIFile(anifn[0], steps)
+        self.sl = anif.sl
+        self.steps = anif.steps
         self.evol = Evol.Evolution(anif.steps, anif.atoms, anif.vc, anif.aunit, anif.vcunit)
 
     def readunsupported(self, steps):
@@ -118,9 +121,49 @@ class SiestaCalc(Calc):
     def get_info(self, itype):
         ''' Returns information of desired type
         '''
-       
         
-    def rdf(self, partial = True, n = None):
+    def get_data(self, data_name, **kwds):
+        ''' Get data by name
+        '''
+        # Returns data by dataname 
+        choice = {'mde' : self.mde,
+                  'rdf' : self.rdf,                    
+                  'msd' : self.msd,
+                  'vaf' : self.vaf,
+                  'dos' : self.dos,
+                  'rdfvp' : self.evol.rdfvp,
+                  'vp_pcn' : self.evol.pcn_evolution,
+                  'vp_facearea' : self.evol.vp_facearea,
+                  'vp_totfacearea' : self.evol.vp_totfacearea,
+                  'vp_totvolume' : self.evol.vp_totvolume,
+                  'vp_ksph' : self.evol.vp_ksph,
+                  'mmagmom' : self.evol.mmagmom,
+                  'mabsmagmom' : self.evol.mmagmom,
+                  'spinflips' : self.evol.spinflips
+                  }
+        # ratio (for voronoi.numpy)
+        ratio = kwds.pop('ratio', 0.5)
+        partial = kwds.pop('partial', True)
+        # one more ugly hack
+        if data_name == 'mabsmagmom':
+            kwds['abs_mm'] = True
+        # TODO:  returns data object (not implemented yet for TIs)
+        return choice[data_name](ratio, partial, **kwds)
+        
+    def mde(self, *args, **kwds):
+        ' Reads information from MDE file'
+        mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
+        if len(mdef) != 1:
+            print 'Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, )
+            return -1
+        mde = SIO.MDEFile(mdef[0])
+        self.nsteps = mde.nsteps
+        self.mdedata = mde.data
+        d = Data('func', 'mde', x_label = 'step', data = mde.data)
+        return d
+#        return self.mdedata, None
+        
+    def rdf(self, ratio, partial, **kwds):
         ''' Get RDF of evolution
         In:
          -> partial (bool) - indicates whether we need partial RDF
@@ -132,24 +175,25 @@ class SiestaCalc(Calc):
         vc = N.diag(self.evol[0].vc)
         rmax = N.max(vc / 2.)
         if partial:
-            if n is None:
 # get the list of atom types (from the first geometry in evolution)
-                types = self.evol[0].types['label']
-                for i, ityp in enumerate(types):
-                    for jtyp in types[i:]:
-                        n1 = self.evol[0].filter('label', ityp)
-                        n2 = self.evol[0].filter('label', jtyp)
-                        title.append(ityp+'-'+jtyp)
-                        r, rdf = self.evol.rdf(rmax = rmax, n = (n1,n2))
-                        total_rdf.append(rdf)
+            types = self.evol[0].types['label']
+            for i, ityp in enumerate(types):
+                for jtyp in types[i:]:
+                    n1 = self.evol[0].filter('label', ityp)
+                    n2 = self.evol[0].filter('label', jtyp)
+                    title.append(ityp+'-'+jtyp)
+                    r, rdf = self.evol.rdf(rmax = rmax, n = (n1,n2))
+                    total_rdf.append(rdf)
         else:
             n = None
             title.append('Total RDF')
             r, rdf = self.evol.rdf(n)
             total_rdf.append(rdf)
-        return (title, r, total_rdf), None
+        d = Data('func', 'rdf', x_label = 'R', x = r, y_label = title[1:], y = total_rdf)
+        return d
+#        return (title, r, total_rdf), None
              
-    def msd(self, atype = None):
+    def msd(self, ratio, partial, **kwds):
         ''' Get MSD of evolution (type-wise)
         NB: As it uses only one cell vector set, when calculating MSD for NPT ensemble one should expect getting strange results. 
         In:
@@ -158,16 +202,18 @@ class SiestaCalc(Calc):
         title = ['T',]
         total_msd = []
 #        self.opts[]
-        if atype is None:
+        if partial:
             types = self.evol[0].types['label']
             for ityp in types:
                 n1 = self.evol[0].filter('label', ityp)
                 title.append(ityp)
                 t, msd = self.evol.msd(n = n1)
                 total_msd.append(msd)
-        return (title, t, total_msd), None
+        d = Data('func', 'msd', x_label = 'T', x = t, y_label = title[1:], y = total_msd)
+        return d
+#        return (title, t, total_msd), None
     
-    def vaf(self, atype = None):
+    def vaf(self, ratio, partial, **kwds):
         ''' Get VAF of evolution (type-wise)
         NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results. 
         In:
@@ -176,23 +222,24 @@ class SiestaCalc(Calc):
         title = ['T',]
         total_vaf = []
 #        self.opts[]
-        if atype is None:
+        if partial:
             types = self.evol[0].types['label']
             for ityp in types:
                 n1 = self.evol[0].filter('label', ityp)
                 title.append(ityp)
                 t, vaf = self.evol.vaf(n = n1)
                 total_vaf.append(vaf)
-        return (title, t, total_vaf), None
+        d = Data('func', 'vaf', x_label = 'T', x = t, y_label = title[1:], y = total_vaf)
+        return d
+#        return (title, t, total_vaf), None
 
-    def dos(self, fname = ''):
-        if not fname:
-            if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
-                fname = os.path.join(self.dir, 'pdos.xml')
-            elif os.path.isfile(os.path.join(self.dir, self.sl + '.PDOS')):
-                fname = os.path.join(self.dir, self.sl + '.PDOS')
-            else:
-                raise Exception('No possible DOS files found!')
+    def dos(self, *args, **kwds):
+        if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
+            fname = os.path.join(self.dir, 'pdos.xml')
+        elif os.path.isfile(os.path.join(self.dir, self.sl + '.PDOS')):
+            fname = os.path.join(self.dir, self.sl + '.PDOS')
+        else:
+            raise Exception('No possible DOS files found!')
         print 'calc.DOS : Took %s as DOS file' % (fname, )                
         dom = SIO.ReadPDOSFile(fname)
         nspin = SIO.GetPDOSnspin(dom)
@@ -209,7 +256,9 @@ class SiestaCalc(Calc):
         elif nspin == 1:
             names += raw_names
             data += raw_data
-        return (names, ev, data), {'nspin': nspin}
+        d = Data('func', 'dos', x_label = 'energy', x = ev, y_label = names[1:], y = data)
+        return d
+#        return (names, ev, data), {'nspin': nspin}
 
     def cn(self, dr = 0.2, ratio = 0.7, part = True):
         ''' Get full and partial atomic coordination numbers (type-wise);
@@ -224,42 +273,6 @@ class SiestaCalc(Calc):
         names = ['R',] + ['-'.join(n) for n in names]
         return (names, rdf, data), info
    
-    def pcn_evolution(self, ratio = 0.7, part = True):
-        'Returns partial coordination numbers evolution'
-        steps = self.evol.steps
-        d = self.evol.pcn_evolution(ratio, part)
-        (names, pcn, data), info = d.evolution(steps, func = 'part_avg')
-        names = ['step',] + ['-'.join(n) for n in names]
-        return (names, pcn, data), info
-    
-    def vp_facearea(self, da = 0.05, ratio = 0.7, part = True):
-        'Returns total face areas for every VP'
-        d = self.evol.vp_facearea(ratio, part)
-        (names, area, data), info = d.histogram(da)
-        names = ['area',] + ['-'.join(n) for n in names]
-        return (names, area, data), info
-    
-    def vp_totfacearea(self, da = 0.1, ratio = 0.7, part = True):
-        'Returns total face areas for every VP'
-        d = self.evol.vp_totfacearea(ratio, part)
-        (names, area, data), info = d.histogram(da)
-        names = ['area',] + names
-        return (names, area, data), info
-   
-    def vp_totvolume(self, dv = 0.05, ratio = 0.7, part = True):
-        'Returns total volume for every VP'
-        d = self.evol.vp_totvolume(ratio, part)
-        (names, vol, data), info = d.histogram(dv)
-        names = ['vol',] + names
-        return (names, vol, data), info
-    
-    def vp_ksph(self, dk = 0.01, ratio = 0.7, part = True):
-        'Returns sphericity coefficient for every VP'
-        d = self.evol.vp_ksph(ratio, part)
-        (names, ksph, data), info = d.histogram(dk)
-        names = ['ksph',] + names
-        return (names, ksph, data), info
-    
     def vp_ti(self, ratio = 0.7, part = True):
         'Returns topological indices for VPs'
         from collections import defaultdict
@@ -297,48 +310,6 @@ class SiestaCalc(Calc):
         (names, steps, sf), info = d.evolution(steps, func = 'cum_sum')
         names = ['step',] + names
         return (names, steps, sf), info
-   
-    def mde(self):
-        ' Reads information from MDE file'
-        mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
-        if len(mdef) != 1:
-            print 'Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, )
-            return -1
-        mde = SIO.MDEFile(mdef[0])
-        self.nsteps = mde.nsteps
-        self.mdedata = mde.data
-        return self.mdedata, None
-# Correlations ---
-    
-    def x(self):
-        ''' Return X-coordinate of atoms by type
-        '''
-        xs = []
-        for istep, (step, geom) in enumerate(self.evol):
-            xs.append([])
-            typs = geom.types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [geom.filter('label',typ)[0] for typ in typs]
-            for ityp, typ in enumerate(typs):
-                xs[istep].append(geom.atoms['crd'][n[ityp]][:,0])
-        return (typs, None, xs), None
-                
-    def y(self):
-        ''' Return Y-coordinate of atoms by type
-        '''
-        ys = []
-        for istep, (step, geom) in enumerate(self.evol):
-            ys.append([])
-            typs = geom.types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [geom.filter('label',typ)[0] for typ in typs]
-            for ityp, typ in enumerate(typs):
-                ys[istep].append(geom.atoms['crd'][n[ityp]][:,1])
-        return (typs, None, ys), None
-    
-    def z(self):
-        pass
- 
     
     def animate(self):
         

@@ -296,8 +296,8 @@ class ANIFile():
         self.vc = []
         self.f = open(anif, 'r')
 # anif - the name of ANI file, we can get system label from here and use it for reading vc from XV        
-        sl = os.path.basename(anif).split('.')[0]
-        xvf = os.path.join(os.path.dirname(anif),sl + '.XV')
+        self.sl = os.path.basename(anif).split('.')[0]
+        xvf = os.path.join(os.path.dirname(anif),self.sl + '.XV')
         xv = XVFile(xvf)
 # vc in Bohr
         vc = N.array(xv.vc)
