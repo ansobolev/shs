@@ -88,7 +88,6 @@ class Data():
                     else:
                         y[self.y_label.index(k)].append(yi[v])
                         self.nat[self.y_label.index(k)] += len(v)
-        print y
         self.y = y
     
     def function(self):
