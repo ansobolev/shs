@@ -37,6 +37,19 @@ def EmptyXY():
     wx.MessageBox('Please provide both X and Y datasets', 'Warning', 
                   wx.OK | wx.ICON_WARNING)
     
+def ValueIsEmpty():
+    wx.MessageBox('You must provide a value for condition!', 'Warning', 
+                  wx.OK | wx.ICON_WARNING)
+    
+def TypeNameIsEmpty():
+    wx.MessageBox('You must provide a name for type!', 'Warning', 
+                  wx.OK | wx.ICON_WARNING)
+
+
+def ValueIsNotANumber(s):
+    wx.MessageBox('Provided value: ' + s + ' is not a number!', 'Warning', 
+                  wx.OK | wx.ICON_WARNING)
+
 
 def ShowPlotInfo(leg, info):
     s = ''

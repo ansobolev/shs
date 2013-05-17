@@ -121,7 +121,15 @@ class SiestaCalc(Calc):
     def get_info(self, itype):
         ''' Returns information of desired type
         '''
-        
+    
+    def getPropNames(self):
+        ''' Returns names for per-atom properties 
+        '''
+        return self.evol.getPropNames()    
+    
+    def updateWithTypes(self, types):
+        self.evol.UpdateWithTypes(types) 
+    
     def get_data(self, data_name, **kwds):
         ''' Get data by name
         '''
@@ -141,14 +149,8 @@ class SiestaCalc(Calc):
                   'mabsmagmom' : self.evol.mmagmom,
                   'spinflips' : self.evol.spinflips
                   }
-        # ratio (for voronoi.numpy)
-        ratio = kwds.pop('ratio', 0.5)
-        partial = kwds.pop('partial', True)
-        # one more ugly hack
-        if data_name == 'mabsmagmom':
-            kwds['abs_mm'] = True
         # TODO:  returns data object (not implemented yet for TIs)
-        return choice[data_name](ratio, partial, **kwds)
+        return choice[data_name](**kwds)
         
     def mde(self, *args, **kwds):
         ' Reads information from MDE file'
@@ -176,11 +178,11 @@ class SiestaCalc(Calc):
         rmax = N.max(vc / 2.)
         if partial:
 # get the list of atom types (from the first geometry in evolution)
-            types = self.evol[0].types['label']
+            types = self.evol[0].names['label']
             for i, ityp in enumerate(types):
                 for jtyp in types[i:]:
-                    n1 = self.evol[0].filter('label', ityp)
-                    n2 = self.evol[0].filter('label', jtyp)
+                    n1 = self.evol[0].filter('label', lambda x: x == ityp)
+                    n2 = self.evol[0].filter('label', lambda x: x == jtyp)
                     title.append(ityp+'-'+jtyp)
                     r, rdf = self.evol.rdf(rmax = rmax, n = (n1,n2))
                     total_rdf.append(rdf)
@@ -203,9 +205,9 @@ class SiestaCalc(Calc):
         total_msd = []
 #        self.opts[]
         if partial:
-            types = self.evol[0].types['label']
+            types = self.evol[0].names['label']
             for ityp in types:
-                n1 = self.evol[0].filter('label', ityp)
+                n1 = self.evol[0].filter('label', lambda x: x == ityp)
                 title.append(ityp)
                 t, msd = self.evol.msd(n = n1)
                 total_msd.append(msd)
@@ -223,9 +225,9 @@ class SiestaCalc(Calc):
         total_vaf = []
 #        self.opts[]
         if partial:
-            types = self.evol[0].types['label']
+            types = self.evol[0].names['label']
             for ityp in types:
-                n1 = self.evol[0].filter('label', ityp)
+                n1 = self.evol[0].filter('label', lambda x: x == ityp)
                 title.append(ityp)
                 t, vaf = self.evol.vaf(n = n1)
                 total_vaf.append(vaf)

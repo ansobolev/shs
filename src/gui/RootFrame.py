@@ -6,7 +6,7 @@ import wx
 from wx.lib.mixins.listctrl import getListCtrlSelection
 from wx.lib.pubsub import Publisher 
 
-import StepsDialog as SD, PlotFrame as PF, CorrDialog as CD
+import StepsDialog as SD, PlotFrame as PF, TypeDialog as TD
 import interface
 import mbox
 
@@ -37,6 +37,8 @@ class RootFrame(wx.Frame):
         self.UpBtn = wx.Button(self, -1, "<<")
         self.GetData = wx.Button(self, -1, "Get calc data")
         self.btnEnqueue = wx.Button(self, -1, "Enqueue job")
+        self.btnTypify = wx.Button(self, -1, "Change types")
+        
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
         self.PropType = wx.Choice(self, -1, choices=["Function","Histogram","Time evolution"]) 
         self.propChoices = {"function": ["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)"],
@@ -67,6 +69,7 @@ class RootFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.UpBtnPress, self.UpBtn)
         self.Bind(wx.EVT_BUTTON, self.GetDataBtnPress, self.GetData)
         self.Bind(wx.EVT_BUTTON, self.enqueuePress, self.btnEnqueue)
+        self.Bind(wx.EVT_BUTTON, self.typifyPress, self.btnTypify)
         self.Bind(wx.EVT_BUTTON, self.PlotProperty, self.PropChoiceBtn)
         self.Bind(wx.EVT_BUTTON, self.Correlate, self.CorrelateBtn)
         self.Bind(wx.EVT_BUTTON, self.Animate, self.AnimateBtn)
@@ -109,6 +112,7 @@ class RootFrame(wx.Frame):
         BtnSizer.Add(self.btnEnqueue, 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(wx.StaticLine(self, wx.HORIZONTAL), 0, wx.ALL|wx.EXPAND, 5)
         BtnSizer.Add(self.AnimateBtn, 0, wx.ALL|wx.EXPAND, 5)
+        BtnSizer.Add(self.btnTypify, 0, wx.ALL|wx.EXPAND, 5)
 
         mainSizer.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
@@ -226,7 +230,18 @@ class RootFrame(wx.Frame):
     def GetDataBtnPress(self, event): # wxGlade: RootFrame.<event_handler>
         print "Event handler `GetDataBtnPress' not implemented!"
         event.Skip()
-
+        
+    def typifyPress(self, event):
+        calcs = [self.calcs[i] for i in getListCtrlSelection(self.CalcList)]
+        props = interface.getProperties(calcs)
+        dlg = TD.TypeDialog(None, props = props)
+        if dlg.ShowModal() == wx.ID_OK:
+            t = dlg.getTypes()
+        dlg.Destroy()
+        for i in getListCtrlSelection(self.CalcList):
+            self.calcs[i].updateWithTypes(t)
+        # TODO: somehow show that we have updated the calc 
+    
     def enqueuePress(self, event): # wxGlade: RootFrame.<event_handler>
         from sshutils import getMount, getDevice, getRemoteDir
         # on which device are we?

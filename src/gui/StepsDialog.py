@@ -84,5 +84,10 @@ class StepsDialog(wx.Dialog):
         return r
 
 # end of class StepsDialog
-
+if __name__ == '__main__':
+    app = wx.App()
+    dlg = StepsDialog(None, -1)
+    app.SetTopWindow(dlg)
+    print dlg.ShowModal() 
+#    dlg.Destroy()
 

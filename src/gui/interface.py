@@ -7,6 +7,7 @@ import os, glob
 import numpy as np
 
 from shs.calc import SiestaCalc as Sc
+from shs.atomtype import Comparison
 
 propChoice = {'func': ['mde', 'rdf', 'msd', 'vaf', 'dos'],
             'per_atom': ['vp_totfacearea', 'vp_totvolume', 'vp_ksph', 'mmagmom',
@@ -31,6 +32,12 @@ def getcalc(cdir, ctype, steps):
     
     return Sc(cdir, dtype = copts[ctype], steps = steps)
 
+def getCondition(prop, cond, value):
+    return Comparison(prop, cond, value)
+
+def addAndToCondition(comparison, prop, cond, value):
+    return comparison.addAnd(prop, cond, value)
+
 def getvalue(cdir, label):
     c = Sc(cdir, dtype = 'fdf')
     return c.opts[label].value
@@ -39,6 +46,18 @@ def setvalue(cdir, label, value):
     c = Sc(cdir, dtype = 'fdf')
     c.opts[label].value = value
     return 0
+
+def getProperties(clist):
+    if clist == []:
+        raise ValueError('interface.getProperties: No calculations selected!')
+    props = None
+    for c in clist:
+        if props is None:
+            props = c.getPropNames()
+        else:
+            assert c.getPropNames() == props
+    return props
+
 
 def get_data(ptype, pchoice, clist):
     """Returns data according to plot type from a list of calcs

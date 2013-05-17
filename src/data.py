@@ -49,9 +49,11 @@ class Data():
         if self.partial:
             return
        
-        assert type(types) == type({})
+        assert isinstance(types, list)
+        
         self.types = types
         self.y_label = []
+        self.nat = []
         y = []
         typeind = {}
         if pairwise:
@@ -73,12 +75,20 @@ class Data():
                 y.append(yi)
              
         else:
-            for (k,v) in types.iteritems():
-                self.y_label.append(k)
-                yi = []
-                for yj in self.y:
-                    yi.append(yj[v])
-                y.append(yi)
+            # cycle over geometry steps
+            for (ti, yi) in zip(types, self.y):
+                # cycle over types in each step 
+                for (k,v) in ti.items(): 
+                    # if typename is not known yet 
+                    if k not in self.y_label:
+                        self.y_label.append(k)
+                        self.nat.append(len(v))
+                        # label index
+                        y.append([yi[v]])
+                    else:
+                        y[self.y_label.index(k)].append(yi[v])
+                        self.nat[self.y_label.index(k)] += len(v)
+        print y
         self.y = y
     
     def function(self):
@@ -116,7 +126,7 @@ class Data():
                 coeff = 1. / (dx * len(y))
             elif norm == 'nat':
                 # norm by the number of atoms (for per-atom quantities)
-                nat = len(self.types[y_label])
+                nat = self.nat[iy]
                 coeff = nat / (dx * len(y))
             else:
                 coeff = 1. / (norm * len(self.types[y_label[0]]))

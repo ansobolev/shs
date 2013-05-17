@@ -9,6 +9,7 @@ import const as Const
 import errors as Err
 import options as Opts
 import sio as SIO
+from atomtype import AtomType
 
 import voronoi.dump as Dump
 import voronoi.numpy.ngbr as NN
@@ -32,7 +33,7 @@ class Geom():
             'AtomicCoordinatesFormat' : ['s', None],
             'AtomicCoordinatesFormatOut' : ['s', None],
             'AtomicCoordinatesAndAtomicSpecies' : ['b', None]}
-    
+
 # Init ---
 
     def __init__(self, dtype = None, data = None):
@@ -44,11 +45,26 @@ class Geom():
                            [0., 1., 0.],
                            [0., 0., 1.]])
         self.atoms = None
-        self.types = None
+        self.names = None
+        # props constructor
+        self.props = {'label' : self.label,
+                      'vp_totvolume' : self.vp_totvolume,
+                      'vp_totfacearea' : self.vp_totfacearea,
+                      'vp_ksph' : self.vp_ksph,
+                      'vp_ti' : self.vp_ti,
+                      'magmom' : self.mmagmom,
+                      'absmagmom' : self.mmagmom,
+                      'vp_cn' :self.vp_neighbors
+                      }
+        self.kwds =  {'common' : {'pbc': True, 'ratio': 0.5, 
+                                  'rm_small' : True, 'eps': 0.5},
+                      'mabsmagmom' : {'abs_mm' : True},
+                      'mmagmom' : {'abs_mm' : False},
+                      }
         # reading if we need to
         if dtype is not None:
             self.read(dtype, data)
-
+        
 # Reading ---
         
     def read(self, dtype, data):
@@ -64,8 +80,19 @@ class Geom():
                'es': self.es2geom,
                'xv' : self.xv2geom
                }
-# as usual, switch triggering
+        # as usual, switch triggering
         act.get(dtype, self.unsupported2geom)(data)
+        # update props with distances to group
+        labels = self.names['label']
+        for label in labels:
+            at = self.filter('label', lambda x: x == label)
+            self.props['distance_' + label] = self.distance_to_group
+            self.kwds['distance_' + label] = at
+        # get atomType
+        self.types = AtomType(self)
+
+    def getPropNames(self):
+        return sorted(self.props.keys())
 
     def fdf2geom(self, data):
         ''' Geometry init from options data
@@ -78,7 +105,7 @@ class Geom():
             self.vc = np.array(self.opts['LatticeVectors'].value).astype(float) * self.alat
         except (KeyError,):
             self.vc = np.eye(3, dtype='f4') * self.alat
-        self.types = np.rec.fromarrays(np.transpose(self.opts['ChemicalSpeciesLabel'].value), names = 'i,z,label', formats = '|i1,|i2,|S2')
+        self.names = np.rec.fromarrays(np.transpose(self.opts['ChemicalSpeciesLabel'].value), names = 'i,z,label', formats = '|i1,|i2,|S2')
         acas = np.array(self.opts['AtomicCoordinatesAndAtomicSpecies'].value)
         crd = acas[:,0:3]
         typ = acas[:,3]
@@ -112,7 +139,7 @@ class Geom():
         except ValueError:
             ityp = np.arange(len(iz)) + 1    
         ilabel = np.array([Const.PeriodicTable[z] for z in iz])
-        self.types = np.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
+        self.names = np.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
         if type(data.data) == type({}):
             for name, field in data.data.iteritems():
                 self.add_fields(name, field)
@@ -139,12 +166,18 @@ class Geom():
         ityp, ind = np.unique(np.array(xv.ityp), return_index = True)
         iz = np.array(xv.z)[ind]
         ilabel = np.array([Const.PeriodicTable[z] for z in iz])
-        self.types = np.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
+        self.names = np.rec.fromarrays([ityp,iz,ilabel], names = 'i,z,label', formats = '|i1,|i2,|S2')
 
     def unsupported2geom(self, data):
         ''' Raise exception when one wants to read geometry from strange place
         '''
         raise Err.UnsupportedError('Now Geom instance supports reading only from fdf, evolstep (es) and xv file')
+
+    def updateWithTypes(self, types):
+        self.types.removeTypes()
+        for (typename, condition) in types.iteritems():
+            self.types.addType(condition, typename)
+        self.types.finalize()
 
 # Auxiliary routines --- 
     
@@ -161,17 +194,15 @@ class Geom():
         fn = os.path.join(calcdir, 'STRUCT.fdf')
         self.opts.write(fn)
 
-    def filter(self, name, value, cmprsn = 'eq'):
+    def filter(self, name, f):
         ''' Filters geometry atoms by field name & value 
         '''
-# TODO: make filtering with other comparison operators
-        return np.where(self.atoms[name] == value)
+        return np.where(f(self.atoms[name]))[0]
     
     def unique(self, name):
         ''' Returns a list of unique properties of the model 
         '''
         return list(np.unique(self.atoms[name]))
-
 
     def to_cell(self):
         crd = self.atoms['crd']
@@ -186,13 +217,22 @@ class Geom():
         self.atoms['crd'] = crd
         
 # End Auxiliary routines --- 
-
-    
-    def distance_to_group(self, group):
+    def property(self, label, **global_kwds):
+        ''' Returns per-atom properties of self.geom (by label)  
+        '''
+        assert label in self.props.keys()
+        kwds = self.kwds['common'].copy()
+        kwds.update(self.kwds.get(label, {}))
+        kwds.update(global_kwds)
+        return self.props[label](**kwds)
+   
+    def distance_to_group(self, **kwds):
         ''' Finds distance to the nearest of the atoms belonging to group
         In:
          -> group (list of indexes) - list of atom indexes
         '''
+        # taking necessary keywords from kwds
+        group = kwds['group']
         ngroup = len(group)
         nat = len(self.atoms)
         rij = r(self.atoms['crd'], self.vc, n = (group, range(nat)))
@@ -204,7 +244,7 @@ class Geom():
     def voronoi(self, pbc = True, ratio = 0.5):
         ''' Get Voronoi tesselation based on the libraries available:
          -> numpy: QHull library
-         -> pyvoro: Python interface to Voro++ library (~3 times faster than Numpy)
+         -> pyvoro: Python interface to Voro++ library (~30 times faster than Numpy)
         
         Input:
          -> pbc - whether to use periodic boundary conditions 
@@ -223,7 +263,6 @@ class Geom():
         self.vp = VN.model_voronoi(d)
         self.vp.voronoi(pbc, ratio)
     
-    
     def voronoi_med(self):
         ''' Get voronoi tesselation of geometry by pure python Medvedev algorithm
         '''
@@ -239,18 +278,17 @@ class Geom():
         self.add_fields('k_sph', np.array(k_sph))
         self.nb = pl_mv
 
-    def voronoi_params(self, pbc = True, ratio = 0.5):
-        ''' Finds parameters of Voronoi tesselation (face areas, volumes of VPs etc)
-        '''
-        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
-        vps = self.vp.separate_vp()
-        for vp in vps:
-            vp.remove_small_faces()
-# TODO: incomplete function        
-    
-    def vp_neighbors(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
+    def label(self, **kwds):
+        return self.atoms['label']
+
+    def vp_neighbors(self, **kwds):
         'Finds neighbors of VP'
         # WARNING: makes a lot of unnecessary work (ok if we work with up to several thousands of atoms)    
+        pbc = kwds['pbc']
+        ratio = kwds['ratio']
+        rm_small = kwds['rm_small']
+        eps = kwds['eps']
+        
         fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
         # If there is a face (with non-zero area) between atoms, then they are neighbors
         fa_np[fa_np > 0] = 1.
@@ -295,27 +333,36 @@ class Geom():
         fa_np = ma.masked_values(fa_np, 0.)
         return fa_np
     
-    def vp_totfacearea(self, pbc = True, ratio = 0.5):
+    def vp_totfacearea(self, **kwds):
         ''' Finds total face areas for resulting Voronoi polihedra 
         '''
+        pbc = kwds['pbc']
+        ratio = kwds['ratio']
+
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if hasattr(self.vp, 'vp_area'): return self.vp.vp_area
         f = self.vp.vp_faces()        
         _, a = self.vp.vp_volumes(f, partial = False)
         return a
 
-    def vp_totvolume(self, pbc = True, ratio = 0.5):
+    def vp_totvolume(self, **kwds):
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
+        pbc = kwds['pbc']
+        ratio = kwds['ratio']
+
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volume
         f = self.vp.vp_faces()        
         v, _ = self.vp.vp_volumes(f, partial = False)
         return v
 
-    def vp_ksph(self, pbc = True, ratio = 0.5):
+    def vp_ksph(self, **kwds):
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
+        pbc = kwds['pbc']
+        ratio = kwds['ratio']
+
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if not hasattr(self.vp, 'vp_volume'): 
             f = self.vp.vp_faces()        
@@ -326,9 +373,14 @@ class Geom():
         ksph = 36. * np.pi * v * v / (a * a * a)
         return ksph
     
-    def vp_ti(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
+    def vp_ti(self, **kwds):
         ''' Finds topological indices of Voronoi polihedra
         '''
+        pbc = kwds['pbc']
+        ratio = kwds['ratio']
+        rm_small = kwds['rm_small']
+        eps = kwds['eps']
+        
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         f = self.vp.vp_faces()        
         if rm_small:
@@ -337,8 +389,8 @@ class Geom():
         ti = self.vp.vp_topological_indices()
         return ti
 
-    def mmagmom(self, abs_mm = False):
-        if abs_mm:
+    def mmagmom(self, **kwds):
+        if kwds['abs_mm']:
             return np.abs(self.atoms['up'] - self.atoms['dn'])
         else:
             return self.atoms['up'] - self.atoms['dn']
@@ -378,9 +430,9 @@ class Geom():
     def geom2opts(self):
         ''' Converts geometry (read from anywhere / altered) to the list of values 
         '''
-        data = {'NumberOfSpecies' : [1, str(len(self.types))], 
+        data = {'NumberOfSpecies' : [1, str(len(self.names))], 
                 'NumberOfAtoms' : [2, str(len(self.atoms))],
-                'ChemicalSpeciesLabel' : [3, ] + array2block(self.types),
+                'ChemicalSpeciesLabel' : [3, ] + array2block(self.names),
                 'LatticeConstant' : [4, str(self.alat), self.unit],
                 'LatticeVectors' : [5, ] + array2block(self.vc),
                 'AtomicCoordinatesFormat' : [6, 'NotScaledCartesian'+self.unit],
@@ -421,7 +473,7 @@ class Geom():
             i = np.arange(1, ntyp + 1)
             label = np.unique(c)
             z = np.array([Const.PeriodicTable[l] for l in label])
-            self.types = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')
+            self.names = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')
             sc = SCellSize[0] * SCellSize[1] * SCellSize[2]
             ityp = np.concatenate((c, ) * sc)
             self.atoms = np.rec.fromarrays([crd, ityp], names = 'crd,itype', formats = '|3f8,|S2')
@@ -430,10 +482,10 @@ class Geom():
         i = np.arange(1, ntyp + 1)
         label = np.array(Composition.keys())
         z = np.array([Const.PeriodicTable[l] for l in label])
-        self.types = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')            
+        self.names = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')            
 # now calculate number of atoms of each type
 # fractions
-        f = np.array([Composition[x] for x in self.types['label']])
+        f = np.array([Composition[x] for x in self.names['label']])
 # sum of fractions
         sf = sum(f)
         percask = f / float(sf) * 100.0
