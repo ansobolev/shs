@@ -10,8 +10,8 @@ from shs.calc import SiestaCalc as Sc
 from shs.atomtype import Comparison
 
 propChoice = {'func': ['mde', 'rdf', 'msd', 'vaf', 'dos'],
-            'per_atom': ['vp_totfacearea', 'vp_totvolume', 'vp_ksph', 'mmagmom',
-                         'mabsmagmom', 'spinflips', 'vp_ti'],
+            'per_atom': ['vp_totfacearea', 'vp_totvolume', 'vp_ksph', 'magmom',
+                         'absmagmom', 'spinflips', 'vp_ti'],
             'hist_evol' : ['vp_facearea',],
             'hist' : ['rdfvp',],
             'evol' : ['vp_pcn',]

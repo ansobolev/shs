@@ -4,7 +4,7 @@ Created on 10.05.2013
 
 @author: andrey
 '''
-
+import sys
 import wx
 
 import interface
@@ -100,13 +100,13 @@ class TypeDialog(wx.Dialog):
             self.condition = interface.addAndToCondition(self.condition, prop, cond, num)
         # Type List:
         tlc = self.condList.GetItemCount()
-        self.condList.InsertStringItem(tlc, prop)
+        self.condList.InsertStringItem(sys.maxint, prop)
         self.condList.SetStringItem(tlc, 1, cond)
         self.condList.SetStringItem(tlc, 2, num)
 
     def btnRemovePress(self, event):
         self.condition = None
-        self.condList.ClearAll()
+        self.condList.DeleteAllItems()
 
     def btnToTypesPress(self, event):
         if not self.typeNameTC.GetValue():
@@ -120,7 +120,6 @@ class TypeDialog(wx.Dialog):
         self.typeList.SetStringItem(tlc, 1, str(self.condition))
         self.types[self.typeNameTC.GetValue()] = self.condition
         # Cleaning all temporary vars
-        self.condition = None
         self.btnRemovePress(event)
         self.typeNameTC.SetValue("")
 

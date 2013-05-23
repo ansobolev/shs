@@ -56,10 +56,13 @@ class Geom():
                       'absmagmom' : self.mmagmom,
                       'vp_cn' :self.vp_neighbors
                       }
+        # pairwise properties constructor
+        self.pwprops = {'vp_distance' : self.vp_distance,
+                        }
         self.kwds =  {'common' : {'pbc': True, 'ratio': 0.5, 
                                   'rm_small' : True, 'eps': 0.5},
-                      'mabsmagmom' : {'abs_mm' : True},
-                      'mmagmom' : {'abs_mm' : False},
+                      'absmagmom' : {'abs_mm' : True},
+                      'magmom' : {'abs_mm' : False},
                       }
         # reading if we need to
         if dtype is not None:
@@ -87,7 +90,7 @@ class Geom():
         for label in labels:
             at = self.filter('label', lambda x: x == label)
             self.props['distance_' + label] = self.distance_to_group
-            self.kwds['distance_' + label] = at
+            self.kwds['distance_' + label] = {'group': at}
         # get atomType
         self.types = AtomType(self)
 
@@ -220,11 +223,15 @@ class Geom():
     def property(self, label, **global_kwds):
         ''' Returns per-atom properties of self.geom (by label)  
         '''
-        assert label in self.props.keys()
         kwds = self.kwds['common'].copy()
         kwds.update(self.kwds.get(label, {}))
         kwds.update(global_kwds)
-        return self.props[label](**kwds)
+        if label in self.props.keys():
+            return self.props[label](**kwds)
+        elif label in self.pwprops.keys():
+            return self.pwprops[label](**kwds)
+        else:
+            raise Exception(label + ' not in the dictionary of properties')
    
     def distance_to_group(self, **kwds):
         ''' Finds distance to the nearest of the atoms belonging to group

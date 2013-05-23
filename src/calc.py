@@ -128,7 +128,7 @@ class SiestaCalc(Calc):
         return self.evol.getPropNames()    
     
     def updateWithTypes(self, types):
-        self.evol.UpdateWithTypes(types) 
+        self.evol.updateWithTypes(types) 
     
     def get_data(self, data_name, **kwds):
         ''' Get data by name
@@ -145,8 +145,8 @@ class SiestaCalc(Calc):
                   'vp_totfacearea' : self.evol.vp_totfacearea,
                   'vp_totvolume' : self.evol.vp_totvolume,
                   'vp_ksph' : self.evol.vp_ksph,
-                  'mmagmom' : self.evol.mmagmom,
-                  'mabsmagmom' : self.evol.mmagmom,
+                  'magmom' : self.evol.magmom,
+                  'absmagmom' : self.evol.absmagmom,
                   'spinflips' : self.evol.spinflips
                   }
         # TODO:  returns data object (not implemented yet for TIs)
@@ -165,12 +165,13 @@ class SiestaCalc(Calc):
         return d
 #        return self.mdedata, None
         
-    def rdf(self, ratio, partial, **kwds):
+    def rdf(self, **kwds):
         ''' Get RDF of evolution
         In:
          -> partial (bool) - indicates whether we need partial RDF
          -> n (tuple of index lists or None) - if partial, then indicates which atoms we need to find geometry of 
         '''
+        partial = kwds.get('partial', True)
         title = ['R',]
         total_rdf = []
 # get r_max
@@ -195,12 +196,13 @@ class SiestaCalc(Calc):
         return d
 #        return (title, r, total_rdf), None
              
-    def msd(self, ratio, partial, **kwds):
+    def msd(self, **kwds):
         ''' Get MSD of evolution (type-wise)
         NB: As it uses only one cell vector set, when calculating MSD for NPT ensemble one should expect getting strange results. 
         In:
          -> atype (int?) - atomic type we need to calculate MSD for 
         '''
+        partial = kwds.get('partial', True)
         title = ['T',]
         total_msd = []
 #        self.opts[]
@@ -215,12 +217,13 @@ class SiestaCalc(Calc):
         return d
 #        return (title, t, total_msd), None
     
-    def vaf(self, ratio, partial, **kwds):
+    def vaf(self, **kwds):
         ''' Get VAF of evolution (type-wise)
         NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results. 
         In:
          -> atype (int?) - atomic type we need to calculate VAF for 
         '''
+        partial = kwds.get('partial', True)
         title = ['T',]
         total_vaf = []
 #        self.opts[]

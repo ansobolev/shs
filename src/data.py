@@ -48,31 +48,37 @@ class Data():
         '''
         if self.partial:
             return
-       
+        from collections import defaultdict
         assert isinstance(types, list)
         
         self.types = types
         self.y_label = []
         self.nat = []
+        self.nsteps = len(types) 
         y = []
-        typeind = {}
+        typeind = defaultdict(list)
         if pairwise:
+            # WARNING: make sure that nat doesn't change throughout evolution
             nat = len(self.y[0])    
+            for itype, yi in zip(self.types, self.y):
+                for (t, nt) in itype.iteritems():
             # adding atoms to existing types
-            for (t, nt) in types.iteritems():
-                self.y_label.append((t,))
-                typeind[(t,)] = (nt, np.arange(nat))
+                    if (t,) not in self.y_label:
+                        self.y_label.append((t,))
+                    typeind[(t,)].append((nt, np.arange(nat)))
             # expanding types by products
-            for (t1, t2) in itertools.product(types.keys(), types.keys()):
-                self.y_label.append((t1, t2))
-                typeind[(t1, t2)] = (types[t1], types[t2])
+                for (t1, t2) in itertools.product(itype.keys(), itype.keys()):
+                    if (t1, t2) not in self.y_label:
+                        self.y_label.append((t1, t2))
+                    typeind[(t1, t2)].append((itype[t1], itype[t2]))
             # data according to types
             for t in self.y_label:
-                (n1, n2) = typeind[t]
-                yi = []
-                for yj in self.y:
-                    yi.append(yj[n1][:,n2].compressed())
-                y.append(yi)
+                self.nat.append(1)
+                yj = []
+                for (ti, yi) in zip(typeind[t], self.y):
+                    (n1, n2) = ti
+                    yj.append(yi[n1][:,n2].compressed())
+                y.append(yj)
              
         else:
             # cycle over geometry steps
@@ -126,7 +132,7 @@ class Data():
             elif norm == 'nat':
                 # norm by the number of atoms (for per-atom quantities)
                 nat = self.nat[iy]
-                coeff = nat / (dx * len(y))
+                coeff = nat / (dx * len(y) * self.nsteps)
             else:
                 coeff = 1. / (norm * len(self.types[y_label[0]]))
             hist, bin_edges = np.histogram(np.array(y), bins = nbins, range = (xmin, xmax))

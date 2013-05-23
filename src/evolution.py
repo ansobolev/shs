@@ -174,17 +174,18 @@ class Evolution():
                 
 # Evolution VP methods --- 
 
-    def rdfvp(self, ratio, partial, **kwds):
+    def rdfvp(self, **kwds):
+        partial = kwds.get('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_distance(ratio = ratio, rm_small = False, eps = 0.5))
+            result.append(g.property('vp_distance', **kwds))
         d = Data('hist', 'rdfvp', y = result, y_label = 'Total')
         # partial calculations
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            # atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
-            d.make_partial(dict(zip(typs, n)), pairwise = True)
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types, pairwise = True)
         return d
 
     def pcn_evolution(self, ratio, partial, **kwds):
@@ -227,26 +228,30 @@ class Evolution():
             d.make_partial(types)
         return d
     
-    def vp_totvolume(self, ratio, partial, **kwds):
+    def vp_totvolume(self, **kwds):
+        partial = kwds.pop('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_totvolume(ratio = ratio))
+            result.append(g.property('vp_totvolume', **kwds))
         d = Data('per_atom', 'vp_totvolume', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
 
-    def vp_ksph(self, ratio, partial, **kwds):
+    def vp_ksph(self, **kwds):
+        partial = kwds.pop('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_ksph(ratio = ratio))
+            result.append(g.property('vp_ksph', **kwds))
         d = Data('per_atom', 'vp_ksph', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
 
     def vp_ti(self, ratio, part):
@@ -267,19 +272,34 @@ class Evolution():
                 typ_ti[it] += [ti[jnt] for jnt in nt]
         return typs, typ_ti
 
-    def mmagmom(self, ratio, partial, **kwds):
-        abs_mm = kwds.pop('abs_mm', False)
+    def magmom(self, **kwds):
+        partial = kwds.pop('partial', True)
         assert self.has_fields('up', 'dn')
         result = []
         for g in self.geom:
-            result.append(g.mmagmom(abs_mm))
-        d = Data('per_atom', 'mmagmom', y = result, y_label = 'Total')
+            result.append(g.property('magmom', **kwds))
+        d = Data('per_atom', 'magmom', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
        
+    def absmagmom(self, **kwds):
+        partial = kwds.pop('partial', True)
+        assert self.has_fields('up', 'dn')
+        result = []
+        for g in self.geom:
+            result.append(g.property('absmagmom', **kwds))
+        d = Data('per_atom', 'magmom', y = result, y_label = 'Total')
+        if partial:
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
+        return d
+
     def spinflips(self, ratio, partial, **kwds):
         'Get spin flips'
         assert self.has_fields('up', 'dn')
