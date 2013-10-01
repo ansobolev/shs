@@ -117,8 +117,8 @@ class RootFrame(wx.Frame):
             return
         dlg.Destroy()
         self.calc = getcalc(cdir, ctype='.ANI', steps = [step,])
-        cats = self.calc.evol[0].filter('label','C')
-        self.CList.InsertItems([str(cat) for cat in cats[0]], 0)        
+        cats = self.calc.evol[0].filter('label',lambda x: x == 'Fe')
+        self.CList.InsertItems([str(cat) for cat in cats], 0)        
         
     
     def UpBtnPress(self, event): # wxGlade: RootFrame.<event_handler>

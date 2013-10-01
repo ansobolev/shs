@@ -144,6 +144,65 @@ class model_voronoi():
             ni = np.array([len(fi['vertices']) for fi in self.v[iat]['faces']])
             ti.append(np.bincount(ni)[3:])
         return ti
+    
+    def plot_vps(self, atoms):
+        import networkx as nx
+        try:
+            from enthought.mayavi import mlab
+        except (ImportError,):
+            from mayavi import mlab
+        crd = self.atoms['crd'][atoms]
+        if not hasattr(self, 'v'):
+            self.voronoi()
+        faces = self.v[atoms[0]]['faces']
+# Neighboring atoms
+        ngbrs = np.array(atoms + [face['adjacent_cell'] for face in faces]) 
+# Coordinates
+        crd_ng = self.atoms['crd'][ngbrs]
+# find centroid
+#        crd_c = np.sum(crd_ng, axis = 0) / crd.shape[0]
+        crd_ng -= crd[0]
+        vc_inv = np.linalg.inv(self.box)
+        crd_vc = np.dot(crd_ng, vc_inv)
+# periodic boundary conditions
+        crd_vc[crd_vc > 0.5] -= 1.0
+        crd_vc[crd_vc < -0.5] += 1.0
+        crd_ng = np.dot(crd_vc, self.box)
+#        np.vstack((crd_ng, np.zeros(3)))
+
+        types = self.atoms['itype'][ngbrs]
+        print types
+# vp vertices
+        crd_vp = np.array(self.v[atoms[0]]['vertices']) - crd[0]
+        adjacency = self.v[atoms[0]]['adjacency']
+# lookup dict
+        edges = set()
+        for iv, v in enumerate(adjacency):
+            for jv in v:
+                if iv < jv:
+                    edges.add((iv, jv))
+        G = nx.Graph()
+        for edge in edges:
+            G.add_edge(edge[0],edge[1])
+
+        mlab.figure(1, bgcolor = (1., 1., 1.))
+        mlab.clf()
+        atoms = mlab.points3d(crd_ng[:,0], crd_ng[:,1], crd_ng[:,2],
+                              types,
+#                              color=(0.5,0.5,0.5),
+                              scale_factor = 0.8,
+                              scale_mode = 'none',
+                              colormap = 'autumn',
+                              resolution = 20)
+        vp_verts = mlab.points3d(crd_vp[:,0], crd_vp[:,1], crd_vp[:,2],
+                                 color=(0.4,0.4,0.4),
+                                 scale_factor = 0.02,
+                                 scale_mode = 'none',
+                                 resolution = 20)
+        vp_verts.mlab_source.dataset.lines = np.array(G.edges())
+        tube = mlab.pipeline.tube(vp_verts, tube_radius=0.1)
+        mlab.pipeline.surface(tube, color = (0.4, 0.4, 0.4))     
+        mlab.show()    
 
 # area of polygon poly ((c) http://code.activestate.com/recipes/578276-3d-polygon-area/)
 def poly_area(poly):

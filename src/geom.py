@@ -54,7 +54,8 @@ class Geom():
                       'vp_ti' : self.vp_ti,
                       'magmom' : self.mmagmom,
                       'absmagmom' : self.mmagmom,
-                      'vp_cn' :self.vp_neighbors
+                      'vp_cn' :self.vp_neighbors,
+                      'spinflips' : self.spinflips
                       }
         # pairwise properties constructor
         self.pwprops = {'vp_distance' : self.vp_distance,
@@ -401,6 +402,9 @@ class Geom():
             return np.abs(self.atoms['up'] - self.atoms['dn'])
         else:
             return self.atoms['up'] - self.atoms['dn']
+        
+    def spinflips(self):
+        pass
     
     def add_fields(self,name,field):
         ''' Add fields to self.atoms

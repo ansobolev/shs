@@ -84,7 +84,8 @@ class Evolution():
                 props = g.getPropNames()
             else:
                 assert props == g.getPropNames()
-        return props
+        props.append('spinflips')
+        return sorted(props)
     
     def updateWithTypes(self, types):
         ''' Updates geometries with given types
@@ -300,10 +301,10 @@ class Evolution():
             d.make_partial(types)
         return d
 
-    def spinflips(self, ratio, partial, **kwds):
+    def spinflips(self, **kwds):
         'Get spin flips'
+        partial = kwds.get('partial', True)
         assert self.has_fields('up', 'dn')
-
         prevmm = self.geom[0].mmagmom(abs_mm = False)
         result = [N.zeros(len(prevmm))]
         for g in self.geom[1:]:
@@ -312,11 +313,21 @@ class Evolution():
             prevmm = gmm
         d = Data('per_atom', 'spinflips', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
 
+    def updateWithSpinflips(self):
+        assert self.has_fields('up', 'dn')
+        prevmm = self.geom[0].mmagmom(abs_mm = False)
+        for ig, g in enumerate(self.geom[1:]):
+            gmm = g.mmagmom(abs_mm = False)            
+            self.geom[ig + 1].updateProperty('spinflips',(prevmm * gmm) < 0)
+            prevmm = gmm
+            
+    
     def has_fields(self, *fields):
         'Returns True if all Geoms in  self.geom have these fields'
         return all([g.has_fields(*fields) for g in self.geom])
