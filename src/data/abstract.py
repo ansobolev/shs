@@ -48,6 +48,9 @@ class AbstractData(object):
     @abstractmethod
     def getData(self, calc):
         pass
+    
+    def plotData(self, plot_type):
+        pass
 
 class PerAtomData(AbstractData):
     _isFunction = False

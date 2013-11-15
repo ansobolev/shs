@@ -66,3 +66,4 @@ class VAFData(PerTypeData):
 
     def plotData(self):
         return plotdata.FunctionData(self)
+    

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
-# -*- coding : utf8 -*-
+# -*- coding: utf8 -*-
 
 import itertools
+from collections import defaultdict
 import numpy as N
 
 import geom as G
-from data import Data
+from data_old import Data
 
 
 ''' Container for working with files in FDF, XV, MDE, OUT format
@@ -54,10 +54,10 @@ class Evolution():
         for istep, igeom in zip(self.steps,self.geom):
             yield istep, igeom
     
-    def filter(self, name, value, cmprsn = 'eq'):
+    def filter(self, name, f):
         ''' Filters evolution by field name & value
         '''
-        return [g.filter(name, value, cmprsn) for g in self.geom]
+        return [g.filter(name, f) for g in self.geom]
 
     def trajectory(self):
         return N.array(self['crd']), N.array(self['vc'])
@@ -75,6 +75,50 @@ class Evolution():
             md.append(dist)
         return md
 
+    def getPropNames(self):
+        ''' Returns the list of names for per-atom atomic properties
+        '''
+        props = None
+        for g in self.geom:
+            if props is None:
+                props = g.getPropNames()
+            else:
+                assert props == g.getPropNames()
+        return props
+
+    def updateWithTypes(self, types):
+        ''' Updates geometries with given types
+        '''
+        for ig in range(len(self.geom)):
+            self.geom[ig].updateWithTypes(types)
+
+    def getAtomsByType(self):
+        labels = []
+        types = defaultdict(list)
+        for g in self.geom:
+            itype = g.types.toDict()
+            labels.append(sorted(itype.keys()))
+            for l, at in itype.iteritems():
+                types[l].append(at)
+        return labels, types
+
+    def areTypesConsistent(self):
+        """ Checks whether all atoms belong to the same type throughout the evol
+        """
+        labels, types = self.getAtomsByType()
+        # check if labels are the same throughout evol
+        if labels.count(labels[0]) != len(labels):
+            return False
+        # check if atoms belong to the same type
+        for _, at in types.iteritems():
+            try:
+                np_at = N.array(at)
+            except:
+                # evolsteps contain different number of atoms of a type
+                return False
+            if not N.all(at == at[0]):
+                return False
+        return True
 
     def rdf(self, n = None, rmax = 7., dr = 0.05):
         coords, vc = self.trajectory()
@@ -90,8 +134,8 @@ class Evolution():
                 nat1 = len(crd_step)
                 nat2 = len(crd_step)
             else:
-                nat1 = len(n[0][0])
-                nat2 = len(n[1][0])
+                nat1 = len(n[0])
+                nat2 = len(n[1])
             vol = N.linalg.det(vc_step)
             
             rij = G.r(crd_step, vc_step, n)
@@ -123,7 +167,7 @@ class Evolution():
         for delta_t in t:
             for t_beg in range(traj_len - delta_t):
                 dx = coords[t_beg + delta_t] - coords[t_beg]
-                dr = (dx**2.0).sum(axis = 2)
+                dr = (dx**2.0).sum(axis = 1)
                 num[delta_t] += len(dr.T)
                 msd[delta_t] += N.sum(dr)
         msd = msd / num
@@ -139,7 +183,7 @@ class Evolution():
         '''
         # taking coordinates of atoms belonging to the list n
         all_coords, _ = self.trajectory()
-        coords = all_coords[:,n[0],:]
+        coords = all_coords[:,n,:]
         # assuming dt = 1, dx - in distance units!
         v = coords[1:] - coords[:-1] 
         traj_len = len(v)
@@ -155,20 +199,21 @@ class Evolution():
                 vaf[delta_t] += N.sum(v_cor)
         vaf = vaf / num
         return t, vaf
-                
+
 # Evolution VP methods --- 
 
-    def rdfvp(self, ratio, partial, **kwds):
+    def rdfvp(self, **kwds):
+        partial = kwds.get('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_distance(ratio = ratio, rm_small = False, eps = 0.5))
+            result.append(g.property('vp_distance', **kwds))
         d = Data('hist', 'rdfvp', y = result, y_label = 'Total')
         # partial calculations
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            # atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
-            d.make_partial(dict(zip(typs, n)), pairwise = True)
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types, pairwise = True)
         return d
 
     def pcn_evolution(self, ratio, partial, **kwds):
@@ -198,37 +243,43 @@ class Evolution():
             d.make_partial(dict(zip(typs, n)), pairwise = True)
         return d
        
-    def vp_totfacearea(self, ratio, partial, **kwds):
+    def vp_totfacearea(self, **kwds):
+        partial = kwds.pop('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_totfacearea(ratio = ratio))
+            result.append(g.property('vp_totfacearea', **kwds))
         d = Data('per_atom', 'vp_totfacearea', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
     
-    def vp_totvolume(self, ratio, partial, **kwds):
+    def vp_totvolume(self, **kwds):
+        partial = kwds.pop('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_totvolume(ratio = ratio))
+            result.append(g.property('vp_totvolume', **kwds))
         d = Data('per_atom', 'vp_totvolume', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
 
-    def vp_ksph(self, ratio, partial, **kwds):
+    def vp_ksph(self, **kwds):
+        partial = kwds.pop('partial', True)
         result = []
         for g in self.geom:
-            result.append(g.vp_ksph(ratio = ratio))
+            result.append(g.property('vp_ksph', **kwds))
         d = Data('per_atom', 'vp_ksph', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
 
     def vp_ti(self, ratio, part):
@@ -249,19 +300,34 @@ class Evolution():
                 typ_ti[it] += [ti[jnt] for jnt in nt]
         return typs, typ_ti
 
-    def mmagmom(self, ratio, partial, **kwds):
-        abs_mm = kwds.pop('abs_mm', False)
+    def magmom(self, **kwds):
+        partial = kwds.pop('partial', True)
         assert self.has_fields('up', 'dn')
         result = []
         for g in self.geom:
-            result.append(g.mmagmom(abs_mm))
-        d = Data('per_atom', 'mmagmom', y = result, y_label = 'Total')
+            result.append(g.property('magmom', **kwds))
+        d = Data('per_atom', 'magmom', y = result, y_label = 'Total')
         if partial:
-            typs = self.geom[0].types['label'].tolist()
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
-            d.make_partial(dict(zip(typs, n)))
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
         return d
        
+    def absmagmom(self, **kwds):
+        partial = kwds.pop('partial', True)
+        assert self.has_fields('up', 'dn')
+        result = []
+        for g in self.geom:
+            result.append(g.property('absmagmom', **kwds))
+        d = Data('per_atom', 'magmom', y = result, y_label = 'Total')
+        if partial:
+            types = []
+            for g in self.geom:
+                types.append(g.types.toDict())
+            d.make_partial(types)
+        return d
+
     def spinflips(self, ratio, partial, **kwds):
         'Get spin flips'
         assert self.has_fields('up', 'dn')
