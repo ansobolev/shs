@@ -6,6 +6,10 @@
 
 from abc import ABCMeta, abstractproperty, abstractmethod
 
+import shs.errors
+
+import plotdata
+
 class classproperty(object):
     def __init__(self, getter):
         self.getter= getter
@@ -63,6 +67,37 @@ class PerEvolData(AbstractData):
     _isHistogram = False
 
 class PerTypeData(AbstractData):
+    """ Base class for per-type functions
+    """
+    
     _isFunction = True
     _isTimeEvol = False
     _isHistogram = False
+
+    def __init__(self, *args, **kwds):
+        self.partial = kwds.get("partial", True)
+        super(PerTypeData, self).__init__(*args, **kwds)
+
+    def plotData(self):
+        return plotdata.FunctionData(self)
+
+class OneTypeData(PerTypeData):
+    """ Data with consistent types (VAF, MSD)
+    """
+    
+    def calculate(self):
+        data_type = self.__class__.__name__
+        if self.partial:
+            if not self.calc.evol.areTypesConsistent():
+                raise shs.errors.AtomTypeError(
+                    "%s: Types should be consistent to get partial results"
+                    % (data_type,))
+            # now we know that types are consistent
+            n = self.calc.evol[0].types.toDict()
+        else:
+            n = {"Total": self.calc.evol.natoms}
+        for label, nat in n.iteritems():
+            x, y = self.calculatePartial(nat)
+            self.y.append(y)
+            self.y_titles.append(label)
+        self.x = x    

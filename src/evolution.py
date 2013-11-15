@@ -173,33 +173,6 @@ class Evolution():
         msd = msd / num
         return t, msd
     
-    def vaf(self, n):
-        ''' Calc velocity autocorrelation function (VAF) for the evolution
-        In:
-         -> n: a list of atoms for which to calculate VAF
-        Out:
-         -> t: a list of \Delta t differences (in steps)
-         -> vaf: a list of average VAFss for every \Delta t
-        '''
-        # taking coordinates of atoms belonging to the list n
-        all_coords, _ = self.trajectory()
-        coords = all_coords[:,n,:]
-        # assuming dt = 1, dx - in distance units!
-        v = coords[1:] - coords[:-1] 
-        traj_len = len(v)
-        # time (in step units!) 
-        t = N.arange(traj_len)
-        vaf = N.zeros(traj_len)
-        num = N.zeros(traj_len, dtype = int)
-        for delta_t in t:
-            for t_beg in range(traj_len - delta_t):
-                # correlation between v(t_beg) and v(t_beg + delta_t)
-                v_cor = (v[t_beg] * v[t_beg + delta_t]).sum(axis = 1)
-                num[delta_t] += len(v_cor.T)
-                vaf[delta_t] += N.sum(v_cor)
-        vaf = vaf / num
-        return t, vaf
-
 # Evolution VP methods --- 
 
     def rdfvp(self, **kwds):
