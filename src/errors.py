@@ -15,3 +15,6 @@ class UnsupportedError(Error):
 
 class FileError(Error):
     pass
+
+class AtomTypeError(Error):
+    pass

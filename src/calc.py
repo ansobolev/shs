@@ -18,7 +18,7 @@ import geom as G
 import options as Opts
 import plot as Plot
 import sio as SIO
-from data import Data
+from data_old import Data
 import vtkxml.xml_write as VTKxml
 
 class Calc():
@@ -118,15 +118,6 @@ class SiestaCalc(Calc):
         self.opts.alter(altdata)
 
 # Get information ---
-    def get_info(self, itype):
-        ''' Returns information of desired type
-        '''
-    
-    def getPropNames(self):
-        ''' Returns names for per-atom properties 
-        '''
-        return self.evol.getPropNames()    
-    
     def updateWithTypes(self, types):
         self.evol.updateWithTypes(types) 
     
@@ -134,8 +125,7 @@ class SiestaCalc(Calc):
         ''' Get data by name
         '''
         # Returns data by dataname 
-        choice = {'mde' : self.mde,
-                  'rdf' : self.rdf,                    
+        choice = {'rdf' : self.rdf,
                   'msd' : self.msd,
                   'vaf' : self.vaf,
                   'dos' : self.dos,
@@ -152,18 +142,14 @@ class SiestaCalc(Calc):
         # TODO:  returns data object (not implemented yet for TIs)
         return choice[data_name](**kwds)
         
-    def mde(self, *args, **kwds):
+    def mde(self):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
         if len(mdef) != 1:
             print 'Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, )
             return -1
         mde = SIO.MDEFile(mdef[0])
-        self.nsteps = mde.nsteps
-        self.mdedata = mde.data
-        d = Data('func', 'mde', x_label = 'step', data = mde.data)
-        return d
-#        return self.mdedata, None
+        return mde.nsteps, mde.data
         
     def rdf(self, **kwds):
         ''' Get RDF of evolution

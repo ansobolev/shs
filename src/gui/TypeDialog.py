@@ -4,11 +4,13 @@ Created on 10.05.2013
 
 @author: andrey
 '''
-import sys
-import wx
 
 import interface
 from mbox import ValueIsEmpty, ValueIsNotANumber, TypeNameIsEmpty
+
+import sys
+import wx
+
 
 class TypeDialog(wx.Dialog):
     '''

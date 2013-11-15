@@ -71,10 +71,10 @@ def ReadFDFLines(infile, head = ''):
     file.close()
     return lines
 
-def any2dict(data):                                                                                                                                                                
+def any2dict(data):
     ''' Converts list of FDF file lines to a dictionary of FDF file options 
     '''  
-    fddict = dict()                                                                                                                                                                 
+    fddict = dict()
     is_block = False                                                                                                                                                                
     for i, fdline in enumerate(data):
         if (is_block):                                                                                                                                                              
@@ -266,9 +266,9 @@ class LMPFile():
     def __del__(self):
         self.f.flush()
         self.f.close()
-        
+
 class MDEFile():
-    
+
     def __init__(self, mdefn):
         dt = {'names' : ('step', 'temp', 'e_ks', 'e_tot', 'vol', 'p'),
              'formats' : ('i4','f4','f4','f4','f4','f4')}

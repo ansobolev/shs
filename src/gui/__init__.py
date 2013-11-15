@@ -2,5 +2,3 @@
 # 
 # (c) Andrey Sobolev, 2013
 #
-
-pass

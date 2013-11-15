@@ -60,4 +60,8 @@ def ShowPlotInfo(leg, info):
         s += '\n'
     wx.MessageBox(s, 'Plot information', 
                   wx.OK | wx.ICON_INFORMATION)
-        
+
+if __name__ == '__main__':
+    app = wx.App()
+    dlg = ValueIsNotANumber('test1')
+    app.SetTopWindow(dlg)

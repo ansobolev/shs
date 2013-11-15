@@ -89,8 +89,8 @@ class PlotFrame(wx.Frame):
         # begin wxGlade: PlotFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        
-        self.CreateMplFigure()       
+
+        self.CreateMplFigure()
         self.PlotsCtrl = wx.ListCtrl(self.panel, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
         self.ByCalcsChkBox = wx.CheckBox(self.panel, -1, 'Group by calcs')
         self.ReplotBtn = wx.Button(self.panel, -1, "Replot!")
@@ -145,13 +145,13 @@ class PlotFrame(wx.Frame):
 # Methods to be implemented in subclasses    
     def ReplotBtnPress(self, evt):
         self.replot()
-    
+
     def InfoBtnPress(self, event):
         pass
-    
+
     def FitBtnPress(self, event):
         pass
-    
+
     def ByCalcsCheck(self, event):
         pass
 
@@ -160,29 +160,29 @@ class PlotFrame(wx.Frame):
 
 class PlotFuncFrame(PlotFrame):
     title = 'Plot'
-    
+
     def __init__(self, *args, **kwds):
         PlotFrame.__init__(self, *args, **kwds)
         Publisher().subscribe(self.plot,('data.plot'))
-       
+
     def plot(self, msg):
-        self.calcs = msg.data[1]
-        self.data = msg.data[2]
-        # a number of tuples (x, y1, ... yn)
-        self.names = self.data[0][1].dtype.names
-        self.info = msg.data[3]
+        self.data = msg.data
         self.initplot()
-        self.replot()       
+        self.replot()
 
     def initplot(self):
         self.PlotsCtrl.DeleteAllItems()
+        # all data are the same for different calcs
+        assert len(set([d.y_titles for d in self.data])) == 1
+        # graphs - different graphs
+        # leg - different lines on a graph
         if self.ByCalcsChkBox.IsChecked():
-            data = self.calcs
-            self.leg = self.names
+            graphs = [d.title for d in self.data]
+            self.leg = self.data[0].y_titles
         else:
-            data = self.names
-            self.leg = self.calcs
-        for i, s in enumerate(data):
+            graphs = self.data[0].y_titles
+            self.leg = [d.title for d in self.data]
+        for i, s in enumerate(graphs):
             self.PlotsCtrl.InsertStringItem(i, s)
         # adjusting column width
         self.PlotsCtrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER) 
@@ -191,11 +191,12 @@ class PlotFuncFrame(PlotFrame):
         wc = self.PlotsCtrl.GetColumnWidth(0); 
         if wh > wc: 
             self.PlotsCtrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER) 
-        
+
         self.PlotsCtrl.Select(0, 1)
-    
+
     def replot(self, cfd = True):
         sind = getListCtrlSelection(self.PlotsCtrl)
+        print sind
         ng = len(sind)
         ncols = round(ng**0.5)
         if ncols == 0.:
@@ -206,22 +207,22 @@ class PlotFuncFrame(PlotFrame):
         if cfd:
             self.fit_points = []
         self.FitBtn.SetLabel("Begin fit")
-        self.fitting = False        
-        
+        self.fitting = False
+
         for i, igraph in enumerate(sind):
             title = self.PlotsCtrl.GetItemText(igraph)
             axes = self.fig.add_subplot(nrows,ncols,i+1)
             axes.set_title(title)
             if self.ByCalcsChkBox.IsChecked():
-                for ns in self.names:
-                    axes.plot(self.data[igraph][0], self.data[igraph][1][ns])
+                for y in self.data[igraph].y:
+                    axes.plot(self.data[igraph].x, y)
             else:
-                for ds in self.data:
-                    axes.plot(ds[0], ds[1][title])
-            if (self.info is not None) and ('x' in self.info.keys()):
-                axes.set_xticks(ds[self.x])
-                self.fig.autofmt_xdate(rotation = 90)
-                axes.set_xticklabels(self.info[i]['x'])
+                for d in self.data:
+                    axes.plot(d.x, d.y[igraph])
+#            if (self.info is not None) and ('x' in self.info.keys()):
+#                axes.set_xticks(ds[self.x])
+#                self.fig.autofmt_xdate(rotation = 90)
+#                axes.set_xticklabels(self.info[i]['x'])
         # get legend
         lines = self.fig.axes[0].get_lines()
         self.fig.legend(lines, self.leg, 1)
@@ -231,7 +232,7 @@ class PlotFuncFrame(PlotFrame):
         if self.info is None:
             mbox.NoInfo()
             return 1
-        mbox.ShowPlotInfo(self.calcs, self.info)       
+        mbox.ShowPlotInfo(self.calcs, self.info)
 
     def ByCalcsCheck(self, evt):
         self.initplot()

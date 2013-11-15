@@ -39,7 +39,7 @@ class Geom():
     def __init__(self, dtype = None, data = None):
         ''' Initializing geometry
         '''
-        self.alat = 1.        
+        self.alat = 1.
         self.unit = 'Ang'
         self.vc = np.array([[1., 0., 0.], 
                            [0., 1., 0.],
@@ -54,8 +54,7 @@ class Geom():
                       'vp_ti' : self.vp_ti,
                       'magmom' : self.mmagmom,
                       'absmagmom' : self.mmagmom,
-                      'vp_cn' :self.vp_neighbors,
-                      'spinflips' : self.spinflips
+                      'vp_cn' :self.vp_neighbors
                       }
         # pairwise properties constructor
         self.pwprops = {'vp_distance' : self.vp_distance,
@@ -402,9 +401,6 @@ class Geom():
             return np.abs(self.atoms['up'] - self.atoms['dn'])
         else:
             return self.atoms['up'] - self.atoms['dn']
-        
-    def spinflips(self):
-        pass
     
     def add_fields(self,name,field):
         ''' Add fields to self.atoms

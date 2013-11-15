@@ -85,5 +85,3 @@ if __name__ == '__main__':
     host = 'tornado.susu.ac.ru'
     user = 'physics'
     ssh = getSSHClient(host, user)
-    
-        

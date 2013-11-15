@@ -20,7 +20,7 @@ class AtomType():
     '''    
     
     def __init__(self, geom):
-        
+
         self.geom = geom
         # default
         self.labels = geom.names['label'].tolist()
@@ -36,7 +36,7 @@ class AtomType():
         self.atoms = []
         self._untyped = self.geom.atoms['id'] - 1
         self.isFinalized = False
-    
+
     def addType(self, condition, typeLabel):
         '''
         '''
@@ -50,7 +50,7 @@ class AtomType():
         self.labels.append(typeLabel)
         self.atoms.append(self._untyped[nat])
         self._untyped = np.delete(self._untyped, nat)
-    
+
     def finalize(self):
         if len(self._untyped) != 0:
             self.atoms.append(self._untyped)
@@ -126,16 +126,21 @@ if __name__ == "__main__":
 # some tests
     from calc import SiestaCalc
     example = '../examples/FeCANI'
+
     c = SiestaCalc(example, dtype = "ani", steps = range(-3,0,1))
     c.evol[0].types.removeTypes()
+
     comp = Comparison('vp_totvolume', '>', '12')
     comp = comp.addAnd('label', '==', "\'Fe\'")
     c.evol[0].types.addType(comp, 'Fe_big')
+
     comp2 = Comparison('vp_totvolume', '>', '9')
     comp2 = comp2.addAnd('label', '==', "\'Fe\'")
     c.evol[0].types.addType(comp2, 'Fe_medium')
+
     comp3 = Comparison('label', '==', "\'C\'")
     c.evol[0].types.addType(comp3, 'C')
+
     for typ, at in c.evol[0].types:
         print typ
         print at

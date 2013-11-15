@@ -1,11 +1,11 @@
-#!/usr/bin/env python
-# -*- coding : utf8 -*-
+# -*- coding: utf8 -*-
 
 import itertools
+from collections import defaultdict
 import numpy as N
 
 import geom as G
-from data import Data
+from data_old import Data
 
 
 ''' Container for working with files in FDF, XV, MDE, OUT format
@@ -84,14 +84,41 @@ class Evolution():
                 props = g.getPropNames()
             else:
                 assert props == g.getPropNames()
-        props.append('spinflips')
-        return sorted(props)
-    
+        return props
+
     def updateWithTypes(self, types):
         ''' Updates geometries with given types
         '''
         for ig in range(len(self.geom)):
             self.geom[ig].updateWithTypes(types)
+
+    def getAtomsByType(self):
+        labels = []
+        types = defaultdict(list)
+        for g in self.geom:
+            itype = g.types.toDict()
+            labels.append(sorted(itype.keys()))
+            for l, at in itype.iteritems():
+                types[l].append(at)
+        return labels, types
+
+    def areTypesConsistent(self):
+        """ Checks whether all atoms belong to the same type throughout the evol
+        """
+        labels, types = self.getAtomsByType()
+        # check if labels are the same throughout evol
+        if labels.count(labels[0]) != len(labels):
+            return False
+        # check if atoms belong to the same type
+        for _, at in types.iteritems():
+            try:
+                np_at = N.array(at)
+            except:
+                # evolsteps contain different number of atoms of a type
+                return False
+            if not N.all(at == at[0]):
+                return False
+        return True
 
     def rdf(self, n = None, rmax = 7., dr = 0.05):
         coords, vc = self.trajectory()
@@ -172,7 +199,7 @@ class Evolution():
                 vaf[delta_t] += N.sum(v_cor)
         vaf = vaf / num
         return t, vaf
-                
+
 # Evolution VP methods --- 
 
     def rdfvp(self, **kwds):
@@ -301,10 +328,10 @@ class Evolution():
             d.make_partial(types)
         return d
 
-    def spinflips(self, **kwds):
+    def spinflips(self, ratio, partial, **kwds):
         'Get spin flips'
-        partial = kwds.get('partial', True)
         assert self.has_fields('up', 'dn')
+
         prevmm = self.geom[0].mmagmom(abs_mm = False)
         result = [N.zeros(len(prevmm))]
         for g in self.geom[1:]:
@@ -313,21 +340,11 @@ class Evolution():
             prevmm = gmm
         d = Data('per_atom', 'spinflips', y = result, y_label = 'Total')
         if partial:
-            types = []
-            for g in self.geom:
-                types.append(g.types.toDict())
-            d.make_partial(types)
+            typs = self.geom[0].types['label'].tolist()
+            n = [self.geom[0].filter('label',typ)[0] for typ in typs]            
+            d.make_partial(dict(zip(typs, n)))
         return d
 
-    def updateWithSpinflips(self):
-        assert self.has_fields('up', 'dn')
-        prevmm = self.geom[0].mmagmom(abs_mm = False)
-        for ig, g in enumerate(self.geom[1:]):
-            gmm = g.mmagmom(abs_mm = False)            
-            self.geom[ig + 1].updateProperty('spinflips',(prevmm * gmm) < 0)
-            prevmm = gmm
-            
-    
     def has_fields(self, *fields):
         'Returns True if all Geoms in  self.geom have these fields'
         return all([g.has_fields(*fields) for g in self.geom])
