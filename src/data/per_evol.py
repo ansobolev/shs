@@ -7,10 +7,12 @@ from abstract import PerEvolData
 import plotdata
 
 class MDEData(PerEvolData):
+    """ Functions describing calculations (E, temp, pressure...) 
+    """
     _shortDoc = "MDE evolution"
 
     def getData(self, calc, title = None):
-        nsteps, data = calc.mde()
+        _, data = calc.mde()
         self.x_title = data.dtype.names[0]
         self.x = data[self.x_title]
         self.y_titles = data.dtype.names[1:]
@@ -18,3 +20,8 @@ class MDEData(PerEvolData):
 
     def plotData(self):
         return plotdata.FunctionData(self)
+    
+class DOSData(PerEvolData):
+    """ Densities of electronic states
+    """
+    _shortDoc = "Density of states"

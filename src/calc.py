@@ -18,7 +18,7 @@ import geom as G
 import options as Opts
 import plot as Plot
 import sio as SIO
-from data import Data
+from data_old import Data
 import vtkxml.xml_write as VTKxml
 
 class Calc():
@@ -193,46 +193,6 @@ class SiestaCalc(Calc):
         return d
 #        return (title, r, total_rdf), None
              
-    def msd(self, ratio, partial, **kwds):
-        ''' Get MSD of evolution (type-wise)
-        NB: As it uses only one cell vector set, when calculating MSD for NPT ensemble one should expect getting strange results. 
-        In:
-         -> atype (int?) - atomic type we need to calculate MSD for 
-        '''
-        title = ['T',]
-        total_msd = []
-#        self.opts[]
-        if partial:
-            types = self.evol[0].types['label']
-            for ityp in types:
-                n1 = self.evol[0].filter('label', ityp)
-                title.append(ityp)
-                t, msd = self.evol.msd(n = n1)
-                total_msd.append(msd)
-        d = Data('func', 'msd', x_label = 'T', x = t, y_label = title[1:], y = total_msd)
-        return d
-#        return (title, t, total_msd), None
-    
-    def vaf(self, ratio, partial, **kwds):
-        ''' Get VAF of evolution (type-wise)
-        NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results. 
-        In:
-         -> atype (int?) - atomic type we need to calculate VAF for 
-        '''
-        title = ['T',]
-        total_vaf = []
-#        self.opts[]
-        if partial:
-            types = self.evol[0].types['label']
-            for ityp in types:
-                n1 = self.evol[0].filter('label', ityp)
-                title.append(ityp)
-                t, vaf = self.evol.vaf(n = n1)
-                total_vaf.append(vaf)
-        d = Data('func', 'vaf', x_label = 'T', x = t, y_label = title[1:], y = total_vaf)
-        return d
-#        return (title, t, total_vaf), None
-
     def dos(self, *args, **kwds):
         if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
             fname = os.path.join(self.dir, 'pdos.xml')

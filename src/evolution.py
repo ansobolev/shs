@@ -86,6 +86,8 @@ class Evolution():
                 assert props == g.getPropNames()
         return props
 
+# Functions dealing with types 
+
     def updateWithTypes(self, types):
         ''' Updates geometries with given types
         '''
@@ -150,29 +152,6 @@ class Evolution():
         rdf = rdf / (4.*N.pi*(r**2.)*dr)
         return r, rdf
 
-    def msd(self, n):
-        ''' Calc mean square displacement (MSD) for the evolution
-        In:
-         -> n: a list of atoms for which to calculate MSD
-        Out:
-         -> t: a list of \Delta t differences (in steps)
-         -> msd: a list of average MSDs for every \Delta t
-        '''
-        all_coords, _ = self.trajectory()
-        coords = all_coords[:,n,:]
-        traj_len = len(coords)
-        t = N.arange(traj_len)
-        msd = N.zeros(traj_len)
-        num = N.zeros(traj_len, dtype = int)
-        for delta_t in t:
-            for t_beg in range(traj_len - delta_t):
-                dx = coords[t_beg + delta_t] - coords[t_beg]
-                dr = (dx**2.0).sum(axis = 1)
-                num[delta_t] += len(dr.T)
-                msd[delta_t] += N.sum(dr)
-        msd = msd / num
-        return t, msd
-    
 # Evolution VP methods --- 
 
     def rdfvp(self, **kwds):

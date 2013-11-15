@@ -47,6 +47,7 @@ class AbstractData(object):
 
     @classmethod
     def shortDoc(self):
+        assert self._shortDoc != "Abstract class for data"
         return self._shortDoc
 
     @abstractmethod
@@ -79,6 +80,7 @@ class PerTypeData(AbstractData):
         super(PerTypeData, self).__init__(*args, **kwds)
 
     def plotData(self):
+        # FIXME: get the function to AbstractData 
         return plotdata.FunctionData(self)
 
 class OneTypeData(PerTypeData):
@@ -100,4 +102,8 @@ class OneTypeData(PerTypeData):
             x, y = self.calculatePartial(nat)
             self.y.append(y)
             self.y_titles.append(label)
-        self.x = x    
+        self.x = x
+        
+class InteractingTypesData(PerTypeData):
+    """ Data with non-consistent interacting types (RDF)
+    """
