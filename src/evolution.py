@@ -122,36 +122,6 @@ class Evolution():
                 return False
         return True
 
-    def rdf(self, n = None, rmax = 7., dr = 0.05):
-        coords, vc = self.trajectory()
-#        sij = coords[:,:,None,...] - coords[:,None,...]
-# number of bins
-        nbins = int((rmax-dr)/dr)
-        nsteps = len(vc)
-        dists = N.zeros(nbins)
-
-        for crd_step, vc_step in zip(coords, vc):
-# fractional coordinates
-            if n is None:
-                nat1 = len(crd_step)
-                nat2 = len(crd_step)
-            else:
-                nat1 = len(n[0])
-                nat2 = len(n[1])
-            vol = N.linalg.det(vc_step)
-            
-            rij = G.r(crd_step, vc_step, n)
-            dist = N.sqrt((rij**2.0).sum(axis = 1))
-# found distances, now get histogram
-            hist, r = N.histogram(dist, bins = nbins, range = (dr, rmax)) 
-            dists += hist / (nat1 / vol * nat2) 
-# find rdf
-        rdf = dists / nsteps
-# norm rdf
-        r = (r+dr/2.)[:-1]        
-        rdf = rdf / (4.*N.pi*(r**2.)*dr)
-        return r, rdf
-
 # Evolution VP methods --- 
 
     def rdfvp(self, **kwds):

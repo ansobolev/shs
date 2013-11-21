@@ -4,7 +4,7 @@
 # (c) Andrey Sobolev, 2013
 #
 
-from abc import ABCMeta, abstractproperty, abstractmethod
+from abc import ABCMeta, abstractmethod
 
 import shs.errors
 
@@ -107,3 +107,4 @@ class OneTypeData(PerTypeData):
 class InteractingTypesData(PerTypeData):
     """ Data with non-consistent interacting types (RDF)
     """
+    

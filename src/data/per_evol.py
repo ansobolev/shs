@@ -12,7 +12,7 @@ class MDEData(PerEvolData):
     _shortDoc = "MDE evolution"
 
     def getData(self, calc, title = None):
-        _, data = calc.mde()
+        data = calc.mde()
         self.x_title = data.dtype.names[0]
         self.x = data[self.x_title]
         self.y_titles = data.dtype.names[1:]

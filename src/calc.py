@@ -126,11 +126,7 @@ class SiestaCalc(Calc):
         ''' Get data by name
         '''
         # Returns data by dataname 
-        choice = {'mde' : self.mde,
-                  'rdf' : self.rdf,                    
-                  'msd' : self.msd,
-                  'vaf' : self.vaf,
-                  'dos' : self.dos,
+        choice = {'dos' : self.dos,
                   'rdfvp' : self.evol.rdfvp,
                   'vp_pcn' : self.evol.pcn_evolution,
                   'vp_facearea' : self.evol.vp_facearea,
@@ -158,41 +154,8 @@ class SiestaCalc(Calc):
             return -1
         mde = SIO.MDEFile(mdef[0])
         self.nsteps = mde.nsteps
-        self.mdedata = mde.data
-        d = Data('func', 'mde', x_label = 'step', data = mde.data)
-        return d
-#        return self.mdedata, None
-        
-    def rdf(self, ratio, partial, **kwds):
-        ''' Get RDF of evolution
-        In:
-         -> partial (bool) - indicates whether we need partial RDF
-         -> n (tuple of index lists or None) - if partial, then indicates which atoms we need to find geometry of 
-        '''
-        title = ['R',]
-        total_rdf = []
-# get r_max
-        vc = N.diag(self.evol[0].vc)
-        rmax = N.max(vc / 2.)
-        if partial:
-# get the list of atom types (from the first geometry in evolution)
-            types = self.evol[0].types['label']
-            for i, ityp in enumerate(types):
-                for jtyp in types[i:]:
-                    n1 = self.evol[0].filter('label', ityp)
-                    n2 = self.evol[0].filter('label', jtyp)
-                    title.append(ityp+'-'+jtyp)
-                    r, rdf = self.evol.rdf(rmax = rmax, n = (n1,n2))
-                    total_rdf.append(rdf)
-        else:
-            n = None
-            title.append('Total RDF')
-            r, rdf = self.evol.rdf(n)
-            total_rdf.append(rdf)
-        d = Data('func', 'rdf', x_label = 'R', x = r, y_label = title[1:], y = total_rdf)
-        return d
-#        return (title, r, total_rdf), None
-             
+        return mde.data
+           
     def dos(self, *args, **kwds):
         if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
             fname = os.path.join(self.dir, 'pdos.xml')
