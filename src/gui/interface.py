@@ -55,7 +55,7 @@ def getProperties(clist):
     return props
 
 
-def getData(data_class, leg, clist):
+def getData(ptype, data_class, leg, clist):
     """Returns data according to plot type from a list of calcs
     Input:
      -> data_class - a class of data needed
@@ -66,7 +66,7 @@ def getData(data_class, leg, clist):
         raise ValueError('interface.getData: No calculations selected!')
     data = []
     for c in clist:
-        data.append(data_class(c).plotData())
+        data.append(data_class(c).plotData(ptype))
     return data
 
 def get_corr(xchoice, ychoice, clist):

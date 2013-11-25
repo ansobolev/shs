@@ -41,7 +41,7 @@ class model_voronoi():
 
         self.atoms = atoms
         
-    def voronoi(self, pbc = True, ratio = 0.5):
+    def voronoi(self, pbc, ratio):
         ''' The main function for computing Voronoi tesselation 
         '''
         self.v = pyvoro.compute_voronoi(self.atoms['crd'], self.vc, np.max(self.vc)/4.)

@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-import itertools
 from collections import defaultdict
 import numpy as N
 
@@ -86,7 +85,7 @@ class Evolution():
                 assert props == g.getPropNames()
         return props
 
-# Functions dealing with types 
+# Functions dealing with types ---
 
     def updateWithTypes(self, types):
         ''' Updates geometries with given types
@@ -178,19 +177,6 @@ class Evolution():
             d.make_partial(types)
         return d
     
-    def vp_totvolume(self, **kwds):
-        partial = kwds.pop('partial', True)
-        result = []
-        for g in self.geom:
-            result.append(g.property('vp_totvolume', **kwds))
-        d = Data('per_atom', 'vp_totvolume', y = result, y_label = 'Total')
-        if partial:
-            types = []
-            for g in self.geom:
-                types.append(g.types.toDict())
-            d.make_partial(types)
-        return d
-
     def vp_ksph(self, **kwds):
         partial = kwds.pop('partial', True)
         result = []

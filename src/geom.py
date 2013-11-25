@@ -248,7 +248,7 @@ class Geom():
         return dist
 
 # Voronoi tesselation routines ---    
-    def voronoi(self, pbc = True, ratio = 0.5):
+    def voronoi(self, pbc, ratio):
         ''' Get Voronoi tesselation based on the libraries available:
          -> numpy: QHull library
          -> pyvoro: Python interface to Voro++ library (~30 times faster than Numpy)
@@ -340,28 +340,29 @@ class Geom():
         fa_np = ma.masked_values(fa_np, 0.)
         return fa_np
     
-    def vp_totfacearea(self, **kwds):
-        ''' Finds total face areas for resulting Voronoi polihedra 
+    def vp_totfacearea(self, pbc, ratio, n = None):
+        ''' Finds total face areas for resulting Voronoi polihedra
+        n -> a tuple of arrays containing atomic numbers of corresponding type  
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
 
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if hasattr(self.vp, 'vp_area'): return self.vp.vp_area
         f = self.vp.vp_faces()        
-        _, a = self.vp.vp_volumes(f, partial = False)
+        _, a = self.vp.vp_volumes(f)
+#        if n is not None:
+#            a = 
         return a
 
-    def vp_totvolume(self, **kwds):
+    def vp_totvolume(self, pbc, ratio, n = None):
         ''' Finds total volumes for resulting Voronoi polihedra 
+        n -> a tuple of arrays containing atomic numbers of corresponding type  
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volume
         f = self.vp.vp_faces()        
-        v, _ = self.vp.vp_volumes(f, partial = False)
+        v, _ = self.vp.vp_volumes(f)
+        if n is not None:
+            v = [v[i] for i in n]
         return v
 
     def vp_ksph(self, **kwds):

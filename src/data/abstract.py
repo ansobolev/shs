@@ -22,12 +22,14 @@ class AbstractData(object):
     _isTimeEvol = None
     _isHistogram = None
     _shortDoc = "Abstract class for data"
+    
 
     def __init__(self, *args, **kwds):
         assert args[0].__class__.__name__ == "SiestaCalc"
         calc = args[0]
         self.calc = calc
         self.title = calc.dir
+        self.plot_options = {}
         self.getData(calc)
 
     @classproperty
@@ -53,24 +55,50 @@ class AbstractData(object):
     @abstractmethod
     def getData(self, calc):
         pass
-    
-    def plotData(self, plot_type):
+
+    @abstractmethod
+    def calculate(self):
         pass
+
+    @abstractmethod
+    def calculatePartial(self):
+        pass
+    
+    def plotData(self, plot_type, plot_options = None):
+        if plot_options is None:
+            plot_options = self.plot_options
+        choice = {"Function" : (self.isFunction, plotdata.FunctionData),
+                  "Histogram": (self.isHistogram, plotdata.HistogramData),
+                  "Time evolution": (self.isTimeEvol, plotdata.TimeEvolData)}
+        assertion, plot_class = choice[plot_type]
+        assert assertion
+        return plot_class(self, **plot_options)
 
 class PerAtomData(AbstractData):
     _isFunction = False
     _isTimeEvol = True
     _isHistogram = True
 
+    def __init__(self, *args, **kwds):
+        self.partial = kwds.get("partial", True)
+        self.pbc = kwds.get("pbc", True)
+        self.ratio = kwds.get("ratio", 0.7)
+        super(PerAtomData, self).__init__(*args, **kwds)
+
 class PerEvolData(AbstractData):
     _isFunction = True
     _isTimeEvol = False
     _isHistogram = False
 
+    def calculate(self):
+        pass
+
+    def calculatePartial(self):
+        pass
+
 class PerTypeData(AbstractData):
     """ Base class for per-type functions
     """
-    
     _isFunction = True
     _isTimeEvol = False
     _isHistogram = False
@@ -79,14 +107,18 @@ class PerTypeData(AbstractData):
         self.partial = kwds.get("partial", True)
         super(PerTypeData, self).__init__(*args, **kwds)
 
-    def plotData(self):
-        # FIXME: get the function to AbstractData 
-        return plotdata.FunctionData(self)
-
 class OneTypeData(PerTypeData):
     """ Data with consistent types (VAF, MSD)
     """
     
+    def getData(self, calc):
+        # taking coordinates of atoms belonging to the list n
+        self.traj, _ = calc.evol.trajectory()
+        self.y = []
+        self.x_title = "Steps"
+        self.y_titles = []
+        self.calculate()
+
     def calculate(self):
         data_type = self.__class__.__name__
         if self.partial:

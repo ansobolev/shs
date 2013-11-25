@@ -217,7 +217,7 @@ class RootFrame(wx.Frame):
             if dlg.ShowModal() == wx.ID_OK:
                 r = dlg.GetRange()
             dlg.Destroy()
-        self.calcs.append(interface.getcalc(cdir, ctype, r))
+        self.calcs.append(interface.getCalc(cdir, ctype, r))
         self.CalcList.InsertStringItem(clc, cdir[len(self.root)+1:])
         self.CalcList.SetStringItem(clc, 1, ctype)
         self.CalcList.SetStringItem(clc, 2, str(len(r)) if r is not None else '')
@@ -291,7 +291,7 @@ class RootFrame(wx.Frame):
         pchoice = self.PropChoice.GetSelection()
         leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
         t1 = time.clock()
-        data, info = interface.get_data(ptype, pchoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
+        data, info = interface.getData(ptype, pchoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
         self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
         msg = [pchoice, leg, data, info]
         try:

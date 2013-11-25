@@ -126,12 +126,10 @@ class SiestaCalc(Calc):
         ''' Get data by name
         '''
         # Returns data by dataname 
-        choice = {'dos' : self.dos,
-                  'rdfvp' : self.evol.rdfvp,
+        choice = {'rdfvp' : self.evol.rdfvp,
                   'vp_pcn' : self.evol.pcn_evolution,
                   'vp_facearea' : self.evol.vp_facearea,
                   'vp_totfacearea' : self.evol.vp_totfacearea,
-                  'vp_totvolume' : self.evol.vp_totvolume,
                   'vp_ksph' : self.evol.vp_ksph,
                   'mmagmom' : self.evol.mmagmom,
                   'mabsmagmom' : self.evol.mmagmom,
@@ -146,7 +144,7 @@ class SiestaCalc(Calc):
         # TODO:  returns data object (not implemented yet for TIs)
         return choice[data_name](ratio, partial, **kwds)
         
-    def mde(self, *args, **kwds):
+    def mde(self):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
         if len(mdef) != 1:
@@ -156,7 +154,7 @@ class SiestaCalc(Calc):
         self.nsteps = mde.nsteps
         return mde.data
            
-    def dos(self, *args, **kwds):
+    def dos(self):
         if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
             fname = os.path.join(self.dir, 'pdos.xml')
         elif os.path.isfile(os.path.join(self.dir, self.sl + '.PDOS')):
@@ -179,9 +177,7 @@ class SiestaCalc(Calc):
         elif nspin == 1:
             names += raw_names
             data += raw_data
-        d = Data('func', 'dos', x_label = 'energy', x = ev, y_label = names[1:], y = data)
-        return d
-#        return (names, ev, data), {'nspin': nspin}
+        return (names, ev, data), {'nspin': nspin}
 
     def cn(self, dr = 0.2, ratio = 0.7, part = True):
         ''' Get full and partial atomic coordination numbers (type-wise);

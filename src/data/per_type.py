@@ -19,7 +19,7 @@ class VAFData(OneTypeData):
     
     _shortDoc = "Velocity autocorrelation"
 
-    def getData(self, calc):
+    def calculatePartial(self, n):
         ''' Calc velocity autocorrelation function (VAF) for the evolution
         In:
          -> n: a list of atoms for which to calculate VAF
@@ -27,14 +27,7 @@ class VAFData(OneTypeData):
          -> t: a list of \Delta t differences (in steps)
          -> vaf: a list of average VAFss for every \Delta t
         '''
-        # taking coordinates of atoms belonging to the list n
-        self.traj, _ = calc.evol.trajectory()
-        self.y = []
-        self.x_title = "Steps"
-        self.y_titles = []
-        self.calculate()
 
-    def calculatePartial(self, n):
         coords = self.traj[:,n,:]
         # assuming dt = 1, dx - in distance units!
         v = coords[1:] - coords[:-1] 
@@ -60,7 +53,7 @@ class MSDData(OneTypeData):
 
     _shortDoc = "Selfdiffusion (MSD)"
     
-    def getData(self, calc):
+    def calculatePartial(self, n):
         ''' Calc mean square displacement for the evolution
         In:
          -> n: a list of atoms for which to calculate MSD
@@ -68,14 +61,6 @@ class MSDData(OneTypeData):
          -> t: a list of \Delta t differences (in steps)
          -> vaf: a list of average VAFss for every \Delta t
         '''
-        # taking coordinates of atoms belonging to the list n
-        self.traj, _ = calc.evol.trajectory()
-        self.y = []
-        self.x_title = "Steps"
-        self.y_titles = []
-        self.calculate()
-
-    def calculatePartial(self, n):
         coords = self.traj[:,n,:]
         traj_len = len(coords)
         t = np.arange(traj_len)
@@ -111,16 +96,7 @@ class RDFData(InteractingTypesData):
         self.calculate()
         
     def calculate(self):
-        ''' Get RDF of evolution
-        In:
-         -> partial (bool) - indicates whether we need partial RDF
-         -> n (tuple of index lists or None) - if partial, then indicates which atoms we need to find geometry of 
-        '''
         if self.partial:
-            # get the list of atom types (from the first geometry in evolution)
-#            if self.calc.evol.areTypesConsistent():
-#                n = self.calc.evol[0].types.toDict()
-            # TODO: deal with non-consistent types                
             _, n = self.calc.evol.getAtomsByType()
             labels = sorted(n.keys())
             for i, ityp in enumerate(labels):
@@ -139,6 +115,11 @@ class RDFData(InteractingTypesData):
 #            total_rdf.append(rdf)
 
     def calculatePartial(self, n1, n2):
+        ''' Get RDF of evolution
+        In:
+         -> partial (bool) - indicates whether we need partial RDF
+         -> n (tuple of index lists or None) - if partial, then indicates which atoms we need to find geometry of 
+        '''
 #        sij = coords[:,:,None,...] - coords[:,None,...]
 # number of bins
         nbins = int((self.rmax-self.dr)/self.dr)

@@ -11,7 +11,7 @@ import shs.gui.interface as interface
 
 class RootFrame(wx.Frame):
 
-    calcs = [interface.getCalc('../examples/FeCANI', '.ANI', steps = range(-50,0,1))]
+    calcs = [interface.getCalc('../examples/FeCANI', '.ANI', steps = range(-5,0,1))]
 
     def __init__(self, *args, **kwds):
         # begin wxGlade: RootFrame.__init__
@@ -85,7 +85,7 @@ class RootFrame(wx.Frame):
         leg = ['example']
         calcs = self.calcs
         t1 = time.clock()
-        plot_data = interface.getData(data_class, leg, calcs)
+        plot_data = interface.getData(ptype, data_class, leg, calcs)
         self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
         msg = plot_data
         try:
