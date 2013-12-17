@@ -85,7 +85,7 @@ class SiestaCalc(Calc):
         outfns = '*.output'
         outf = SIO.OUTFile(outfns, self.dir, steps)
         self.steps = outf.steps
-        self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
+        self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins, 'forces': outf.forces})
 
     def readani(self, steps):
         'Reading calculation options and geometry from output files'

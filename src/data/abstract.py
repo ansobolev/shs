@@ -85,6 +85,20 @@ class PerAtomData(AbstractData):
         self.ratio = kwds.get("ratio", 0.7)
         super(PerAtomData, self).__init__(*args, **kwds)
 
+    def calculate(self):
+        if self.partial:
+            _, types = self.calc.evol.getAtomsByType()
+            self.y_titles = sorted(types.keys())
+            for y_title in self.y_titles:
+                self.y.append(self.calculatePartial(types[y_title]))
+        else:
+            self.y_titles = ["Total"]
+            self.y = self.data
+    
+    def calculatePartial(self, n):
+        return [self.data[i][n_i] for i, n_i in enumerate(n)]
+    
+
 class PerEvolData(AbstractData):
     _isFunction = True
     _isTimeEvol = False

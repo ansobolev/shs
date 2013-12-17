@@ -367,10 +367,12 @@ class OUTFile():
         self.atoms = []
         self.vc = []
         self.spins = []
+        self.forces = []
         for istep, block in timesteps(blocks, self.steps):
             read_atoms = False
             read_vc = False
             read_spins = False
+            read_forces = False
             for line in block:
 # getting coordinates block
                 if line.find('outcoor: Atomic coordinates') != -1:
@@ -399,9 +401,19 @@ class OUTFile():
                         read_spins = False
                         continue
                     spins_list.append(line.split())
+# getting forces block
+                if line.find('Atomic forces') != -1:
+                    read_forces = True
+                    forces_list = []
+                if read_forces:
+                    if line.find('--------') != -1:
+                        read_forces = False
+                        continue
+                    forces_list.append(line.split())
             self.atoms.append(self.list2atoms(at_list))
             self.vc.append(self.list2vc(vc_list))
             self.spins.append(self.list2spins(spins_list, self.atoms[-1]['label']))
+            self.forces.append(self.list2forces(forces_list))
 
     def list2atoms(self, at_list):
 # find unit of measurement
@@ -424,6 +436,10 @@ class OUTFile():
         vcu = re.search(r'\(.+?\)', str(head))
         self.vcunit = vcu.group(0)[1:-1]
         return N.array(vc_list).astype('float')
+
+    def list2forces(self, forces_list):
+        forces = [line[1:] for line in forces_list[1:]]
+        return N.rec.fromarrays([N.array(forces).astype('float')], names = 'forces', formats = '3f8' )
 
     def list2spins(self, spins_list, typ):
         'Now supports only collinear spin'

@@ -11,7 +11,7 @@ import shs.gui.interface as interface
 
 class RootFrame(wx.Frame):
 
-    calcs = [interface.getCalc('../examples/FeCANI', '.ANI', steps = range(-5,0,1))]
+    calcs = [interface.getCalc('../examples/FeCANI', '.ANI', steps = range(-20, 0))]
 
     def __init__(self, *args, **kwds):
         # begin wxGlade: RootFrame.__init__

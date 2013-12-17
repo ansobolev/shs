@@ -320,7 +320,7 @@ class Geom():
         dist_np = ma.masked_values(dist_np, 0.)
         return dist_np
     
-    def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
+    def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
         ''' Finds face areas of Voronoi tesselation
         '''
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
@@ -417,7 +417,12 @@ class Geom():
             self.atoms = nlrf.append_fields(self.atoms, name, field, asrecarray=True, usemask=False)
         elif fcn == 'recarray':
             for name in field.dtype.names:
-                self.atoms = nlrf.append_fields(self.atoms, name, field[name], asrecarray=True, usemask=False)
+                # FIXME: very, very dirty hack!
+                if name == 'forces':
+                    self.forces = field[name]
+                    continue
+                self.atoms = nlrf.rec_append_fields(self.atoms, name, field[name])
+
         else:
             raise TypeError ('Geom.add_fields: Only arrays or recarrays can be added to self.atoms as fields!')
 

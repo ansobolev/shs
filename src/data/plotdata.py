@@ -32,6 +32,7 @@ class HistogramData(PlotData):
     def prepare(self, data):
         dx = self.dx
         y = [np.hstack(y_typ) for y_typ in data.y]        
+        print [len(yi) for yi in y], y[0].shape
         xmin = np.ceil(np.min(np.hstack(y))/dx) * dx
         xmax = np.ceil(np.max(np.hstack(y))/dx) * dx
         nbins = (xmax - xmin) / dx
