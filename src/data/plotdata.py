@@ -65,3 +65,19 @@ class HistogramData(PlotData):
 
 class TimeEvolData(PlotData):
     pass
+
+class CumSumData(PlotData):
+   
+    def __init__(self, data, **kwds):
+        self.data = data
+        self.title = data.title
+        self.x_title = data.x_title
+        self.y = []
+        self.y_titles = tuple(data.y_titles)
+        # flattening type lists        
+        self.prepare(data)
+        
+    def prepare(self, data):
+        y_summed = [np.sum(yi, axis = 1) for yi in data.y]
+        self.x = np.arange(len(data.y[0]))
+        self.y = [np.cumsum(yi) for yi in y_summed]

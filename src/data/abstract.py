@@ -21,7 +21,7 @@ class AbstractData(object):
     _isFunction = None
     _isTimeEvol = None
     _isHistogram = None
-    _shortDoc = "Abstract class for data"
+    _shortDoc = None
     
 
     def __init__(self, *args, **kwds):
@@ -30,6 +30,9 @@ class AbstractData(object):
         self.calc = calc
         self.title = calc.dir
         self.plot_options = {}
+        self.x_title = ""
+        self.y = []
+        self.y_titles = []
         self.getData(calc)
 
     @classproperty
@@ -49,7 +52,7 @@ class AbstractData(object):
 
     @classmethod
     def shortDoc(self):
-        assert self._shortDoc != "Abstract class for data"
+        assert self._shortDoc is not None
         return self._shortDoc
 
     @abstractmethod
@@ -93,11 +96,13 @@ class PerAtomData(AbstractData):
                 self.y.append(self.calculatePartial(types[y_title]))
         else:
             self.y_titles = ["Total"]
-            self.y = self.data
+            self.y = self.calculateTotal()
     
     def calculatePartial(self, n):
         return [self.data[i][n_i] for i, n_i in enumerate(n)]
     
+    def calculateTotal(self):
+        return self.data
 
 class PerEvolData(AbstractData):
     _isFunction = True
@@ -128,9 +133,7 @@ class OneTypeData(PerTypeData):
     def getData(self, calc):
         # taking coordinates of atoms belonging to the list n
         self.traj, _ = calc.evol.trajectory()
-        self.y = []
         self.x_title = "Steps"
-        self.y_titles = []
         self.calculate()
 
     def calculate(self):

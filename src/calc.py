@@ -85,7 +85,7 @@ class SiestaCalc(Calc):
         outfns = '*.output'
         outf = SIO.OUTFile(outfns, self.dir, steps)
         self.steps = outf.steps
-        self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins, 'forces': outf.forces})
+        self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
 
     def readani(self, steps):
         'Reading calculation options and geometry from output files'
@@ -121,29 +121,12 @@ class SiestaCalc(Calc):
     def get_info(self, itype):
         ''' Returns information of desired type
         '''
-        
-    def get_data(self, data_name, **kwds):
-        ''' Get data by name
+
+# TODO: get data with data object
+    def get_data(self, dtype):
+        ''' Returns data of desired type
         '''
-        # Returns data by dataname 
-        choice = {'rdfvp' : self.evol.rdfvp,
-                  'vp_pcn' : self.evol.pcn_evolution,
-                  'vp_facearea' : self.evol.vp_facearea,
-                  'vp_totfacearea' : self.evol.vp_totfacearea,
-                  'vp_ksph' : self.evol.vp_ksph,
-                  'mmagmom' : self.evol.mmagmom,
-                  'mabsmagmom' : self.evol.mmagmom,
-                  'spinflips' : self.evol.spinflips
-                  }
-        # ratio (for voronoi.numpy)
-        ratio = kwds.pop('ratio', 0.5)
-        partial = kwds.pop('partial', True)
-        # one more ugly hack
-        if data_name == 'mabsmagmom':
-            kwds['abs_mm'] = True
-        # TODO:  returns data object (not implemented yet for TIs)
-        return choice[data_name](ratio, partial, **kwds)
-        
+      
     def mde(self):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
@@ -205,30 +188,6 @@ class SiestaCalc(Calc):
             for elt in ti[ityp]:
                 d[ityp][tuple(elt)] += 1
         return names, d 
-
-    def mmagmom(self):
-        'Returns evolution of mean magnetic moment on atoms'
-        steps = self.evol.steps
-        d = self.evol.mmagmom()
-        (names, steps, magmom), info = d.evolution(steps, func = 'avg')
-        names = ['step',] + names
-        return (names, steps, magmom), info
-        
-    def mabsmagmom(self):
-        'Returns evolution of mean magnetic moment on atoms'
-        steps = self.evol.steps
-        d = self.evol.mmagmom(abs_mm = True)
-        (names, steps, magmom), info = d.evolution(steps, func = 'avg')
-        names = ['step',] + names
-        return (names, steps, magmom), info
-
-    def spinflips(self):
-        'Returns the number of spin flips over time'
-        steps = self.evol.steps
-        d = self.evol.spinflips()
-        (names, steps, sf), info = d.evolution(steps, func = 'cum_sum')
-        names = ['step',] + names
-        return (names, steps, sf), info
     
     def animate(self):
         

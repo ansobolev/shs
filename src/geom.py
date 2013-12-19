@@ -52,8 +52,8 @@ class Geom():
                       'vp_totfacearea' : self.vp_totfacearea,
                       'vp_ksph' : self.vp_ksph,
                       'vp_ti' : self.vp_ti,
-                      'magmom' : self.mmagmom,
-                      'absmagmom' : self.mmagmom,
+                      'magmom' : self.magmom,
+                      'absmagmom' : self.magmom,
                       'vp_cn' :self.vp_neighbors
                       }
         # pairwise properties constructor
@@ -349,8 +349,6 @@ class Geom():
         if hasattr(self.vp, 'vp_area'): return self.vp.vp_area
         f = self.vp.vp_faces()        
         _, a = self.vp.vp_volumes(f)
-#        if n is not None:
-#            a = 
         return a
 
     def vp_totvolume(self, pbc, ratio, n = None):
@@ -365,12 +363,9 @@ class Geom():
             v = [v[i] for i in n]
         return v
 
-    def vp_ksph(self, **kwds):
+    def vp_ksph(self, pbc, ratio):
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if not hasattr(self.vp, 'vp_volume'): 
             f = self.vp.vp_faces()        
@@ -397,8 +392,8 @@ class Geom():
         ti = self.vp.vp_topological_indices()
         return ti
 
-    def mmagmom(self, **kwds):
-        if kwds['abs_mm']:
+    def magmom(self, abs_mm = False):
+        if abs_mm:
             return np.abs(self.atoms['up'] - self.atoms['dn'])
         else:
             return self.atoms['up'] - self.atoms['dn']

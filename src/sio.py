@@ -413,7 +413,7 @@ class OUTFile():
             self.atoms.append(self.list2atoms(at_list))
             self.vc.append(self.list2vc(vc_list))
             self.spins.append(self.list2spins(spins_list, self.atoms[-1]['label']))
-            self.forces.append(self.list2forces(forces_list))
+#            self.forces.append(self.list2forces(forces_list))
 
     def list2atoms(self, at_list):
 # find unit of measurement
