@@ -75,6 +75,7 @@ class VPFaceAreaData(PerAtomData):
                     self.y.append(self.calculatePartial(types[ti], types[tj]))
         else:
             self.y_titles = ["Total"]
+            raise NotImplementedError
 # FIXME:            self.y = self.data
     
     def calculatePartial(self, ti, tj = None):

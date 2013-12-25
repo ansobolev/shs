@@ -4,8 +4,6 @@
 # (c) Andrey Sobolev, 2013
 #
 import numpy as np
-import shs.errors
-import plotdata
 from shs.geom import r
 from abstract import OneTypeData, InteractingTypesData
 
@@ -135,7 +133,7 @@ class RDFData(InteractingTypesData):
             rij = r(crd_i, vc_i, (n1_i, n2_i))
             dist = np.sqrt((rij**2.0).sum(axis = 1))
 # found distances, now get histogram
-            hist, x = np.histogram(dist, bins = nbins, range = (self.dr, self.rmax)) 
+            hist, x = np.histogram(dist, bins = nbins, range = (self.dr, self.rmax))
             dists += hist / (nat1 / vol * nat2) 
 # find rdf
         rdf = dists / nsteps
@@ -144,3 +142,54 @@ class RDFData(InteractingTypesData):
         rdf = rdf / (4.*np.pi*(x**2.)*self.dr)
         return x, rdf
   
+class VPRDFData(InteractingTypesData):
+    """ Data class for calculating partial RDFs based on VP 
+    """
+    _shortDoc = "Partial VP RDFs"
+    
+    def __init__(self, *args, **kwds):
+        self.dr = kwds.get("dr", 0.05)
+        super(VPRDFData, self).__init__(*args, **kwds)
+
+    def getData(self, calc):
+        self.data = [g.vp_distance() for _, g in calc.evol]
+        self.y = []
+        self.x_title = "Distance"
+        self.y_titles = []
+        self.calculate()
+
+    def calculate(self):
+        data = []
+        if self.partial:
+            _, types = self.calc.evol.getAtomsByType()
+            labels = sorted(types.keys())
+            # single
+            for ti in labels:
+                self.y_titles.append(ti)
+                data.append(self.calculatePartial(types[ti]))
+            # pairwise
+            for i, ti in enumerate(labels):
+                for tj in labels[i:]:
+                    self.y_titles.append(ti + "-" + tj)
+                    data.append(self.calculatePartial(types[ti], types[tj]))
+        else:
+            self.y_titles = ["Total"]
+            raise NotImplementedError
+        # histogram is calculated here, as it is a function
+        r_min = min([np.min(data_i) for data_i in data])   
+        r_max = max([np.max(data_i) for data_i in data])   
+        nbins = int((r_max-r_min) / self.dr)
+        for yi in data:
+            hist, x = np.histogram(yi, bins = nbins, range = (r_min, r_max))
+            print hist.shape, x.shape
+            self.y.append(hist)
+        self.x = (x + self.dr/2.)[:-1]       
+        
+    
+    def calculatePartial(self, ti, tj = None):
+        if tj is None:
+            return np.hstack([np.ma.compressed(self.data[i][t_i]) for (i,t_i) 
+                        in enumerate(ti)])
+        else:
+            return  np.hstack([np.ma.compressed(self.data[i][t_i][:,t_j]) 
+                        for i,(t_i,t_j) in enumerate(zip(ti,tj))])

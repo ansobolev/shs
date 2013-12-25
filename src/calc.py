@@ -167,7 +167,6 @@ class SiestaCalc(Calc):
         also return nearest neighbors RDF (found using VP analysis)
         In:
          -> dr (float) - bin width, with which RDFVP is built
-         -> atype (int?) - atomic type we need to calculate CNs for
         '''
         nsteps = len(self.evol.steps)
         d = self.evol.rdfvp(ratio, part)
@@ -220,7 +219,7 @@ class LammpsCalc(Calc):
         Global variables:
             SC.geom : a calculation model geometry (Geom class)
     '''
-    
+
     def __init__(self, dir, steps = None):
         self.dir = dir
         # Default geom
