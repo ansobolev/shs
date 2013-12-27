@@ -18,7 +18,6 @@ import geom as G
 import options as Opts
 import plot as Plot
 import sio as SIO
-from data_old import Data
 import vtkxml.xml_write as VTKxml
 
 class Calc():
@@ -169,24 +168,11 @@ class SiestaCalc(Calc):
             names += raw_names
             data += raw_data
         return (names, ev, data), {'nspin': nspin}
-
-    def cn(self, dr = 0.2, ratio = 0.7, part = True):
-        ''' Get full and partial atomic coordination numbers (type-wise);
-        also return nearest neighbors RDF (found using VP analysis)
-        In:
-         -> dr (float) - bin width, with which RDFVP is built
-        '''
-        nsteps = len(self.evol.steps)
-        d = self.evol.rdfvp(ratio, part)
-        (names, rdf, data), info = d.histogram(dr, xmin = 0., norm = nsteps * dr)
-        names = ['R',] + ['-'.join(n) for n in names]
-        return (names, rdf, data), info
-   
+ 
     def vp_ti(self, ratio = 0.7, part = True):
         'Returns topological indices for VPs'
         from collections import defaultdict
         typs, ti = self.evol.vp_ti(ratio, part)
-        data = []
         names = ['TI'] + typs
 
         d = [defaultdict(int) for _ in typs]
@@ -228,8 +214,8 @@ class LammpsCalc(Calc):
             SC.geom : a calculation model geometry (Geom class)
     '''
 
-    def __init__(self, dir, steps = None):
-        self.dir = dir
+    def __init__(self, calc_dir, steps = None):
+        self.dir = calc_dir
         # Default geom
         self.geom = G.Geom()
 

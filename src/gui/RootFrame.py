@@ -38,19 +38,14 @@ class RootFrame(wx.Frame):
         self.GetData = wx.Button(self, -1, "Get calc data")
         self.btnEnqueue = wx.Button(self, -1, "Enqueue job")
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
-        self.PropType = wx.Choice(self, -1, choices=["Function","Histogram","Time evolution"]) 
-        self.propChoices = {"function": ["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)"],
-                            "per_atom": ["VP total face area", "VP total volume", "VP sphericity coefficient", 
-                                        "Mean magn moment", "Mean abs magn moment", "Number of spin flips",
-                                        "Topological indices"],
-                            "hist_evol" : ["Voronoi face area",],
-                            "hist" : ["Coordination numbers",],
-                            "evol" : [ "CNs time evolution"]}
+        self.propChoices = interface.dataClasses()
+        self.propType = wx.Choice(self, -1, choices=self.propChoices.types())
+        pt_num = self.propType.GetSelection()
+        pt = self.propType.GetItems()[pt_num]
+        self.propChoice = wx.Choice(self, -1, choices = self.propChoices.classes(pt))
         
-        self.PropChoice = wx.Choice(self, -1, choices = self.propChoices["function"])
-        
-        self.CorrXChoice = wx.Choice(self, -1, choices=self.propChoices["per_atom"])
-        self.CorrYChoice = wx.Choice(self, -1, choices=self.propChoices["per_atom"])
+        self.CorrXChoice = wx.Choice(self, -1, choices=self.propChoices.classes("Histogram"))
+        self.CorrYChoice = wx.Choice(self, -1, choices=self.propChoices.classes("Histogram"))
         
         self.PropChoiceBtn = wx.Button(self, -1, "Plot property")
         self.CorrelateBtn = wx.Button(self, -1, "Plot correlations")
@@ -60,7 +55,7 @@ class RootFrame(wx.Frame):
         self.__set_properties()
         self.__do_layout()
 
-        self.Bind(wx.EVT_CHOICE, self.propTypeChange, self.PropType)
+        self.Bind(wx.EVT_CHOICE, self.propTypeChange, self.propType)
         self.Bind(wx.EVT_RADIOBOX, self.TypeChange, self.TypeRBox)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChange, self.CalcTree)
         self.Bind(wx.EVT_BUTTON, self.DownBtnPress, self.DownBtn)
@@ -81,9 +76,8 @@ class RootFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: RootFrame.__set_properties
         self.SetTitle("Siesta help scripts GUI")
-        self.SetSize((820, 430))
+        self.SetSize((850, 430))
         self.TypeRBox.SetSelection(1)
-        self.PropChoice.SetSelection(4)
         self.btnEnqueue.Enable(False)
         # end wxGlade
 
@@ -113,8 +107,8 @@ class RootFrame(wx.Frame):
         mainSizer.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
         
-        PropSizer.Add(self.PropType, 1, wx.ALL|wx.EXPAND, 0)
-        PropSizer.Add(self.PropChoice, 1, wx.ALL|wx.EXPAND, 0)
+        PropSizer.Add(self.propType, 1, wx.ALL|wx.EXPAND, 0)
+        PropSizer.Add(self.propChoice, 1, wx.ALL|wx.EXPAND, 0)
         plotSizer.Add(PropSizer, 1, wx.ALL|wx.EXPAND, 2)
         plotSizer.Add(self.PropChoiceBtn, 0, wx.ALL|wx.EXPAND, 2)
         CorrSizer.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
@@ -173,14 +167,10 @@ class RootFrame(wx.Frame):
 
     def propTypeChange(self, event):
         # property type
-        ptype = self.PropType.GetSelection()
-        choice = {0: ["function",],
-                  1: ["hist", "hist_evol", "per_atom"],
-                  2: ["evol", "hist_evol", "per_atom"]}
-        props = [p for pc in choice[ptype] for p in self.propChoices[pc]]
-        self.PropChoice.SetItems(props)
-        self.PropChoice.SetSelection(0)
-         
+        pt_num = self.propType.GetSelection()
+        pt = self.propType.GetItems()[pt_num]
+        self.propChoice.SetItems(self.propChoices.classes(pt))
+        self.propChoice.SetSelection(0)
 
     def TypeChange(self, event): # wxGlade: RootFrame.<event_handler>
         ctype = self.TypeRBox.GetItemLabel(self.TypeRBox.GetSelection())
@@ -287,13 +277,15 @@ class RootFrame(wx.Frame):
     
     def PlotProperty(self, event): # wxGlade: RootFrame.<event_handler>
 # plot options - get all the data to plot
-        ptype = self.PropType.GetSelection()
-        pchoice = self.PropChoice.GetSelection()
+        ptype = self.propType.GetItems()[self.propType.GetSelection()]
+        pchoice = self.propChoice.GetItems()[self.propChoice.GetSelection()]
+        data_class = self.propChoices.dataClass(ptype, pchoice)
         leg = [self.CalcList.GetItemText(i) for i in getListCtrlSelection(self.CalcList)]
         t1 = time.clock()
-        data, info = interface.getData(ptype, pchoice, [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
+        plot_data = interface.getData(ptype, data_class, leg, 
+                                       [self.calcs[i] for i in getListCtrlSelection(self.CalcList)])        
         self.SetStatusText('Calculation time: %7.2f s.' % (time.clock() - t1))
-        msg = [pchoice, leg, data, info]
+        msg = plot_data
         try:
             self.pf.Raise()
         except (AttributeError, wx._core.PyDeadObjectError):

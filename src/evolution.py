@@ -4,8 +4,6 @@ from collections import defaultdict
 import numpy as N
 
 import geom as G
-from data_old import Data
-
 
 ''' Container for working with files in FDF, XV, MDE, OUT format
 '''
@@ -116,27 +114,13 @@ class Evolution():
         # check if atoms belong to the same type
         for _, at in types.iteritems():
             try:
-                np_at = N.array(at)
+                N.array(at)
             except:
                 # evolsteps contain different number of atoms of a type
                 return False
             if not N.all(at == at[0]):
                 return False
         return True
-
-    def pcn_evolution(self, ratio, partial, **kwds):
-        'Returns time evolution of partial coordination numbers'
-        result = []
-        for g in self.geom:
-            result.append(g.vp_neighbors(ratio = ratio, rm_small = False, eps = 0.5))
-        d = Data('hist', 'vp_pcn', y = result, y_label = 'Total')
-        # partial calculations
-        if partial:
-            typs = self.geom[0].types['label'].tolist()
-            # atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]           
-            d.make_partial(dict(zip(typs, n)), pairwise = True)
-        return d
   
     def vp_ti(self, ratio, part):
         nat = len(self.geom[0].atoms)
