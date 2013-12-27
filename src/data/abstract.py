@@ -126,6 +126,19 @@ class PerTypeData(AbstractData):
         self.partial = kwds.get("partial", True)
         super(PerTypeData, self).__init__(*args, **kwds)
 
+class PerStepData(AbstractData):
+    """ Base class for per-type functions
+    """
+    _isFunction = False
+    _isTimeEvol = True
+    _isHistogram = False
+
+    def __init__(self, *args, **kwds):
+        self.partial = kwds.get("partial", True)
+        self.rm_small = kwds.get("rm_small", True)
+        self.eps = kwds.get("eps", True)
+        super(PerStepData, self).__init__(*args, **kwds)
+
 class OneTypeData(PerTypeData):
     """ Data with consistent types (VAF, MSD)
     """

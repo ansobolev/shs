@@ -11,6 +11,7 @@ class VPVolumeData(PerAtomData):
     _shortDoc = "Total VP volume"
 
     def getData(self, calc):
+        self.nsteps = len(calc)
         # default plot options         
         self.plot_options['dx'] = 0.05
         
@@ -24,6 +25,7 @@ class VPTotalFaceAreaData(PerAtomData):
     _shortDoc = "VP total face area"
     
     def getData(self, calc):
+        self.nsteps = len(calc)
         # default plot options         
         self.plot_options['dx'] = 0.1
         
@@ -37,6 +39,7 @@ class VPSphericityCoefficient(PerAtomData):
     _shortDoc = "VP sphericity coefficient"
     
     def getData(self, calc):
+        self.nsteps = len(calc)        
         # default plot options         
         self.plot_options['dx'] = 0.02
         
@@ -51,6 +54,7 @@ class VPFaceAreaData(PerAtomData):
     _shortDoc = "VP face area"    
 
     def getData(self, calc):
+        self.nsteps = len(calc)        
         # default plot options         
         self.plot_options['dx'] = 0.04
         
@@ -88,6 +92,7 @@ class MagneticMoment(PerAtomData):
     _shortDoc = "Magnetic moment"
     
     def getData(self, calc):
+        self.nsteps = len(calc)        
         self.plot_options['dx'] = 0.1
         
         self.x_title = "Magnetic moment"
@@ -100,6 +105,7 @@ class AbsMagneticMoment(PerAtomData):
     _shortDoc = "Absolute magnetic moment"
     
     def getData(self, calc):
+        self.nsteps = len(calc)
         self.plot_options['dx'] = 0.1
         
         self.x_title = "Absolute magnetic moment"

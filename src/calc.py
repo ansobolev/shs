@@ -48,6 +48,14 @@ class SiestaCalc(Calc):
             self.dtype = dtype
             self.read(dtype, steps)
 
+    def __len__(self):
+        """ The length of the calculation equals the length of its evolution
+        """
+        if hasattr(self, 'evol'):
+            return len(self.evol)
+        else:
+            return 1
+
 # Read ---
     def read(self, dtype, steps):
         ''' Reading calculation options

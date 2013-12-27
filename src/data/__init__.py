@@ -7,6 +7,7 @@
 import per_atom
 import per_evol
 import per_type
+import per_step
 
 #self.propChoices = {"function": ["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)"],
 #    "per_atom": ["VP total face area", "VP total volume", "VP sphericity coefficient", 
@@ -22,7 +23,7 @@ class Data(object):
     def __init__(self):
         import inspect
         # dirty hack; I don't know how to populate the list of modules imported within current file
-        data_modules = [per_atom, per_evol, per_type]
+        data_modules = [per_atom, per_evol, per_type, per_step]
     
         data_class_list = []
         for mod in data_modules:

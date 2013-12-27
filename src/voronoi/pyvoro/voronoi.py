@@ -56,7 +56,8 @@ class model_voronoi():
             self.voronoi()
         ngbrs = []
         for iat, vi in enumerate(self.v):
-            ngbrs.append(np.array([iat,] + [fi['adjacent_cell'] for fi in vi['faces']]))
+            ngbrs.append(np.array([iat,] + [fi['adjacent_cell'] for fi in vi['faces'] 
+                                            if (not rm_small or fi['area']  > eps)]))
         return ngbrs
     
     def vp_volumes(self, f, partial = False):

@@ -53,6 +53,9 @@ class Evolution():
         for istep, igeom in zip(self.steps,self.geom):
             yield istep, igeom
     
+    def __len__(self):
+        return len(self.geom)
+    
     def filter(self, name, f):
         ''' Filters evolution by field name & value
         '''
@@ -120,22 +123,6 @@ class Evolution():
             if not N.all(at == at[0]):
                 return False
         return True
-
-# Evolution VP methods --- 
-
-    def rdfvp(self, **kwds):
-        partial = kwds.get('partial', True)
-        result = []
-        for g in self.geom:
-            result.append(g.property('vp_distance', **kwds))
-        d = Data('hist', 'rdfvp', y = result, y_label = 'Total')
-        # partial calculations
-        if partial:
-            types = []
-            for g in self.geom:
-                types.append(g.types.toDict())
-            d.make_partial(types, pairwise = True)
-        return d
 
     def pcn_evolution(self, ratio, partial, **kwds):
         'Returns time evolution of partial coordination numbers'

@@ -289,17 +289,18 @@ class Geom():
         return self.atoms['label']
 
     def vp_neighbors(self, **kwds):
-        'Finds neighbors of VP'
-        # WARNING: makes a lot of unnecessary work (ok if we work with up to several thousands of atoms)    
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-        rm_small = kwds['rm_small']
-        eps = kwds['eps']
-        
-        fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
+        'Finds neighbors of VPs'
+# FIXME: Works only with pyvoro
+        pbc = kwds.get('pbc', True)
+        ratio = kwds.get('ratio', 0.5)
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
+        rm_small = kwds.get('rm_small', True)
+        eps = kwds.get('eps', 0.05)
+        return self.vp.vp_neighbors(rm_small, eps)
+#        fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
         # If there is a face (with non-zero area) between atoms, then they are neighbors
-        fa_np[fa_np > 0] = 1.
-        return fa_np
+#        fa_np[fa_np > 0] = 1.
+#        return fa_np
     
     def vp_distance(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
         'Finds distances between VP neighbors'
