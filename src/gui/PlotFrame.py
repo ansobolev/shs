@@ -153,7 +153,8 @@ class PlotFrame(wx.Frame):
         pass
 
     def ByCalcsCheck(self, event):
-        pass
+        self.initplot()
+        self.replot()
 
     def OnClose(self, event):
         pass
@@ -236,10 +237,6 @@ class PlotFuncFrame(PlotFrame):
             mbox.NoInfo()
             return 1
         mbox.ShowPlotInfo(self.calcs, self.info)
-
-    def ByCalcsCheck(self, evt):
-        self.initplot()
-        self.replot()
 
     def FitBtnPress(self, evt):
         sind = getListCtrlSelection(self.PlotsCtrl)
@@ -364,10 +361,6 @@ class PlotCorrFrame(PlotFrame):
         self.fig.legend(sdata, self.leg, scatterpoints = 1)
         self.canvas.draw()
 
-    def ByCalcsCheck(self, evt):
-        self.initplot()
-        self.replot()
-        
     def OnClose(self, evt):
         Publisher().unsubscribe(self.plot,('corr.plot'))
         self.Destroy()

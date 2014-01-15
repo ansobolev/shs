@@ -9,14 +9,6 @@ import per_evol
 import per_type
 import per_step
 
-#self.propChoices = {"function": ["Run evolution (MDE)","Partial RDFs","Selfdiffusion (MSD)","Velocity autocorrelation", "Density of states (DOS)"],
-#    "per_atom": ["VP total face area", "VP total volume", "VP sphericity coefficient", 
-#                 "Mean magn moment", "Mean abs magn moment", "Number of spin flips",
-#                 "Topological indices"],
-#    "hist_evol" : ["Voronoi face area",],
-#    "hist" : ["Coordination numbers",],
-#    "evol" : [ "CNs time evolution"]}
-
 class Data(object):
     _types = ['Function', 'Histogram', 'Time evolution']
 
