@@ -169,19 +169,6 @@ class SiestaCalc(Calc):
             data += raw_data
         return (names, ev, data), {'nspin': nspin}
  
-    def vp_ti(self, ratio = 0.7, part = True):
-        'Returns topological indices for VPs'
-        from collections import defaultdict
-        typs, ti = self.evol.vp_ti(ratio, part)
-        names = ['TI'] + typs
-
-        d = [defaultdict(int) for _ in typs]
-        for ityp in range(len(typs)):
-            # Count number of VP occurrences    
-            for elt in ti[ityp]:
-                d[ityp][tuple(elt)] += 1
-        return names, d 
-    
     def animate(self):
         
         def sign(x):

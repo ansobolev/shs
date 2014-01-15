@@ -95,53 +95,6 @@ def get_corr(xchoice, ychoice, clist):
     return data, xd.y_label
 
 # interfaces per se
-def function(pchoice, clist):
-    data = []
-    # data kinds
-    kinds = ['func']
-    choices = [ci for k in kinds for ci in propChoice[k]]
-    choice = choices[pchoice]
-    for c in clist:
-        d = c.get_data(choice)
-        (names, x, calc_data), info = d.function()
-        data.append((x, np.rec.fromarrays(calc_data, names = names)))
-    return data, info
-
-def histogram(pchoice, clist):
-    data = []
-    # data kinds
-    kinds = ['hist', 'hist_evol', 'per_atom']
-    choices = [ci for k in kinds for ci in propChoice[k]]
-    # data settings
-    dsettings = [si for k in kinds for si in settings[k]]
-    choice = choices[pchoice]
-    setting = dsettings[pchoice]
-    # get histogram
-    dx = setting.pop('dx', 0.05)
-    for c in clist:
-        # get Data instance 
-        d = c.get_data(choice)
-        (names, x, calc_data), info = d.histogram(dx, **setting) 
-        data.append((x, np.rec.fromarrays(calc_data, names = names)))
-    return data, info
-
-
-def time_evolution(pchoice, clist):
-    data = []
-    kinds = ['evol', 'hist_evol', 'per_atom']
-    choices = [ci for k in kinds for ci in propChoice[k]]
-    # data settings
-    dsettings = [si for k in kinds for si in settings[k]]
-    choice = choices[pchoice]
-    setting = dsettings[pchoice]
-    
-    for c in clist:
-        setting['steps'] = c.steps
-        d = c.get_data(choice)
-        (names, x, calc_data), info = d.evolution(**setting)
-        data.append((x, np.rec.fromarrays(calc_data, names = names)))
-    return data, info
-
 
 def var_x(fn, clist, threshold = 0.5):
     from collections import defaultdict

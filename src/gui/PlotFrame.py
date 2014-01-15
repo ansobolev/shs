@@ -196,7 +196,6 @@ class PlotFuncFrame(PlotFrame):
 
     def replot(self, cfd = True):
         sind = getListCtrlSelection(self.PlotsCtrl)
-        print sind
         ng = len(sind)
         ncols = round(ng**0.5)
         if ncols == 0.:
@@ -218,14 +217,18 @@ class PlotFuncFrame(PlotFrame):
                     axes.plot(self.data[igraph].x, y)
             else:
                 for d in self.data:
-                    axes.plot(d.x, d.y[igraph])
-#            if (self.info is not None) and ('x' in self.info.keys()):
-#                axes.set_xticks(ds[self.x])
-#                self.fig.autofmt_xdate(rotation = 90)
-#                axes.set_xticklabels(self.info[i]['x'])
+                    if not d.var_x:
+                        x = d.x
+                    else:
+                        x = range(len(d.x))
+                        axes.get_xaxis().set_ticks(x) 
+                        axes.get_xaxis().set_ticklabels(d.x, rotation=60, size='x-small') 
+                    axes.plot(x, d.y[igraph])
+
         # get legend
         lines = self.fig.axes[0].get_lines()
         self.fig.legend(lines, self.leg, 1)
+        self.fig.tight_layout()
         self.canvas.draw()
 
     def InfoBtnPress(self, evt):

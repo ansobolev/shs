@@ -132,7 +132,7 @@ class SpinFlipsData(PerAtomData):
             result.append((prev * cur) < 0)
             prev = cur
 #        print len(result), len(result[0])
-        return result        
+        return result
         
     def calculatePartial(self, t):
         data = self.calculateTotal()
@@ -142,4 +142,29 @@ class SpinFlipsData(PerAtomData):
     def plotData(self, plot_type):
         from plotdata import CumSumData
         return CumSumData(self)
-        
+
+class TopologicalIndices(PerAtomData):
+    _isTimeEvol = False
+    _shortDoc = 'Topological indices'
+    
+    def getData(self, calc):
+        self.plot_options['threshold'] = 0.5
+        self.x_title = 'VP TIs'
+        self.data = []
+        for _, g in calc.evol:
+            # pbc, ratio, rm_small, eps
+            self.data.append(g.vp_ti())
+        self.calculate()
+
+    def calculateTotal(self):
+        return self.data
+
+    def calculatePartial(self, t):
+        result = []
+        for d, ti in zip(self.data, t):
+            result += [d[tij] for tij in ti]
+        return result
+    
+    def plotData(self, plot_type):
+        from plotdata import VarXData
+        return VarXData(self, **self.plot_options)

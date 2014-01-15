@@ -122,24 +122,6 @@ class Evolution():
                 return False
         return True
   
-    def vp_ti(self, ratio, part):
-        nat = len(self.geom[0].atoms)
-# full calculations         
-        typs = ['Total']
-        n = [range(nat)]
-        if part:
-            typs = self.geom[0].types['label'].tolist()
-# atomic numbers by type, atoms do not change their type throughout calculation 
-            n = [self.geom[0].filter('label',typ)[0] for typ in typs]
-# results storage
-        typ_ti = [[] for _ in typs]
-
-        for g in self.geom:
-            ti = g.vp_ti(ratio = ratio)
-            for it, nt in enumerate(n):
-                typ_ti[it] += [ti[jnt] for jnt in nt]
-        return typs, typ_ti
-
     def has_fields(self, *fields):
         'Returns True if all Geoms in  self.geom have these fields'
         return all([g.has_fields(*fields) for g in self.geom])

@@ -377,14 +377,10 @@ class Geom():
         ksph = 36. * np.pi * v * v / (a * a * a)
         return ksph
     
-    def vp_ti(self, **kwds):
+    def vp_ti(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
         ''' Finds topological indices of Voronoi polihedra
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-        rm_small = kwds['rm_small']
-        eps = kwds['eps']
-        
+
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         f = self.vp.vp_faces()        
         if rm_small:
