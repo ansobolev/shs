@@ -95,40 +95,6 @@ def get_corr(xchoice, ychoice, clist):
         data.append([np.array((xi, yi)) for (xi, yi) in zip(x, y)])
     return data, xd.y_label
 
-# interfaces per se
-
-def var_x(fn, clist, threshold = 0.5):
-    from collections import defaultdict
-    x = []
-    d = []
-    data = [[] for _ in clist]
-    info = [{} for _ in clist]
-    for c in clist:
-        title, data_i = fn(c)
-        d.append(data_i)
-
-        for data_ij in data_i:
-            for key_ij in data_ij.keys():
-                t = max(data_ij.values()) * threshold
-                if data_ij[key_ij] > t:
-                    x.append(key_ij)
-    x = list(set(x))
-    # For the sake of beautiful output    
-    l = defaultdict(list)
-    for key in x:
-        l[sum(key)].append(key)
-    x = [sorted(l[k]) + ['',] for k in sorted(l.keys())]
-    # flattening list
-    x = [l for sublist in x for l in sublist][:-1]
-    # cycle over calcs
-    for i, di in enumerate(d):
-        for dij in di:
-            data[i].append([dij[xi] for xi in x])
-        formats = ['f8' for _ in title]
-        data[i] = np.rec.fromarrays([range(len(x))] + data[i], names = title, formats = formats)
-        info[i]['x'] = x
-    return data, info
-
 def isCalcOfType(ctype, **kwargs):
     if 'fn' in kwargs.keys():
         options = {'.FDF' : [f for f in kwargs['fn'] if f.endswith('.fdf')],
