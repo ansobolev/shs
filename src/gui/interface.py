@@ -43,6 +43,7 @@ def set_value(cdir, label, value):
     c.opts[label].value = value
     return 0
 
+
 def getProperties(clist):
     if clist == []:
         raise ValueError('interface.getProperties: No calculations selected!')
@@ -55,7 +56,7 @@ def getProperties(clist):
     return props
 
 
-def getData(data_class, leg, clist):
+def getData(ptype, data_class, leg, clist):
     """Returns data according to plot type from a list of calcs
     Input:
      -> data_class - a class of data needed
@@ -66,7 +67,7 @@ def getData(data_class, leg, clist):
         raise ValueError('interface.getData: No calculations selected!')
     data = []
     for c in clist:
-        data.append(data_class(c).plotData())
+        data.append(data_class(c).plotData(ptype))
     return data
 
 def get_corr(xchoice, ychoice, clist):
@@ -95,53 +96,6 @@ def get_corr(xchoice, ychoice, clist):
     return data, xd.y_label
 
 # interfaces per se
-def function(pchoice, clist):
-    data = []
-    # data kinds
-    kinds = ['func']
-    choices = [ci for k in kinds for ci in propChoice[k]]
-    choice = choices[pchoice]
-    for c in clist:
-        d = c.get_data(choice)
-        (names, x, calc_data), info = d.function()
-        data.append((x, np.rec.fromarrays(calc_data, names = names)))
-    return data, info
-
-def histogram(pchoice, clist):
-    data = []
-    # data kinds
-    kinds = ['hist', 'hist_evol', 'per_atom']
-    choices = [ci for k in kinds for ci in propChoice[k]]
-    # data settings
-    dsettings = [si for k in kinds for si in settings[k]]
-    choice = choices[pchoice]
-    setting = dsettings[pchoice]
-    # get histogram
-    dx = setting.pop('dx', 0.05)
-    for c in clist:
-        # get Data instance 
-        d = c.get_data(choice)
-        (names, x, calc_data), info = d.histogram(dx, **setting) 
-        data.append((x, np.rec.fromarrays(calc_data, names = names)))
-    return data, info
-
-
-def time_evolution(pchoice, clist):
-    data = []
-    kinds = ['evol', 'hist_evol', 'per_atom']
-    choices = [ci for k in kinds for ci in propChoice[k]]
-    # data settings
-    dsettings = [si for k in kinds for si in settings[k]]
-    choice = choices[pchoice]
-    setting = dsettings[pchoice]
-    
-    for c in clist:
-        setting['steps'] = c.steps
-        d = c.get_data(choice)
-        (names, x, calc_data), info = d.evolution(**setting)
-        data.append((x, np.rec.fromarrays(calc_data, names = names)))
-    return data, info
-
 
 def var_x(fn, clist, threshold = 0.5):
     from collections import defaultdict

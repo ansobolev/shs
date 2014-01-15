@@ -52,8 +52,8 @@ class Geom():
                       'vp_totfacearea' : self.vp_totfacearea,
                       'vp_ksph' : self.vp_ksph,
                       'vp_ti' : self.vp_ti,
-                      'magmom' : self.mmagmom,
-                      'absmagmom' : self.mmagmom,
+                      'magmom' : self.magmom,
+                      'absmagmom' : self.magmom,
                       'vp_cn' :self.vp_neighbors
                       }
         # pairwise properties constructor
@@ -248,7 +248,7 @@ class Geom():
         return dist
 
 # Voronoi tesselation routines ---    
-    def voronoi(self, pbc = True, ratio = 0.5):
+    def voronoi(self, pbc, ratio):
         ''' Get Voronoi tesselation based on the libraries available:
          -> numpy: QHull library
          -> pyvoro: Python interface to Voro++ library (~30 times faster than Numpy)
@@ -289,17 +289,18 @@ class Geom():
         return self.atoms['label']
 
     def vp_neighbors(self, **kwds):
-        'Finds neighbors of VP'
-        # WARNING: makes a lot of unnecessary work (ok if we work with up to several thousands of atoms)    
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-        rm_small = kwds['rm_small']
-        eps = kwds['eps']
-        
-        fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
+        'Finds neighbors of VPs'
+# FIXME: Works only with pyvoro
+        pbc = kwds.get('pbc', True)
+        ratio = kwds.get('ratio', 0.5)
+        if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
+        rm_small = kwds.get('rm_small', True)
+        eps = kwds.get('eps', 0.05)
+        return self.vp.vp_neighbors(rm_small, eps)
+#        fa_np = self.vp_facearea(pbc, ratio, rm_small, eps)
         # If there is a face (with non-zero area) between atoms, then they are neighbors
-        fa_np[fa_np > 0] = 1.
-        return fa_np
+#        fa_np[fa_np > 0] = 1.
+#        return fa_np
     
     def vp_distance(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
         'Finds distances between VP neighbors'
@@ -320,7 +321,7 @@ class Geom():
         dist_np = ma.masked_values(dist_np, 0.)
         return dist_np
     
-    def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = True, eps = 0.5):
+    def vp_facearea(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
         ''' Finds face areas of Voronoi tesselation
         '''
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
@@ -340,36 +341,32 @@ class Geom():
         fa_np = ma.masked_values(fa_np, 0.)
         return fa_np
     
-    def vp_totfacearea(self, **kwds):
-        ''' Finds total face areas for resulting Voronoi polihedra 
+    def vp_totfacearea(self, pbc, ratio, n = None):
+        ''' Finds total face areas for resulting Voronoi polihedra
+        n -> a tuple of arrays containing atomic numbers of corresponding type  
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
 
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if hasattr(self.vp, 'vp_area'): return self.vp.vp_area
         f = self.vp.vp_faces()        
-        _, a = self.vp.vp_volumes(f, partial = False)
+        _, a = self.vp.vp_volumes(f)
         return a
 
-    def vp_totvolume(self, **kwds):
+    def vp_totvolume(self, pbc, ratio, n = None):
         ''' Finds total volumes for resulting Voronoi polihedra 
+        n -> a tuple of arrays containing atomic numbers of corresponding type  
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if hasattr(self.vp, 'vp_volume'): return self.vp.vp_volume
         f = self.vp.vp_faces()        
-        v, _ = self.vp.vp_volumes(f, partial = False)
+        v, _ = self.vp.vp_volumes(f)
+        if n is not None:
+            v = [v[i] for i in n]
         return v
 
-    def vp_ksph(self, **kwds):
+    def vp_ksph(self, pbc, ratio):
         ''' Finds total volumes for resulting Voronoi polihedra 
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         if not hasattr(self.vp, 'vp_volume'): 
             f = self.vp.vp_faces()        
@@ -380,14 +377,10 @@ class Geom():
         ksph = 36. * np.pi * v * v / (a * a * a)
         return ksph
     
-    def vp_ti(self, **kwds):
+    def vp_ti(self, pbc = True, ratio = 0.5, rm_small = False, eps = 0.5):
         ''' Finds topological indices of Voronoi polihedra
         '''
-        pbc = kwds['pbc']
-        ratio = kwds['ratio']
-        rm_small = kwds['rm_small']
-        eps = kwds['eps']
-        
+
         if not hasattr(self,'vp'): self.voronoi(pbc, ratio)
         f = self.vp.vp_faces()        
         if rm_small:
@@ -396,8 +389,8 @@ class Geom():
         ti = self.vp.vp_topological_indices()
         return ti
 
-    def mmagmom(self, **kwds):
-        if kwds['abs_mm']:
+    def magmom(self, abs_mm = False):
+        if abs_mm:
             return np.abs(self.atoms['up'] - self.atoms['dn'])
         else:
             return self.atoms['up'] - self.atoms['dn']
@@ -416,7 +409,12 @@ class Geom():
             self.atoms = nlrf.append_fields(self.atoms, name, field, asrecarray=True, usemask=False)
         elif fcn == 'recarray':
             for name in field.dtype.names:
-                self.atoms = nlrf.append_fields(self.atoms, name, field[name], asrecarray=True, usemask=False)
+                # FIXME: very, very dirty hack!
+                if name == 'forces':
+                    self.forces = field[name]
+                    continue
+                self.atoms = nlrf.rec_append_fields(self.atoms, name, field[name])
+
         else:
             raise TypeError ('Geom.add_fields: Only arrays or recarrays can be added to self.atoms as fields!')
 

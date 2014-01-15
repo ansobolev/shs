@@ -367,7 +367,7 @@ class model_voronoi(model_ngbr):
                 areas[ing][iat] = vpa[i]
         return areas
 
-    def vp_volumes(self, faces, partial = True):
+    def vp_volumes(self, faces, partial = False):
         ''' Get volumes AND areas of VP
         '''
         vpf_max = max([len(a) for at_face in faces for a in at_face.values()])

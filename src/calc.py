@@ -18,7 +18,6 @@ import geom as G
 import options as Opts
 import plot as Plot
 import sio as SIO
-from data_old import Data
 import vtkxml.xml_write as VTKxml
 
 class Calc():
@@ -47,6 +46,14 @@ class SiestaCalc(Calc):
         if dtype is not None:
             self.dtype = dtype
             self.read(dtype, steps)
+
+    def __len__(self):
+        """ The length of the calculation equals the length of its evolution
+        """
+        if hasattr(self, 'evol'):
+            return len(self.evol)
+        else:
+            return 1
 
 # Read ---
     def read(self, dtype, steps):
@@ -118,30 +125,15 @@ class SiestaCalc(Calc):
         self.opts.alter(altdata)
 
 # Get information ---
-    def updateWithTypes(self, types):
-        self.evol.updateWithTypes(types) 
-    
-    def get_data(self, data_name, **kwds):
-        ''' Get data by name
+    def get_info(self, itype):
+        ''' Returns information of desired type
         '''
-        # Returns data by dataname 
-        choice = {'rdf' : self.rdf,
-                  'msd' : self.msd,
-                  'vaf' : self.vaf,
-                  'dos' : self.dos,
-                  'rdfvp' : self.evol.rdfvp,
-                  'vp_pcn' : self.evol.pcn_evolution,
-                  'vp_facearea' : self.evol.vp_facearea,
-                  'vp_totfacearea' : self.evol.vp_totfacearea,
-                  'vp_totvolume' : self.evol.vp_totvolume,
-                  'vp_ksph' : self.evol.vp_ksph,
-                  'magmom' : self.evol.magmom,
-                  'absmagmom' : self.evol.absmagmom,
-                  'spinflips' : self.evol.spinflips
-                  }
-        # TODO:  returns data object (not implemented yet for TIs)
-        return choice[data_name](**kwds)
-        
+
+# TODO: get data with data object
+    def get_data(self, dtype):
+        ''' Returns data of desired type
+        '''
+      
     def mde(self):
         ' Reads information from MDE file'
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
@@ -149,82 +141,10 @@ class SiestaCalc(Calc):
             print 'Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, )
             return -1
         mde = SIO.MDEFile(mdef[0])
-        return mde.nsteps, mde.data
-        
-    def rdf(self, **kwds):
-        ''' Get RDF of evolution
-        In:
-         -> partial (bool) - indicates whether we need partial RDF
-         -> n (tuple of index lists or None) - if partial, then indicates which atoms we need to find geometry of 
-        '''
-        partial = kwds.get('partial', True)
-        title = ['R',]
-        total_rdf = []
-# get r_max
-        vc = N.diag(self.evol[0].vc)
-        rmax = N.max(vc / 2.)
-        if partial:
-# get the list of atom types (from the first geometry in evolution)
-            types = self.evol[0].names['label']
-            for i, ityp in enumerate(types):
-                for jtyp in types[i:]:
-                    n1 = self.evol[0].filter('label', lambda x: x == ityp)
-                    n2 = self.evol[0].filter('label', lambda x: x == jtyp)
-                    title.append(ityp+'-'+jtyp)
-                    r, rdf = self.evol.rdf(rmax = rmax, n = (n1,n2))
-                    total_rdf.append(rdf)
-        else:
-            n = None
-            title.append('Total RDF')
-            r, rdf = self.evol.rdf(n)
-            total_rdf.append(rdf)
-        d = Data('func', 'rdf', x_label = 'R', x = r, y_label = title[1:], y = total_rdf)
-        return d
-#        return (title, r, total_rdf), None
-             
-    def msd(self, **kwds):
-        ''' Get MSD of evolution (type-wise)
-        NB: As it uses only one cell vector set, when calculating MSD for NPT ensemble one should expect getting strange results. 
-        In:
-         -> atype (int?) - atomic type we need to calculate MSD for 
-        '''
-        partial = kwds.get('partial', True)
-        title = ['T',]
-        total_msd = []
-#        self.opts[]
-        if partial:
-            types = self.evol[0].names['label']
-            for ityp in types:
-                n1 = self.evol[0].filter('label', lambda x: x == ityp)
-                title.append(ityp)
-                t, msd = self.evol.msd(n = n1)
-                total_msd.append(msd)
-        d = Data('func', 'msd', x_label = 'T', x = t, y_label = title[1:], y = total_msd)
-        return d
-#        return (title, t, total_msd), None
-    
-    def vaf(self, **kwds):
-        ''' Get VAF of evolution (type-wise)
-        NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results. 
-        In:
-         -> atype (int?) - atomic type we need to calculate VAF for 
-        '''
-        partial = kwds.get('partial', True)
-        title = ['T',]
-        total_vaf = []
-#        self.opts[]
-        if partial:
-            types = self.evol[0].names['label']
-            for ityp in types:
-                n1 = self.evol[0].filter('label', lambda x: x == ityp)
-                title.append(ityp)
-                t, vaf = self.evol.vaf(n = n1)
-                total_vaf.append(vaf)
-        d = Data('func', 'vaf', x_label = 'T', x = t, y_label = title[1:], y = total_vaf)
-        return d
-#        return (title, t, total_vaf), None
-
-    def dos(self, *args, **kwds):
+        self.nsteps = mde.nsteps
+        return mde.data
+           
+    def dos(self):
         if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
             fname = os.path.join(self.dir, 'pdos.xml')
         elif os.path.isfile(os.path.join(self.dir, self.sl + '.PDOS')):
@@ -247,61 +167,8 @@ class SiestaCalc(Calc):
         elif nspin == 1:
             names += raw_names
             data += raw_data
-        d = Data('func', 'dos', x_label = 'energy', x = ev, y_label = names[1:], y = data)
-        return d
-#        return (names, ev, data), {'nspin': nspin}
-
-    def cn(self, dr = 0.2, ratio = 0.7, part = True):
-        ''' Get full and partial atomic coordination numbers (type-wise);
-        also return nearest neighbors RDF (found using VP analysis)
-        In:
-         -> dr (float) - bin width, with which RDFVP is built
-         -> atype (int?) - atomic type we need to calculate CNs for
-        '''
-        nsteps = len(self.evol.steps)
-        d = self.evol.rdfvp(ratio, part)
-        (names, rdf, data), info = d.histogram(dr, xmin = 0., norm = nsteps * dr)
-        names = ['R',] + ['-'.join(n) for n in names]
-        return (names, rdf, data), info
-   
-    def vp_ti(self, ratio = 0.7, part = True):
-        'Returns topological indices for VPs'
-        from collections import defaultdict
-        typs, ti = self.evol.vp_ti(ratio, part)
-        data = []
-        names = ['TI'] + typs
-
-        d = [defaultdict(int) for _ in typs]
-        for ityp in range(len(typs)):
-            # Count number of VP occurrences    
-            for elt in ti[ityp]:
-                d[ityp][tuple(elt)] += 1
-        return names, d 
-
-    def mmagmom(self):
-        'Returns evolution of mean magnetic moment on atoms'
-        steps = self.evol.steps
-        d = self.evol.mmagmom()
-        (names, steps, magmom), info = d.evolution(steps, func = 'avg')
-        names = ['step',] + names
-        return (names, steps, magmom), info
-        
-    def mabsmagmom(self):
-        'Returns evolution of mean magnetic moment on atoms'
-        steps = self.evol.steps
-        d = self.evol.mmagmom(abs_mm = True)
-        (names, steps, magmom), info = d.evolution(steps, func = 'avg')
-        names = ['step',] + names
-        return (names, steps, magmom), info
-
-    def spinflips(self):
-        'Returns the number of spin flips over time'
-        steps = self.evol.steps
-        d = self.evol.spinflips()
-        (names, steps, sf), info = d.evolution(steps, func = 'cum_sum')
-        names = ['step',] + names
-        return (names, steps, sf), info
-    
+        return (names, ev, data), {'nspin': nspin}
+ 
     def animate(self):
         
         def sign(x):
@@ -333,9 +200,9 @@ class LammpsCalc(Calc):
         Global variables:
             SC.geom : a calculation model geometry (Geom class)
     '''
-    
-    def __init__(self, dir, steps = None):
-        self.dir = dir
+
+    def __init__(self, calc_dir, steps = None):
+        self.dir = calc_dir
         # Default geom
         self.geom = G.Geom()
 

@@ -11,8 +11,8 @@ except (ImportError,):
     import plot as Plot
 
 def plotrdf():
-    dir = '../../test/lammps'
-    c = SiestaCalc(dir, type = 'ani', steps = range(-300, 0))
+    dir = '/home/andrey/calc/FeH'
+    c = LammpsCalc(dir, type = 'ani', steps = range(-300, 0))
 #    n1 = c.evol.filter('label', 'C')[0]
     title, r, rdf = c.rdf(partial = True ,n = None)
     Plot.plotrdf(title, r, rdf)
