@@ -46,18 +46,21 @@ class RootFrame(wx.Frame):
         self.GetData = wx.Button(self, -1, "Get calc data")
         self.btnEnqueue = wx.Button(self, -1, "Enqueue job")
         self.CalcList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.noteBook = wx.Notebook(self, style=wx.NB_TOP)
+        self.plotPanels = [wx.Panel(self.noteBook) for _ in range(2)]
         self.propChoices = interface.dataClasses()
-        self.propType = wx.Choice(self, -1, choices=self.propChoices.types())
+        self.propType = wx.Choice(self.plotPanels[0], -1, choices=self.propChoices.types())
         pt_num = self.propType.GetSelection()
         pt = self.propType.GetItems()[pt_num]
-        self.propChoice = wx.Choice(self, -1, choices = self.propChoices.classes(pt))
+        self.propChoice = wx.Choice(self.plotPanels[0], -1, choices = self.propChoices.classes(pt))
         
-        self.CorrXChoice = wx.Choice(self, -1, choices=self.propChoices.classes("Histogram"))
-        self.CorrYChoice = wx.Choice(self, -1, choices=self.propChoices.classes("Histogram"))
+        self.CorrXChoice = wx.Choice(self.plotPanels[1], -1, choices=self.propChoices.classes("Histogram"))
+        self.CorrYChoice = wx.Choice(self.plotPanels[1], -1, choices=self.propChoices.classes("Histogram"))
         
-        self.PropChoiceBtn = wx.Button(self, -1, "Plot property")
-        self.CorrelateBtn = wx.Button(self, -1, "Plot correlations")
         self.AnimateBtn = wx.Button(self, -1, "Animations")
+        self.plotOptionsBtn = wx.Button(self, -1, "Options")
+        self.plotBtn = wx.Button(self, -1, "Plot")
+
         self.CreateStatusBar()
         
         self.__set_properties()
@@ -70,8 +73,7 @@ class RootFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.UpBtnPress, self.UpBtn)
         self.Bind(wx.EVT_BUTTON, self.GetDataBtnPress, self.GetData)
         self.Bind(wx.EVT_BUTTON, self.enqueuePress, self.btnEnqueue)
-        self.Bind(wx.EVT_BUTTON, self.PlotProperty, self.PropChoiceBtn)
-        self.Bind(wx.EVT_BUTTON, self.Correlate, self.CorrelateBtn)
+        self.Bind(wx.EVT_BUTTON, self.plot, self.plotBtn)
         self.Bind(wx.EVT_BUTTON, self.Animate, self.AnimateBtn)
         # end wxGlade
         # initialize the tree
@@ -94,12 +96,10 @@ class RootFrame(wx.Frame):
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         LeftSizer = wx.BoxSizer(wx.VERTICAL)
 
-        plotSizer = wx.FlexGridSizer(rows=2, cols=2, hgap=5, vgap=2)        
-        plotSizer.SetFlexibleDirection(wx.HORIZONTAL)
-        PropSizer = wx.BoxSizer(wx.VERTICAL)
-        CorrSizer = wx.BoxSizer(wx.VERTICAL)
+        plotSizers = [wx.BoxSizer(wx.VERTICAL) for _ in range(2)]        
         
         BtnSizer = wx.BoxSizer(wx.VERTICAL)
+        leftBtnSizer = wx.BoxSizer(wx.HORIZONTAL)
         RightSizer = wx.BoxSizer(wx.VERTICAL)
         RightSizer.Add(self.CalcTree, 1, wx.EXPAND, 0)
         RightSizer.Add(self.TypeRBox, 0, wx.EXPAND, 0)
@@ -115,17 +115,20 @@ class RootFrame(wx.Frame):
         mainSizer.Add(BtnSizer, 0, wx.EXPAND, 0)
         LeftSizer.Add(self.CalcList, 2, wx.ALL|wx.EXPAND, 5)
         
-        PropSizer.Add(self.propType, 1, wx.ALL|wx.EXPAND, 0)
-        PropSizer.Add(self.propChoice, 1, wx.ALL|wx.EXPAND, 0)
-        plotSizer.Add(PropSizer, 1, wx.ALL|wx.EXPAND, 2)
-        plotSizer.Add(self.PropChoiceBtn, 0, wx.ALL|wx.EXPAND, 2)
-        CorrSizer.Add(self.CorrXChoice, 1, wx.ALL|wx.EXPAND, 0)
-        CorrSizer.Add(self.CorrYChoice, 1, wx.ALL|wx.EXPAND, 0)
-        plotSizer.Add(CorrSizer, 1, wx.ALL|wx.EXPAND, 2)
-        plotSizer.Add(self.CorrelateBtn, 0, wx.ALL|wx.EXPAND, 2)
-
-        LeftSizer.Add(plotSizer, 1, wx.ALL|wx.EXPAND, 2)
-
+        plotSizers[0].Add(self.propType, 0, wx.ALL|wx.EXPAND, 2)
+        plotSizers[0].Add(self.propChoice, 0, wx.ALL|wx.EXPAND, 2)
+        plotSizers[1].Add(self.CorrXChoice, 0, wx.ALL|wx.EXPAND, 2)
+        plotSizers[1].Add(self.CorrYChoice, 0, wx.ALL|wx.EXPAND, 2)
+        for i, panel in enumerate(self.plotPanels):
+            panel.SetSizer(plotSizers[i])
+            panel.Layout()
+            panel.Fit()
+        self.noteBook.AddPage(self.plotPanels[0], 'Properties')
+        self.noteBook.AddPage(self.plotPanels[1], 'Correlations')
+        LeftSizer.Add(self.noteBook, 1, wx.ALL|wx.EXPAND, 2)
+        leftBtnSizer.Add(self.plotOptionsBtn, 1, wx.ALL|wx.EXPAND, 2)
+        leftBtnSizer.Add(self.plotBtn, 1, wx.ALL|wx.EXPAND, 2)
+        LeftSizer.Add(leftBtnSizer, 0, wx.ALL|wx.EXPAND, 2)
         mainSizer.Add(LeftSizer, 1, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(mainSizer)
         self.Layout()
@@ -283,7 +286,13 @@ class RootFrame(wx.Frame):
         removeFile(sftp, remotefile)
         ssh.close()
     
-    def PlotProperty(self, event): # wxGlade: RootFrame.<event_handler>
+    def plot(self, event):
+        if self.noteBook.GetSelection() == 0:
+            self.plotProperty(event)
+        else:
+            self.Correlate(event)
+    
+    def plotProperty(self, event): # wxGlade: RootFrame.<event_handler>
 # plot options - get all the data to plot
         ptype = self.propType.GetItems()[self.propType.GetSelection()]
         pchoice = self.propChoice.GetItems()[self.propChoice.GetSelection()]
