@@ -364,4 +364,3 @@ class PlotCorrFrame(PlotFrame):
     def OnClose(self, evt):
         Publisher().unsubscribe(self.plot,('corr.plot'))
         self.Destroy()
-        

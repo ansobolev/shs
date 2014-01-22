@@ -10,14 +10,6 @@ from shs.calc import SiestaCalc as Sc
 from shs.data import Data
 #from shs.atomtype import Comparison
 
-settings = {'func': [{}, {}, {}, {}, {}],
-            'per_atom': [{'dx' : 0.2}, {'dx' : 0.05}, {'dx' : 0.005}, {},
-                         {}, {'func': 'cum_sum'}, {}],
-            'hist_evol' : [{'dx' : 0.05, 'xmin' : 0.}], 
-            'hist' : [{'dx' : 0.1, 'xmin' : 0.}],
-            'evol' : [{'func' : 'part_avg'}]
-            }
-
 def getCalc(cdir, ctype, steps):
     copts = {'.FDF':'fdf',
              '.ANI':'ani',
@@ -70,11 +62,11 @@ def getData(ptype, data_class, leg, clist):
         data.append(data_class(c).plotData(ptype))
     return data
 
-def get_corr(xchoice, ychoice, clist):
+def getCorr(xdata_class, ydata_class, clist):
     ''' Gets data for correlation plotting
     Input:
-     -> xchoice (int) - x axis data
-     -> ychoice (int) - y axis data 
+     -> xdata_class (int) - x axis data class
+     -> ydata_class (int) - y axis data class
      -> clist (list) - a list of SiestaCalc instances 
 
     '''
@@ -82,18 +74,11 @@ def get_corr(xchoice, ychoice, clist):
         raise ValueError('interface.get_data: No calculations selected!')
 
     data = []
-    xc = propChoice['per_atom'][xchoice]
-    yc = propChoice['per_atom'][ychoice]
     for c in clist:
-        xd = c.get_data(xc)
-        yd = c.get_data(yc)
-        assert (xd.y_label == yd.y_label)
-        # flattening type lists
-        # TODO: check everything
-        x = [np.hstack([i for step_y in yi for i in step_y]) for yi in xd.y]
-        y = [np.hstack([i for step_y in yi for i in step_y]) for yi in yd.y]
+        x = [np.hstack([i for step_y in yi for i in step_y]) for yi in xdata_class(c).y]
+        y = [np.hstack([i for step_y in yi for i in step_y]) for yi in ydata_class(c).y]
         data.append([np.array((xi, yi)) for (xi, yi) in zip(x, y)])
-    return data, xd.y_label
+    return data, ydata_class(c).y_titles
 
 def isCalcOfType(ctype, **kwargs):
     if 'fn' in kwargs.keys():
@@ -121,7 +106,7 @@ def GetCalcInfo():
 if __name__ == '__main__':
     example = '../../examples/FeCANI'
 
-    c = get_calc(example, ".ANI", steps = range(-1,0,1))
+    c = getCalc(example, ".ANI", steps = range(-1,0,1))
     c.evol[0].types.removeTypes()
 
     comp = get_condition('vp_totvolume', '>', '12')
