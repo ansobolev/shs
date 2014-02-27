@@ -85,6 +85,8 @@ class Geom():
                }
         # as usual, switch triggering
         act.get(dtype, self.unsupported2geom)(data)
+        # adjusting coordinates to cell
+        self.to_cell()
         # update props with distances to group
         labels = self.names['label']
         for label in labels:
@@ -214,8 +216,7 @@ class Geom():
         vc_inv = np.linalg.inv(vc)
         crd_vc = np.dot(crd, vc_inv)
 # Fractional coordinates - to cell
-        crd_vc[crd_vc > 1.] -= 1.
-        crd_vc[crd_vc < 1.] += 1.
+        crd_vc -= np.floor(crd_vc)
         crd = np.dot(crd_vc, vc)
         self.atoms['crd'] = crd
         

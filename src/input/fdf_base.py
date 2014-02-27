@@ -83,18 +83,16 @@ class TESizer(wx.BoxSizer):
         if self.opt and enable:
             self.switch.SetValue(True)
             self.onEnable()
-        self.te.SetValue(Tval.value)            
-        
-        
+        self.te.SetValue(Tval.value)
 
 class NumSizer(wx.BoxSizer):
     ''' Sizer with label and numbers edit field
     '''
     def __init__(self, parent, label, opt = True, digits = 0, inc = 1.0, range = (0, None), defVal = 1.):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
-        
+
         self.opt = opt
-        self.label = wx.StaticText(parent, -1, label = label) 
+        self.label = wx.StaticText(parent, -1, label = label)
         self.num = FloatSpin(parent, -1, digits = digits, increment = inc,
                               min_val = range[0], max_val = range[1], value = defVal)
         if opt:
@@ -313,7 +311,7 @@ class ChBoxSizer(wx.BoxSizer):
         return self.cb.GetValue()
 
     def SetValue(self, Tval, enable = True):
-        if self.opt and enable:            
+        if self.opt and enable:
             self.switch.SetValue(True)
             self.onEnable()
 # this should be done on read
