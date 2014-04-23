@@ -62,7 +62,7 @@ class RootFrame(wx.Frame):
             fdfo = Options(fdff.d)
             self.ImportFDF(fdfo.opts)
         dlg.Destroy()
-        
+
     def ImportFDF(self, d):
         'Imports FDF dictionary to shs-init'
         for page in self.pages:
@@ -76,8 +76,7 @@ class RootFrame(wx.Frame):
                     d.pop(option)
         # all remaining options go to extras
         self.pages[-1].Populate(d)
-                    
-    
+
     def __set_properties(self):
         pass
 

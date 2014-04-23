@@ -2,6 +2,7 @@
 # -*- coding : utf8 -*-
 
 import os, string, re
+from collections import OrderedDict
 import xml.dom.minidom as xml
 
 import numpy as N
@@ -38,11 +39,11 @@ def data2file(data, title, fname):
     file.close()
 
 
-def ReadFDFLines(infile, head = ''):                                                                                                                                  
-    '''Returns an FDF file and all the %include files as split strings                                                                                                            
+def ReadFDFLines(infile, head = ''):
+    '''Returns an FDF file and all the %include files as split strings
        infile = input file
        (c) Inelastica package
-    '''                                                                                                                                                      
+    '''
     absfile = os.path.abspath(infile)
     if head == '':                                                                                                                                                                  
         head = os.path.split(absfile)[0]
@@ -74,7 +75,7 @@ def ReadFDFLines(infile, head = ''):
 def any2dict(data):
     ''' Converts list of FDF file lines to a dictionary of FDF file options 
     '''  
-    fddict = dict()
+    fddict = OrderedDict()
     is_block = False                                                                                                                                                                
     for i, fdline in enumerate(data):
         if (is_block):                                                                                                                                                              

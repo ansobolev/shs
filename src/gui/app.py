@@ -8,7 +8,6 @@
 # Manual changes will be overwritten without warning!
 
 import wx
-import gettext
 
 try:
     from RootFrame import RootFrame

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf8 -*-
 
+from collections import OrderedDict
 import fdftypes as T
 import sio as SIO
 import const as Const
@@ -12,10 +13,10 @@ class Options():
     def __init__(self, data):
         '''Initialization of Options class with a dict of FDF data
         '''
-        
-        self.opts = {}      
+
+        self.opts = OrderedDict()
         # nonrecognized options
-        self.nr_opts = {}
+        self.nr_opts = OrderedDict()
         if data != {}:
 # we are creating not-empty options
             self.read(data)
