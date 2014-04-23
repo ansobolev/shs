@@ -16,7 +16,6 @@ except ImportError:
     from shs.gui.RootFrame import RootFrame
     
 if __name__ == "__main__":
-    gettext.install("app") # replace with the appropriate catalog name
 
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
