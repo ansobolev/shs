@@ -8,11 +8,9 @@
 # Manual changes will be overwritten without warning!
 
 import wx
-import gettext
 from RootGUI import RootGUI
 
 if __name__ == "__main__":
-    gettext.install("app") # replace with the appropriate catalog name
 
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
