@@ -215,8 +215,14 @@ class PlotFuncFrame(PlotFrame):
             axes = self.fig.add_subplot(nrows,ncols,i+1)
             axes.set_title(title)
             if self.ByCalcsChkBox.IsChecked():
+                if not hasattr(self.data[igraph],'var_x'):
+                    x = self.data[igraph].x
+                else:
+                    x = range(len(self.data[igraph].x))
+                    axes.get_xaxis().set_ticks(x)
+                    axes.get_xaxis().set_ticklabels(self.data[igraph].x, rotation=60, size='x-small')
                 for y in self.data[igraph].y:
-                    axes.plot(self.data[igraph].x, y)
+                    axes.plot(x, y)
             else:
                 for d in self.data:
                     if not hasattr(d,'var_x'):
