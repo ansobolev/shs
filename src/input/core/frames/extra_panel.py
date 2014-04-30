@@ -4,7 +4,7 @@
 import sys
 import wx
 
-from dialogs import AddBlockDlg
+from ..dialogs.add_block import AddBlockDlg
 
 #import fdf_base as fdf
 import wx.lib.agw.ultimatelistctrl as ulc
