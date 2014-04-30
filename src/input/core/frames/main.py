@@ -125,5 +125,6 @@ class MainFrame(wx.Frame):
 
     def export_FDF(self, fname):
         with open(fname, 'w') as f:
-            for _, v in self.fdf_ol.iteritems():
-                print v.fdf_text, v.value
+            for _, value in self.fdf_ol.iteritems():
+                for _, v in value.iteritems():
+                    print v.fdf_text, v.value

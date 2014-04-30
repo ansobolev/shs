@@ -117,12 +117,9 @@ class LatticeParVec(fdf_options.Block):
     def __init__(self, parent):
         self.parent = parent
         self._sizer = self.__create_sizer(parent)
-        self.bindings = [(self.LatParOrVec, 
-                          fdf_wx.EVT_RADIOLINE, 
-                          self.on_choice),
-                         (self.LatParOrVec.switch,
-                          wx.EVT_CHECKBOX,
-                          self.on_enable)]
+        # create bindings here
+        self.parent.Bind(fdf_wx.EVT_RADIOLINE, self.on_choice, self.LatParOrVec)
+        self.parent.Bind(wx.EVT_CHECKBOX, self.on_enable, self.LatParOrVec.switch)
 
     def __create_sizer(self, parent):
 
