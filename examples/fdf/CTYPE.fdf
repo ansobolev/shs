@@ -1,0 +1,9 @@
+MD.TypeOfRun                        NoseParrinelloRahman
+MD.InitialTemperature               1673 K
+MD.TargetTemperature                1673 K
+MD.LengthTimeStep                   1 fs
+MD.NoseMass                         500 Ry*fs**2
+MD.FinalTimeStep                    200
+MD.TargetPressure                   0.0 GPa
+MD.ParrinelloRahmanMass             500 Ry*fs**2
+

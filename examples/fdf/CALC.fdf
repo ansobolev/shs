@@ -1,0 +1,31 @@
+SystemName                          cubic FeC FM
+SystemLabel                         FeC
+%block ProjectedDensityOfStates
+ -20.0   0.0   0.2   500   eV  
+%endblock ProjectedDensityOfStates
+
+xc.functional                       GGA
+xc.authors                          PBE
+PAO.BasisType                       split
+PAO.BasisSize                       SZ
+SpinPolarized                       True
+MaxSCFIterations                    200
+DM.Tolerance                        2e-05
+DM.MixingWeight                     0.01
+DM.NumberKick                       10
+MeshCutoff                          200.0 Ry
+ElectronicTemperature               300 meV
+SolutionMethod                      diagon
+UseSaveData                         True
+WriteMullikenPop                    1
+WriteMDhistory                      True
+SaveElectrostaticPotential          True
+SaveTotalPotential                  True
+SaveRho                             True
+WriteCoorStep                       True
+WriteMDXMol                         True
+NonCollinearSpin                    False
+COOP.Write                          True
+
+%include STRUCT.fdf
+%include CTYPE.fdf
