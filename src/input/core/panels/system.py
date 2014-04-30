@@ -271,6 +271,13 @@ class AtomicCoordinates(fdf_options.Block):
         self.LC.InsertColumn(2, 'Y', width = 112)
         self.LC.InsertColumn(3, 'Z', width = 112)
         self.LC.InsertColumn(4, 'Species', width = 58)
+        # create bindings here
+        self.AddBtn.Bind(wx.EVT_BUTTON, self.on_AddBtn_press)
+        self.RmBtn.Bind(wx.EVT_BUTTON, self.on_RmBtn_press)
+        self.LC.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_sel)
+        self.LC.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.on_sel)
+        self.LC.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.on_edit)
+        
         self.__set_properties()
         return self.__do_layout()
 
@@ -306,10 +313,18 @@ class AtomicCoordinates(fdf_options.Block):
         #renumber
         for i in range(self.LC.GetItemCount()):
             self.LC.SetStringItem(i, 0, str(i + 1))
-        self.LCRmBtn.Enable(False)
+        self.RmBtn.Enable(False)
 
     def on_sel(self, evt):
-        self.LCRmBtn.Enable(self.LC.GetSelectedItemCount())
+        self.RmBtn.Enable(self.LC.GetSelectedItemCount())
+
+    def on_edit(self, evt):
+        row = evt.m_itemIndex
+        col = evt.m_col
+        try:
+            float(evt.GetText())
+        except:
+            self.LC.SetStringItem(row, col, '0.0')                         
 
     def on_InitBtn_press(self, evt):
         data = self.GetCSLData()
