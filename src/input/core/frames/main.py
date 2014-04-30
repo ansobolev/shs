@@ -1,14 +1,18 @@
 
-import os
 import wx
 import functools
 import pkgutil
 import inspect
 from collections import OrderedDict
 
-from shs.sio import FDFFile
-from shs.options import Options
-from shs.geom import Geom
+try:
+    from sio import FDFFile
+    from options import Options
+    from geom import Geom
+except:
+    from shs.sio import FDFFile
+    from shs.options import Options
+    from shs.geom import Geom
 
 from .. import panels
 from ..fdf_optionlist import FDFOptionList
@@ -54,7 +58,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.on_batch, self.BatchBtn)
 
         # ceate bindings for notebook fdf options
-        for (name, value) in self.ol.iteritems():
+        for (_, value) in self.ol.iteritems():
             if value.bindings is not None:
                 for (widget, event, fun) in value.bindings:
                     fun_args = inspect.getargspec(fun).args
@@ -109,9 +113,12 @@ class MainFrame(wx.Frame):
 
     def import_FDF(self, d):
         'Imports FDF dictionary to shs-init'
+        flat_ol = {}
+        for value in self.fdf_ol.values():
+            flat_ol.update(value)
         for option, value in d.items():
-            if option.lower() in self.fdf_ol.keys():
-                self.fdf_ol[option.lower()].SetFDFValue(value)
+            if option.lower() in flat_ol.keys():
+                flat_ol[option.lower()].SetFDFValue(value)
                 d.pop(option)
         # all remaining options go to extras
         self.extra_page.Populate(d)
