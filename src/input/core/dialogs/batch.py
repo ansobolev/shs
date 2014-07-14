@@ -3,6 +3,7 @@ import wx
 from wx.wizard import Wizard, WizardPageSimple
 from batch_pages import SelectPage, FillInPage, DirHierarchyPage
 
+
 class BatchWizard(Wizard):
 
     def __init__(self, *args, **kwds):
@@ -18,7 +19,8 @@ class BatchWizard(Wizard):
         self.__set_properties(options)
         self.__do_layout()
 
-    def make_options_dict(self, options):
+    @staticmethod
+    def make_options_dict(options):
         # flattening options 
         result = OrderedDict()
         for panels, option_dict in options.iteritems():
@@ -50,9 +52,9 @@ class BatchWizard(Wizard):
     def __do_layout(self):
         pass
 
-
     def run(self):
         self.RunWizard(self.select_page)
+
 
 if __name__ == '__main__':
     'A simple test'
