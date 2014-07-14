@@ -6,9 +6,10 @@ import fdf_values
 
 EvtRL, EVT_RADIOLINE = newevent.NewCommandEvent()
 
+
 class TEListCtrl(wx.ListCtrl, TextEditMixin):
-    ''' Editable list control
-    '''
+    """ Editable list control
+    """
     def __init__(self, parent, ID, pos=wx.DefaultPosition,
                  size=wx.DefaultSize, style=0):
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
@@ -25,9 +26,10 @@ class TEListCtrl(wx.ListCtrl, TextEditMixin):
             for i, item in enumerate(s[1:]):
                 self.SetStringItem(ind, i+1, item) 
 
+
 class NumberedTEListCtrl(wx.ListCtrl, TextEditMixin):
-    ''' Editable list control with numbered rows
-    '''
+    """ Editable list control with numbered rows
+    """
     def __init__(self, parent, ID, pos=wx.DefaultPosition,
                  size=wx.DefaultSize, style=0):
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
@@ -43,6 +45,7 @@ class NumberedTEListCtrl(wx.ListCtrl, TextEditMixin):
             ind = self.InsertStringItem(sys.maxint, str(i + 1))
             for i, item in enumerate(s):
                 self.SetStringItem(ind, i+1, str(item)) 
+
 
 class LineSizer(wx.BoxSizer):
 
@@ -74,6 +77,7 @@ class LineSizer(wx.BoxSizer):
         self.value.Enable(is_enabled)
         event.Skip()
 
+
 class BooleanSizer(LineSizer):
     ''' Sizer with a checkbox
     '''
@@ -85,6 +89,7 @@ class BooleanSizer(LineSizer):
             self.value.Enable(False)
         cb = self.value.widgets[0]
         self.Add(cb, 2, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
 
 class TextEditSizer(LineSizer):
     ''' Sizer with a TextCtrl
@@ -98,6 +103,7 @@ class TextEditSizer(LineSizer):
         te = self.value.widgets[0]
         self.Add(te, 2, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
+
 class ChoiceSizer(LineSizer):
     ''' Sizer with a Choice
     '''
@@ -110,6 +116,7 @@ class ChoiceSizer(LineSizer):
         cb = self.value.widgets[0]
         self.Add(cb, 2, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
+
 class NumberSizer(LineSizer):
     ''' Sizer with a FloatSpin
     '''
@@ -121,6 +128,7 @@ class NumberSizer(LineSizer):
             self.value.Enable(False)
         num = self.value.widgets[0]
         self.Add(num, 2, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
 
 class MeasuredSizer(LineSizer):
     ''' Sizer with a FloatSpin for value and Combobox for unit 
@@ -135,6 +143,7 @@ class MeasuredSizer(LineSizer):
         unit = self.value.widgets[1]
         self.Add(num, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         self.Add(unit, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
 
 class RadioSizer(LineSizer):
     ''' Sizer with a set of RadioButtons

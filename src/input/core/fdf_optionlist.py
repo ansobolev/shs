@@ -1,6 +1,6 @@
-import pkgutil
 import inspect
 from collections import OrderedDict
+
 
 class FDFOptionList(object):
 

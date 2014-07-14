@@ -5,6 +5,7 @@ import fdf_wx
 """ Classes representing FDF options
 """
 
+
 class FDFOption(object):
     label = None
     fdf_text = None
@@ -22,6 +23,7 @@ class FDFOption(object):
 
     def SetFDFValue(self, value):
         print value
+
 
 class Line(FDFOption):
 

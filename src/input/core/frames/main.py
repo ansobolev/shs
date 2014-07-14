@@ -57,7 +57,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.on_export, self.ExportBtn)
         self.Bind(wx.EVT_BUTTON, self.on_batch, self.BatchBtn)
 
-        # ceate bindings for notebook fdf options
+        # create bindings for notebook fdf options
         for (_, value) in self.ol.iteritems():
             if value.bindings is not None:
                 for (widget, event, fun) in value.bindings:
@@ -98,7 +98,7 @@ class MainFrame(wx.Frame):
         dlg.Destroy()
 
     def on_export(self, event):
-        'Exports FDF file dictionary to file'
+        """Exports FDF file dictionary to file"""
         dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard = '*.fdf', style = wx.ID_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
@@ -106,13 +106,13 @@ class MainFrame(wx.Frame):
         dlg.Destroy()
 
     def on_batch(self, event):
-        'Runs batch wizard'
+        """Runs batch wizard"""
         wiz = BatchWizard(self, -1, options=self.fdf_ol)
         wiz.run()
         wiz.Destroy()
 
     def import_FDF(self, d):
-        'Imports FDF dictionary to shs-init'
+        """Imports FDF dictionary to shs-init"""
         flat_ol = {}
         for value in self.fdf_ol.values():
             flat_ol.update(value)

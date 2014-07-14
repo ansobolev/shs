@@ -6,6 +6,7 @@ from wx.lib.agw.floatspin import FloatSpin, EVT_FLOATSPIN
 """ Classes representing FDF values and wx widgets for them
 """
 
+
 class FDFValue(object):
     widgets = None
     _value = None
@@ -13,6 +14,7 @@ class FDFValue(object):
     def Enable(self, value):
         for widget in self.widgets:
             widget.Enable(value)
+
 
 class BoolValue(FDFValue):
 
@@ -36,6 +38,7 @@ class BoolValue(FDFValue):
         assert type(value) == bool
         self._value = value
         self._cb.SetValue(self._value)
+
 
 class TextValue(FDFValue):
 
