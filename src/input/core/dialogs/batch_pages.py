@@ -4,17 +4,17 @@ from wx.wizard import PyWizardPage, WizardPage, WizardPageSimple
 from wx.lib.mixins.listctrl import getListCtrlSelection
 from fillin_page import FillInNBPage
 
-class SelectPage(WizardPageSimple):
 
+class SelectPage(WizardPageSimple):
     def __init__(self, parent):
         self.parent = parent
         WizardPageSimple.__init__(self, parent)
         self.selected_options = []
         self.LabelText = wx.StaticText(self, -1, label="Select FDF options to include in batch run:")
-        self.OptionsTree = wx.TreeCtrl(self, -1, style=wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS)
+        self.OptionsTree = wx.TreeCtrl(self, -1, style=wx.TR_HIDE_ROOT | wx.TR_HAS_BUTTONS)
         self.SelectBtn = wx.Button(self, -1, ">>")
         self.DeselectBtn = wx.Button(self, -1, "<<")
-        self.OptionsList = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.OptionsList = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
         # initialize OptionsList
         self.OptionsList.InsertColumn(0, 'Options', width=180)
         # binding events
@@ -46,7 +46,7 @@ class SelectPage(WizardPageSimple):
             print 'You have chosen this option already!'
             return None
         parent = self.OptionsTree.GetItemParent(item)
-        if self.OptionsTree.GetItemText(parent) == 'root': 
+        if self.OptionsTree.GetItemText(parent) == 'root':
             print 'The panel name cannot be selected!'
             return None
         clc = self.OptionsList.GetItemCount()
@@ -59,8 +59,8 @@ class SelectPage(WizardPageSimple):
         if sind:
             ds = 0
             for si in sind:
-                option_text = self.selected_options.pop(si-ds)
-                self.OptionsList.DeleteItem(si-ds)
+                option_text = self.selected_options.pop(si - ds)
+                self.OptionsList.DeleteItem(si - ds)
                 self.parent.remove_FDF_option(option_text)
                 ds += 1
             return 0
@@ -71,20 +71,19 @@ class SelectPage(WizardPageSimple):
 
     def __do_layout(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.LabelText, 0, wx.EXPAND|wx.ALL, 2)
+        sizer.Add(self.LabelText, 0, wx.EXPAND | wx.ALL, 2)
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        main_sizer.Add(self.OptionsTree, 1, wx.EXPAND|wx.ALL, 5)
+        main_sizer.Add(self.OptionsTree, 1, wx.EXPAND | wx.ALL, 5)
         btn_sizer = wx.BoxSizer(wx.VERTICAL)
-        btn_sizer.Add(self.SelectBtn, 0, wx.EXPAND|wx.ALL, 2)
-        btn_sizer.Add(self.DeselectBtn, 0, wx.EXPAND|wx.ALL, 2)
-        main_sizer.Add(btn_sizer, 0, wx.EXPAND|wx.ALL, 3)
-        main_sizer.Add(self.OptionsList, 1, wx.EXPAND|wx.ALL, 5)
-        sizer.Add(main_sizer, 1, wx.EXPAND|wx.ALL, 0)        
+        btn_sizer.Add(self.SelectBtn, 0, wx.EXPAND | wx.ALL, 2)
+        btn_sizer.Add(self.DeselectBtn, 0, wx.EXPAND | wx.ALL, 2)
+        main_sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 3)
+        main_sizer.Add(self.OptionsList, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(main_sizer, 1, wx.EXPAND | wx.ALL, 0)
         self.SetSizer(sizer)
 
 
 class FillInPage(WizardPageSimple):
-
     def __init__(self, parent):
         self.parent = parent
         self.page_names = []
@@ -128,21 +127,26 @@ class FillInPage(WizardPageSimple):
 
     def __do_layout(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.LabelText, 0, wx.EXPAND|wx.ALL, 0)
-        sizer.Add(self.Notebook, 1, wx.EXPAND|wx.ALL, 5)
+        sizer.Add(self.LabelText, 0, wx.EXPAND | wx.ALL, 0)
+        sizer.Add(self.Notebook, 1, wx.EXPAND | wx.ALL, 5)
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn_sizer.Add(self.AddBtn, 0, wx.EXPAND|wx.ALL, 2)
-        btn_sizer.Add(self.RemoveBtn, 0, wx.EXPAND|wx.ALL, 2)
-        sizer.Add(btn_sizer, 0, wx.EXPAND|wx.ALL, 3)
+        btn_sizer.Add(self.AddBtn, 0, wx.EXPAND | wx.ALL, 2)
+        btn_sizer.Add(self.RemoveBtn, 0, wx.EXPAND | wx.ALL, 2)
+        sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 3)
         self.SetSizer(sizer)
 
 
 class DDTreeCtrl(wx.TreeCtrl):
+    """ Drag'n'drop enabled subclass of wxPython TreeCtrl
+    (from http://wiki.wxpython.org/DragAndDropWithFolderMovingAndRearranging, with some changes)
+    """
+
     def __init__(self, *args, **kwds):
         wx.TreeCtrl.__init__(self, *args, **kwds)
 
     def traverse(self, func, start):
         """Apply 'func' to each node in a branch, beginning with 'start'. """
+
         def traverse_aux(node, depth, func):
             nc = self.GetChildrenCount(node, 0)
             child, cookie = self.GetFirstChild(node)
@@ -151,6 +155,7 @@ class DDTreeCtrl(wx.TreeCtrl):
                 func(child, depth)
                 traverse_aux(child, depth + 1, func)
                 child, cookie = self.GetNextChild(node, cookie)
+
         func(start, 0)
         traverse_aux(start, 1, func)
 
@@ -161,6 +166,7 @@ class DDTreeCtrl(wx.TreeCtrl):
         def test_func(node, depth):
             if node == item1:
                 self._result = True
+
         self.traverse(test_func, item2)
         return self._result
 
@@ -181,9 +187,7 @@ class DDTreeCtrl(wx.TreeCtrl):
 
             item = {}
             item['label'] = self.GetItemText(node)
-
             tmp_result.append(item)
-
         self.traverse(save_func, start)
         return result
 
@@ -219,7 +223,6 @@ class DDTreeCtrl(wx.TreeCtrl):
 
 
 class DirHierarchyPage(WizardPageSimple):
-
     def __init__(self, parent):
         self.parent = parent
         self.drag_item_list = None
@@ -249,9 +252,9 @@ class DirHierarchyPage(WizardPageSimple):
     def on_drag_begin(self, evt):
         evt.Allow()
         self.drag_item_list = self.DirTree.save_items_to_list(evt.GetItem())
-    
+
     def on_drag_end(self, evt):
-        #If we dropped somewhere that isn't on top of an item, ignore the event
+        # If we dropped somewhere that isn't on top of an item, ignore the event
         if not evt.GetItem().IsOk():
             return
         # Make sure this member exists.
@@ -271,7 +274,7 @@ class DirHierarchyPage(WizardPageSimple):
 
     def __do_layout(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.LabelText, 0, wx.EXPAND|wx.ALL, 0)
-        sizer.Add(self.DirTree, 1, wx.EXPAND|wx.ALL, 5)
+        sizer.Add(self.LabelText, 0, wx.EXPAND | wx.ALL, 0)
+        sizer.Add(self.DirTree, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(sizer)
         self.Layout()

@@ -52,12 +52,23 @@ class BatchWizard(Wizard):
     def __do_layout(self):
         pass
 
+    def prepare_calc_dirs(self):
+        calc_dir = None
+        dlg = wx.DirDialog(self, message="Select root directory for calculations")
+        if dlg.ShowModal() == wx.ID_OK:
+            calc_dir = dlg.GetPath()
+        dlg.Destroy()
+        if calc_dir is None:
+            return
+
+
     def run(self):
-        self.RunWizard(self.select_page)
+        if self.RunWizard(self.select_page):
+            self.prepare_calc_dirs()
 
 
 if __name__ == '__main__':
-    'A simple test'
+    "A simple test"
     app = wx.App()
     dlg = BatchWizard(None, -1)
     app.SetTopWindow(dlg)

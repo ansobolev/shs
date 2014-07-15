@@ -9,7 +9,7 @@ try:
     from sio import FDFFile
     from options import Options
     from geom import Geom
-except:
+except ImportError:
     from shs.sio import FDFFile
     from shs.options import Options
     from shs.geom import Geom
@@ -88,7 +88,7 @@ class MainFrame(wx.Frame):
 
     def on_import(self, event):
         'Gets FDF file dictionary'
-        dlg = wx.FileDialog(self, 'Choose FDF file to import', wildcard = '*.fdf', style = wx.ID_OPEN)
+        dlg = wx.FileDialog(self, 'Choose FDF file to import', wildcard='*.fdf', style=wx.ID_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
             fdff = FDFFile(fdfn)
@@ -99,7 +99,7 @@ class MainFrame(wx.Frame):
 
     def on_export(self, event):
         """Exports FDF file dictionary to file"""
-        dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard = '*.fdf', style = wx.ID_SAVE)
+        dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard='*.fdf', style=wx.ID_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
             self.export_FDF(fdfn)
