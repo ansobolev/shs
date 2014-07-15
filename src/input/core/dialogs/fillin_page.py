@@ -11,6 +11,9 @@ class FillInNBPage(wx.ScrolledWindow):
         self.sizer.Add(option.sizer, 0, wx.EXPAND|wx.ALL, 2)
         self.Layout()
 
+    def remove_option(self):
+        pass
+
     def __set_properties(self):
         pass
 

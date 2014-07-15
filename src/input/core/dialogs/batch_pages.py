@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import wx
-from wx.wizard import PyWizardPage, WizardPage, WizardPageSimple
+from wx.wizard import WizardPageSimple
 from wx.lib.mixins.listctrl import getListCtrlSelection
 from fillin_page import FillInNBPage
 
@@ -116,11 +116,13 @@ class FillInPage(WizardPageSimple):
         page_name = self.page_names[idx]
         page = self.pages[idx]
         cls = self.parent.get_option_class(page_name)
-        option = cls(page)
+        option = cls(page, optional=False)
         page.add_option(option)
 
     def on_RemoveBtn(self, evt):
-        pass
+        idx = self.Notebook.GetSelection()
+        page = self.pages[idx]
+        page.remove_option()
 
     def __set_properties(self):
         pass
@@ -185,8 +187,7 @@ class DDTreeCtrl(wx.TreeCtrl):
                     tmp_result.append({})
                 tmp_result = tmp_result[-1].setdefault('children', [])
 
-            item = {}
-            item['label'] = self.GetItemText(node)
+            item = {'label': self.GetItemText(node)}
             tmp_result.append(item)
         self.traverse(save_func, start)
         return result
@@ -247,7 +248,7 @@ class DirHierarchyPage(WizardPageSimple):
         self.DirTree.Delete(item)
         if len(children) != 0:
             new_nodes = self.DirTree.insert_items_from_list(children, parent)
-        self.ids.update(new_nodes)
+            self.ids.update(new_nodes)
 
     def on_drag_begin(self, evt):
         evt.Allow()

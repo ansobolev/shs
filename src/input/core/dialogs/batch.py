@@ -8,14 +8,15 @@ class BatchWizard(Wizard):
 
     def __init__(self, *args, **kwds):
         options = kwds.pop('options', None)
+        self.values = {}
         self.options = self.make_options_dict(options)
         
         Wizard.__init__(self, *args, **kwds)
         self.select_page = SelectPage(self)
-        self.fillin_page = FillInPage(self)
+        self.fill_in_page = FillInPage(self)
         self.dh_page = DirHierarchyPage(self)
-        WizardPageSimple.Chain(self.select_page, self.fillin_page)
-        WizardPageSimple.Chain(self.fillin_page, self.dh_page)
+        WizardPageSimple.Chain(self.select_page, self.fill_in_page)
+        WizardPageSimple.Chain(self.fill_in_page, self.dh_page)
         self.__set_properties(options)
         self.__do_layout()
 
@@ -34,13 +35,24 @@ class BatchWizard(Wizard):
         return result
 
     def add_FDF_option(self, option):
-        self.fillin_page.add_FDF_option(option)
+        self.values[option] = {"values": [],
+                               "level": 1}
+        self.fill_in_page.add_FDF_option(option)
         self.dh_page.add_FDF_option(option)
 
-
     def remove_FDF_option(self, option):
-        self.fillin_page.remove_FDF_option(option)
+        self.values.pop(option)
+        self.fill_in_page.remove_FDF_option(option)
         self.dh_page.remove_FDF_option(option)
+
+    def add_value(self, option, value):
+        self.values[option]["values"].append(value)
+
+    def remove_value(self, option):
+        self.values[option]["values"].pop()
+
+    def alter_level(self, option, level):
+        self.values[option]["level"] = level
 
     def get_option_class(self, option):
         return self.options[option].__class__ 

@@ -17,6 +17,10 @@ class FDFOption(object):
     bindings = None
     proportion = 0
 
+    def __init__(self, *args, **kwds):
+        if "optional" in kwds.keys():
+            self.optional = kwds["optional"]
+
     @property
     def sizer(self):
         return self._sizer
@@ -66,6 +70,7 @@ class Block(FDFOption):
 class BooleanLine(Line):
 
     def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(parent, *args, **kwds)
         self._sizer = fdf_wx.BooleanSizer(parent, self.label, self.optional)
         super(BooleanLine, self).__init__(parent, *args, **kwds)
         self.CB = self.widgets[0]
@@ -73,6 +78,7 @@ class BooleanLine(Line):
 class TextEditLine(Line):
 
     def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(parent, *args, **kwds)
         self._sizer = fdf_wx.TextEditSizer(parent, self.label, self.optional)
         super(TextEditLine, self).__init__(parent, *args, **kwds)
         self.TE = self.widgets[0]
@@ -81,6 +87,7 @@ class ChoiceLine(Line):
     choices = None
 
     def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(parent, *args, **kwds)
         self._sizer = fdf_wx.ChoiceSizer(parent, self.label, self.choices, self.optional)
         super(ChoiceLine, self).__init__(parent, *args, **kwds)
         self.CB = self.widgets[0]
@@ -98,6 +105,7 @@ class NumberLine(Line):
     value = None
 
     def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(parent, *args, **kwds)
         kwds = {"digits": self.digits,
                 "increment": self.increment,
                 "range_val": self.range_val,
@@ -115,6 +123,7 @@ class MeasuredLine(Line):
     units = None
 
     def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(parent, *args, **kwds)
         kwds = {"digits": self.digits,
                 "increment": self.increment,
                 "range_val": self.range_val,
@@ -130,6 +139,7 @@ class RadioLine(Line):
     choices = None
 
     def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(parent, *args, **kwds)
         self._sizer = fdf_wx.RadioSizer(parent, self.label, self.choices, self.optional)
         super(RadioLine, self).__init__(parent, *args, **kwds)
         self.RBs = self.widgets
