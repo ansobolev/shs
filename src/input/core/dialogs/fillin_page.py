@@ -1,5 +1,6 @@
 import wx
 
+
 class FillInNBPage(wx.ScrolledWindow):
 
     def __init__(self, *args, **kwds):
@@ -12,7 +13,13 @@ class FillInNBPage(wx.ScrolledWindow):
         self.Layout()
 
     def remove_option(self):
-        pass
+        idx = len(self.sizer.GetChildren())-1
+        self.sizer.Hide(idx)
+        self.sizer.Remove(idx)
+        self.Layout()
+
+    def __len__(self):
+        return len(self.sizer.GetChildren())
 
     def __set_properties(self):
         pass

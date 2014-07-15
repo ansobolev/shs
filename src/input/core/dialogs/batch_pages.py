@@ -96,6 +96,7 @@ class FillInPage(WizardPageSimple):
         # binding events
         self.Bind(wx.EVT_BUTTON, self.on_AddBtn, self.AddBtn)
         self.Bind(wx.EVT_BUTTON, self.on_RemoveBtn, self.RemoveBtn)
+        self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_Notebook, self.Notebook)
         self.__set_properties()
         self.__do_layout()
 
@@ -115,17 +116,30 @@ class FillInPage(WizardPageSimple):
         idx = self.Notebook.GetSelection()
         page_name = self.page_names[idx]
         page = self.pages[idx]
+        if not self.RemoveBtn.IsEnabled():
+            self.RemoveBtn.Enable(True)
         cls = self.parent.get_option_class(page_name)
         option = cls(page, optional=False)
         page.add_option(option)
+        self.parent.add_value(page_name, option)
+
 
     def on_RemoveBtn(self, evt):
         idx = self.Notebook.GetSelection()
+        page_name = self.page_names[idx]
         page = self.pages[idx]
         page.remove_option()
+        if len(page) == 0:
+            self.RemoveBtn.Enable(False)
+        self.parent.remove_value(page_name)
+
+    def on_Notebook(self, evt):
+        idx = evt.GetSelection()
+        page = self.pages[idx]
+        self.RemoveBtn.Enable(len(page))
 
     def __set_properties(self):
-        pass
+        self.RemoveBtn.Enable(False)
 
     def __do_layout(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
