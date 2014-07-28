@@ -123,7 +123,6 @@ class FillInPage(WizardPageSimple):
         page.add_option(option)
         self.parent.add_value(page_name, option)
 
-
     def on_RemoveBtn(self, evt):
         idx = self.Notebook.GetSelection()
         page_name = self.page_names[idx]
@@ -177,14 +176,15 @@ class DDTreeCtrl(wx.TreeCtrl):
 
     def item_is_child_of(self, item1, item2):
         """ Tests if item1 is a child of item2, using the traverse function """
-        self._result = False
+        def check_parent(parent, item):
+            if not parent.IsOk():
+                return False
+            elif parent == item:
+                return True
+            else:
+                return check_parent(self.GetItemParent(parent), item)
 
-        def test_func(node, depth):
-            if node == item1:
-                self._result = True
-
-        self.traverse(test_func, item2)
-        return self._result
+        return check_parent(item1, item2)
 
     def save_items_to_list(self, start):
         """ Generates a python object representation of the tree (or a branch of it),
@@ -233,8 +233,15 @@ class DDTreeCtrl(wx.TreeCtrl):
 
             new_items[item['label']] = node
             if 'children' in item:
-                self.insert_items_from_list(item['children'], node, append_after=True)
+                new_items.update(self.insert_items_from_list(item['children'], node, append_after=True))
         return new_items
+
+    def GetLevel(self, node):
+        parent = self.GetItemParent(node)
+        if not parent.IsOk():
+            return 0
+        else:
+            return 1 + self.GetLevel(parent)
 
 
 class DirHierarchyPage(WizardPageSimple):
@@ -263,6 +270,9 @@ class DirHierarchyPage(WizardPageSimple):
         if len(children) != 0:
             new_nodes = self.DirTree.insert_items_from_list(children, parent)
             self.ids.update(new_nodes)
+            for label, node in new_nodes.iteritems():
+                level = self.DirTree.GetLevel(node)
+                self.parent.alter_level(label, level)
 
     def on_drag_begin(self, evt):
         evt.Allow()
@@ -282,7 +292,11 @@ class DirHierarchyPage(WizardPageSimple):
         self.DirTree.Delete(old)
         new_nodes = self.DirTree.insert_items_from_list(self.drag_item_list, new)
         self.ids.update(new_nodes)
+        for label, node in new_nodes.iteritems():
+            level = self.DirTree.GetLevel(node)
+            self.parent.alter_level(label, level)
         self.DirTree.ExpandAll()
+        print self.parent.values
 
     def __set_properties(self):
         pass
@@ -293,3 +307,5 @@ class DirHierarchyPage(WizardPageSimple):
         sizer.Add(self.DirTree, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(sizer)
         self.Layout()
+
+

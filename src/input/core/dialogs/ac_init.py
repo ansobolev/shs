@@ -1,12 +1,19 @@
 from ..fdf_wx import LineSizer
 from ..fdf_options import Line, ChoiceLine, MeasuredLine, NumberLine 
 import wx
+from wx.lib.agw.floatspin import FloatSpin
+try:
+    from geom import Geom
+except ImportError:
+    from shs.geom import Geom
+
 
 class Bravais(ChoiceLine):
     label = 'Composition'
     choices = ['BCC', 'FCC', 'SC']
     optional = False
-    
+
+
 class LatticeConstant(MeasuredLine):
     label = 'Lattice constant'
     value = 1.
@@ -15,6 +22,7 @@ class LatticeConstant(MeasuredLine):
     units = ['Bohr', 'Ang']
     optional = False
 
+
 class DistortionLevel(NumberLine):
     label = 'Distortion level (in %)'
     value = 0.
@@ -22,6 +30,7 @@ class DistortionLevel(NumberLine):
     increment = 1.
     range_val = (0., 100.)
     optional = False
+
 
 class SuperCell(Line):
     label = 'Supercell'
