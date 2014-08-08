@@ -3,6 +3,7 @@ import wx
 from wx.wizard import WizardPageSimple
 from wx.lib.mixins.listctrl import getListCtrlSelection
 from fillin_page import FillInNBPage
+from ..fdf_options import ChoiceLine
 
 
 class SelectPage(WizardPageSimple):
@@ -249,7 +250,7 @@ class DirHierarchyPage(WizardPageSimple):
         self.parent = parent
         self.drag_item_list = None
         WizardPageSimple.__init__(self, parent)
-        self.LabelText = wx.StaticText(self, -1, label="Drag and drop FDF options in a tree to create selected " +
+        self.LabelText = wx.StaticText(self, -1, label="Drag and drop FDF options in a tree to create selected "
                                                        "directory hierarchy:")
         self.DirTree = DDTreeCtrl(self, -1, style=wx.TR_HAS_BUTTONS)
         self.ids = {'root': self.DirTree.AddRoot('Root directory')}
@@ -309,3 +310,54 @@ class DirHierarchyPage(WizardPageSimple):
         self.Layout()
 
 
+class DirNamePage(WizardPageSimple):
+
+    class LevelLine(ChoiceLine):
+        choices = ["Ordinal numbers", ]
+        label = "Level"
+
+        def append_choice(self, choice):
+            self._sizer.value.AppendChoice(choice)
+
+        def delete_choice(self, choice):
+            self._sizer.value.DeleteChoice(choice)
+
+    def __init__(self, parent):
+        self.parent = parent
+        self._sizer = None
+        self._levels = []
+        WizardPageSimple.__init__(self, parent)
+        self.LabelText = wx.StaticText(self, -1, label="Select titles of directories on selected levels:")
+        self.__set_properties()
+        self.__do_layout()
+
+    def add_to_level(self, choice, level):
+        if len(self._levels) < level:
+            self.add_level()
+        level_line = self._levels[level-1]
+        level_line.append_choice(choice)
+
+    def remove_from_level(self, choice):
+        pass
+
+    def move_between_levels(self, choice, l1,l2):
+        pass
+
+    def add_level(self):
+        level = self.LevelLine(self)
+        self._levels.append(level)
+        i_level = len(self._levels)
+        level._sizer.SetLabel("Level %i" % (i_level, ))
+        self._sizer.Add(level.sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+    def remove_level(self, level):
+        pass
+
+    def __set_properties(self):
+        pass
+
+    def __do_layout(self):
+        self._sizer = wx.BoxSizer(wx.VERTICAL)
+        self._sizer.Add(self.LabelText, 0, wx.EXPAND | wx.ALL, 0)
+        self.SetSizer(self._sizer)
+        self.Layout()

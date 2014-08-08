@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import wx
 from wx.wizard import Wizard, WizardPageSimple
-from batch_pages import SelectPage, FillInPage, DirHierarchyPage
+from batch_pages import SelectPage, FillInPage, DirHierarchyPage, DirNamePage
 
 
 class BatchWizard(Wizard):
@@ -15,8 +15,10 @@ class BatchWizard(Wizard):
         self.select_page = SelectPage(self)
         self.fill_in_page = FillInPage(self)
         self.dh_page = DirHierarchyPage(self)
+        self.name_page = DirNamePage(self)
         WizardPageSimple.Chain(self.select_page, self.fill_in_page)
         WizardPageSimple.Chain(self.fill_in_page, self.dh_page)
+        WizardPageSimple.Chain(self.dh_page, self.name_page)
         self.__set_properties(options)
         self.__do_layout()
 
@@ -39,6 +41,7 @@ class BatchWizard(Wizard):
                                "level": 1}
         self.fill_in_page.add_FDF_option(option)
         self.dh_page.add_FDF_option(option)
+        self.name_page.add_to_level(option, 1)
 
     def remove_FDF_option(self, option):
         self.values.pop(option)

@@ -87,6 +87,13 @@ class ChoiceValue(FDFValue):
         self._value = self._cb.GetItems()[self._cb.GetSelection()]
         event.Skip()
 
+    def AppendChoice(self, choice):
+        self._choices.append(choice)
+        self._cb.AppendItems([choice, ])
+
+    def DeleteChoice(self):
+        pass
+
     def SetChoices(self, choices):
         self._choices = choices
         self._cb.Clear()

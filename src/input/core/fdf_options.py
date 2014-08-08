@@ -64,6 +64,9 @@ class Line(FDFOption):
         self.Enable(True)
         self._sizer.value.SetValue(value)
 
+    def SetLabel(self, label):
+        self._sizer.SetLabel(label)
+
 class Block(FDFOption):
     pass
 

@@ -77,6 +77,8 @@ class LineSizer(wx.BoxSizer):
         self.value.Enable(is_enabled)
         event.Skip()
 
+    def SetLabel(self, label):
+        self.label.SetLabel(label)
 
 class BooleanSizer(LineSizer):
     ''' Sizer with a checkbox
