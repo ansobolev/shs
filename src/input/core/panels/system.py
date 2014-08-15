@@ -245,7 +245,23 @@ class LatticeParVec(fdf_options.Block):
         self.cz.SetValue(float(value[2][2]))
 
     def FDF_string(self, k):
-        print ""
+        if not self.LatParOrVec.IsEnabled():
+            return ""
+        if k == "LatticeParameters".lower():
+            return ""
+        elif k == "LatticeVectors".lower():
+            s = "%block LatticeVectors\n"
+            s += "  {0}    {1}    {2}\n".format(self.ax.GetValue(),
+                                                self.ay.GetValue(),
+                                                self.az.GetValue())
+            s += "  {0}    {1}    {2}\n".format(self.bx.GetValue(),
+                                                self.by.GetValue(),
+                                                self.bz.GetValue())
+            s += "  {0}    {1}    {2}\n".format(self.cx.GetValue(),
+                                                self.cy.GetValue(),
+                                                self.cz.GetValue())
+            s += "%endblock LatticeVectors"
+            return s
 
     def show_by_value(self, value):
         if value == 0:
