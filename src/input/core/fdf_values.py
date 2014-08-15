@@ -38,7 +38,10 @@ class BoolValue(FDFValue):
         assert type(value) == bool
         self._value = value
         self._cb.SetValue(self._value)
-
+        # firing checkbox event
+        check_event = wx.CommandEvent(wx.EVT_CHECKBOX.typeId, self._cb.GetId())
+        check_event.SetInt(int(self._cb.IsChecked()))
+        wx.PostEvent(self._cb.GetEventHandler(), check_event)
 
 class TextValue(FDFValue):
 

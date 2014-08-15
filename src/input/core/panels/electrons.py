@@ -1,5 +1,8 @@
 import wx
-from core import fdf_options
+try:
+    from core import fdf_options
+except ImportError:
+    from .. import fdf_options
 
 __title__ = "Electrons"
 __page__ = 2
@@ -100,7 +103,6 @@ class SpinPolarized(fdf_options.BooleanLine):
                          )]
 
     def show_spin_options(self, event, NonCollinearSpin, DMInitSpinAF):
-        print self.IsEnabled()
         NonCollinearSpin.Show(self.IsEnabled() and self.CB.IsChecked())
         DMInitSpinAF.Show(self.IsEnabled() and self.CB.IsChecked())
         event.Skip()

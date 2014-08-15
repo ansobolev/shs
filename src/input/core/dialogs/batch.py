@@ -73,13 +73,12 @@ class BatchWizard(Wizard):
 
     def prepare_calc_dirs(self):
         calc_dir = None
-        dlg = wx.DirDialog(self, message="Select root directory for calculations")
+        dlg = wx.DirDialog(self, message="Select root directory for calculations", style=wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal() == wx.ID_OK:
             calc_dir = dlg.GetPath()
         dlg.Destroy()
         if calc_dir is None:
             return
-
 
     def run(self):
         if self.RunWizard(self.select_page):

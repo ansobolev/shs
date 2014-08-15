@@ -297,7 +297,6 @@ class DirHierarchyPage(WizardPageSimple):
             level = self.DirTree.GetLevel(node)
             self.parent.alter_level(label, level)
         self.DirTree.ExpandAll()
-        print self.parent.values
 
     def __set_properties(self):
         pass
@@ -357,7 +356,7 @@ class DirNamePage(WizardPageSimple):
         level = self.LevelLine(self)
         self._levels.append(level)
         i_level = len(self._levels)
-        level._sizer.SetLabel("Level %i" % (i_level, ))
+        level.sizer.SetLabel("Level %i" % (i_level, ))
         self._sizer.Add(level.sizer, 0, wx.EXPAND | wx.ALL, 5)
 
     def remove_level(self, i_level):

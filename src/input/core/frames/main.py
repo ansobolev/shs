@@ -98,7 +98,8 @@ class MainFrame(wx.Frame):
 
     def on_export(self, event):
         """Exports FDF file dictionary to file"""
-        dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard='*.fdf', style=wx.ID_SAVE)
+        dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard='*.fdf',
+                            style=wx.ID_SAVE|wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
             self.export_FDF(fdfn)
@@ -126,4 +127,7 @@ class MainFrame(wx.Frame):
         with open(fname, 'w') as f:
             for _, value in self.fdf_ol.iteritems():
                 for _, v in value.iteritems():
-                    print v.fdf_text, v.value
+                    if v.IsEnabled():
+                        print v
+#                    f.write("%s\n" % (v,))
+

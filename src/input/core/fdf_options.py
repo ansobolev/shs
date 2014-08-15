@@ -20,10 +20,20 @@ class FDFOption(object):
     def __init__(self, *args, **kwds):
         if "optional" in kwds.keys():
             self.optional = kwds["optional"]
+        self.switch = None
 
     @property
     def sizer(self):
         return self._sizer
+
+    def IsShown(self):
+        return not self.hidden
+
+    def IsEnabled(self):
+        if not self.optional:
+            return self.IsShown()
+        else:
+            return self.IsShown() and self.switch.IsChecked()
 
     def SetFDFValue(self, value):
         print value
@@ -42,23 +52,20 @@ class Line(FDFOption):
             return
         self.switch.SetValue(flag)
         # firing the checkbox event, as if we checked cb manually
-        checkEvent = wx.CommandEvent(wx.EVT_CHECKBOX.typeId, self.switch.GetId())
-        checkEvent.SetInt(int(self.switch.IsChecked()))
-        wx.PostEvent(self.switch.GetEventHandler(), checkEvent)
-
-    def IsEnabled(self):
-        return self.IsShown() and self.switch.IsChecked()
+        check_event = wx.CommandEvent(wx.EVT_CHECKBOX.typeId, self.switch.GetId())
+        check_event.SetInt(int(self.switch.IsChecked()))
+        wx.PostEvent(self.switch.GetEventHandler(), check_event)
 
     def Show(self, flag):
         self._sizer.ShowItems(flag)
         self.parent.Layout()
-        self.hidden = flag
-
-    def IsShown(self):
-        return not self.hidden
+        self.hidden = not flag
 
     def GetValue(self):
         return self.widgets[0].GetValue()
+
+    def GetFDFValue(self):
+        return self.GetValue()
 
     def SetFDFValue(self, value):
         self.Enable(True)
@@ -67,8 +74,16 @@ class Line(FDFOption):
     def SetLabel(self, label):
         self._sizer.SetLabel(label)
 
+    def FDF_string(self):
+        return "{0:<25}\t{1}".format(self.fdf_text, self.GetFDFValue())
+
+    def __str__(self):
+        return self.FDF_string()
+
+
 class Block(FDFOption):
     pass
+
 
 class BooleanLine(Line):
 
@@ -77,6 +92,7 @@ class BooleanLine(Line):
         self._sizer = fdf_wx.BooleanSizer(parent, self.label, self.optional)
         super(BooleanLine, self).__init__(parent, *args, **kwds)
         self.CB = self.widgets[0]
+
 
 class TextEditLine(Line):
 
@@ -101,6 +117,7 @@ class ChoiceLine(Line):
     def GetValue(self):
         return self.choices[self.CB.GetSelection()]
 
+
 class NumberLine(Line):
     digits = 2
     increment = 0.01
@@ -117,6 +134,13 @@ class NumberLine(Line):
         self._sizer = fdf_wx.NumberSizer(parent, self.label, self.optional, **kwds)
         super(NumberLine, self).__init__(parent, *args, **kwds)
         self.FS = self.widgets[0]
+
+    def GetFDFValue(self):
+        value = self.FS.GetValue()
+        if self.digits == 0:
+            value = int(value)
+        return "{0}".format(value)
+
 
 class MeasuredLine(Line):
     digits = 2
@@ -138,6 +162,14 @@ class MeasuredLine(Line):
         self.FS = self.widgets[0]
         self.CB = self.widgets[1]
 
+    def GetFDFValue(self):
+        value = self.FS.GetValue()
+        if self.digits == 0:
+            value = int(value)
+        units = self.CB.GetValue()
+        return "{0} {1}".format(value, units)
+
+
 class RadioLine(Line):
     choices = None
 
@@ -149,7 +181,7 @@ class RadioLine(Line):
         for RB in self.RBs:
             RB.Bind(wx.EVT_RADIOBUTTON, self.on_change)
 
-    def on_change(self, event):
+    def on_change(self, evt):
         value = self.GetValue()
         new_event = fdf_wx.EvtRL(self.GetId(), value=value)
         wx.PostEvent(self.parent, new_event)        
