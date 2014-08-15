@@ -1,8 +1,13 @@
 import sys
 import wx
 from shs.const import PeriodicTable 
-from core import fdf_options
-from core import fdf_wx
+try:
+    from core import fdf_options
+    from core import fdf_wx
+except ImportError:
+    from .. import fdf_options
+    from .. import fdf_wx
+
 from wx.lib.agw import floatspin as fs
 
 __title__ = "System"
@@ -51,7 +56,6 @@ class ChemicalSpeciesLabel(fdf_options.Block):
         main_sizer.Add(btn_sizer, 0, wx.EXPAND, 0)
         return main_sizer
 
-
     def on_AddBtn_press(self, evt):
         self.LC.InsertStringItem(sys.maxint, str(self.LC.GetItemCount() + 1))
 
@@ -78,9 +82,22 @@ class ChemicalSpeciesLabel(fdf_options.Block):
     def SetFDFValue(self, value):
         if value.key == 'NumberOfSpecies':
             print 'Number of atomic types: %d' % (value.value,)
-            return None 
+            return None
         self.LC.SetValue(value)
-    
+
+    def FDF_string(self, k):
+        if k == "NumberOfSpecies".lower():
+            return "{0:<25}\t{1}".format("NumberOfSpecies", self.LC.GetItemCount())
+        elif k == "ChemicalSpeciesLabel".lower():
+            s = "%block ChemicalSpeciesLabel\n"
+            for i in range(self.LC.GetItemCount()):
+                items = [self.LC.GetItem(itemId=i, col=j).GetText() for j in range(3)]
+                s += "  {0}\t{1}\t{2}\n".format(*items)
+            s += "%endblock ChemicalSpeciesLabel"
+            return s
+        else:
+            raise KeyError
+
 
 class AtomicCoordinatesFormat(fdf_options.ChoiceLine):
     label = 'Coordinates format'
@@ -226,7 +243,10 @@ class LatticeParVec(fdf_options.Block):
         self.az.SetValue(float(value[0][2]))
         self.bz.SetValue(float(value[1][2]))
         self.cz.SetValue(float(value[2][2]))
-    
+
+    def FDF_string(self, k):
+        print ""
+
     def show_by_value(self, value):
         if value == 0:
             self.latPar.ShowItems(True)

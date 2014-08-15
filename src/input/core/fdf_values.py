@@ -78,14 +78,6 @@ class ChoiceValue(FDFValue):
         self.widgets = [self._cb, ]
         self._cb.Bind(wx.EVT_CHOICE, self.on_change)
 
-    def __get__(self, instance, owner):
-        return self._value
-
-    def __set__(self, instance, value):
-        assert type(value) == str
-        self._value = value
-        self._cb.SetValue(self._value) # fires EVT_TEXT event
-
     def on_change(self, event):
         self._value = self._cb.GetItems()[self._cb.GetSelection()]
         event.Skip()

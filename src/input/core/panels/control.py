@@ -1,6 +1,10 @@
 
 import wx
-from core import fdf_options
+try:
+    from core import fdf_options
+except ImportError:
+    from .. import fdf_options
+
 
 __title__ = "Control"
 __page__ = 0
@@ -30,16 +34,16 @@ class MDTypeOfRun(fdf_options.ChoiceLine):
                        )]
 
     def show_by_calctype(self, event, MDNumCGSteps,
-                      MDMaxForceTol,
-                      MDMaxCGDispl,
-                      MDVariableCell,
-                      MDTargetPressure,
-                      MDFinalTimeStep,
-                      MDLengthTimeStep,
-                      MDInitialTemperature,
-                      MDTargetTemperature,
-                      MDNoseMass,
-                      MDParrinelloRahmanMass):
+                         MDMaxForceTol,
+                         MDMaxCGDispl,
+                         MDVariableCell,
+                         MDTargetPressure,
+                         MDFinalTimeStep,
+                         MDLengthTimeStep,
+                         MDInitialTemperature,
+                         MDTargetTemperature,
+                         MDNoseMass,
+                         MDParrinelloRahmanMass):
         args = locals()
         args.pop('self')
         args.pop('event')
@@ -82,9 +86,9 @@ class WriteCoorStep(fdf_options.BooleanLine):
     optional = True
     priority = 80
 
-class WriteMDhistory(fdf_options.BooleanLine):
+class WriteMDHistory(fdf_options.BooleanLine):
     label = 'MD history (.MD, .MDE)'
-    fdf_text = 'WriteMDhistory'
+    fdf_text = 'WriteMDHistory'
     box = "Output options"
     optional = True
     priority = 90

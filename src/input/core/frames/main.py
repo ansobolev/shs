@@ -15,6 +15,7 @@ except ImportError:
     from shs.geom import Geom
 
 from .. import panels
+from .. import fdf_options
 from ..dialogs.batch import BatchWizard
 from init_panel import NBPage
 from extra_panel import ExtraPN
@@ -126,8 +127,10 @@ class MainFrame(wx.Frame):
     def export_FDF(self, fname):
         with open(fname, 'w') as f:
             for _, value in self.fdf_ol.iteritems():
-                for _, v in value.iteritems():
+                for k, v in value.iteritems():
                     if v.IsEnabled():
+                        if isinstance(v, fdf_options.Block):
+                            print v.FDF_string(k)
                         print v
 #                    f.write("%s\n" % (v,))
 

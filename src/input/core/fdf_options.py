@@ -82,7 +82,9 @@ class Line(FDFOption):
 
 
 class Block(FDFOption):
-    pass
+
+    def FDF_string(self, k):
+        print "%block", k
 
 
 class BooleanLine(Line):
