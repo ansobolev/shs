@@ -313,14 +313,20 @@ class DirHierarchyPage(WizardPageSimple):
 class DirNamePage(WizardPageSimple):
 
     class LevelLine(ChoiceLine):
-        choices = ["Ordinal numbers", ]
         label = "Level"
+
+        def __init__(self, *args, **kwds):
+            self.choices = ["Ordinal numbers", ]
+            ChoiceLine.__init__(self, *args, **kwds)
 
         def append_choice(self, choice):
             self._sizer.value.AppendChoice(choice)
 
         def delete_choice(self, choice):
             self._sizer.value.DeleteChoice(choice)
+
+        def get_count(self):
+            return self._sizer.value.GetCount()
 
     def __init__(self, parent):
         self.parent = parent
@@ -337,11 +343,15 @@ class DirNamePage(WizardPageSimple):
         level_line = self._levels[level-1]
         level_line.append_choice(choice)
 
-    def remove_from_level(self, choice):
-        pass
+    def remove_from_level(self, choice, level):
+        level_line = self._levels[level-1]
+        level_line.delete_choice(choice)
+        if level == len(self._levels) and level_line.get_count() == 1:
+            self.remove_level(level)
 
     def move_between_levels(self, choice, l1,l2):
-        pass
+        self.add_to_level(choice, l2)
+        self.remove_from_level(choice, l1)
 
     def add_level(self):
         level = self.LevelLine(self)
@@ -350,8 +360,12 @@ class DirNamePage(WizardPageSimple):
         level._sizer.SetLabel("Level %i" % (i_level, ))
         self._sizer.Add(level.sizer, 0, wx.EXPAND | wx.ALL, 5)
 
-    def remove_level(self, level):
-        pass
+    def remove_level(self, i_level):
+        assert i_level == len(self._levels)
+        level = self._levels.pop(i_level-1)
+        self._sizer.Hide(i_level)
+        self._sizer.Remove(i_level)
+        self.Layout()
 
     def __set_properties(self):
         pass

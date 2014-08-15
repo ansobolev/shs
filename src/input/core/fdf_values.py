@@ -91,8 +91,13 @@ class ChoiceValue(FDFValue):
         self._choices.append(choice)
         self._cb.AppendItems([choice, ])
 
-    def DeleteChoice(self):
-        pass
+    def DeleteChoice(self, choice):
+        i_choice = self._choices.index(choice)
+        self._choices.pop(i_choice)
+        self.SetChoices(self._choices)
+
+    def GetCount(self):
+        return self._cb.GetCount()
 
     def SetChoices(self, choices):
         self._choices = choices

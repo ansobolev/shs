@@ -44,9 +44,11 @@ class BatchWizard(Wizard):
         self.name_page.add_to_level(option, 1)
 
     def remove_FDF_option(self, option):
-        self.values.pop(option)
+        v = self.values.pop(option)
+        i_level = v["level"]
         self.fill_in_page.remove_FDF_option(option)
         self.dh_page.remove_FDF_option(option)
+        self.name_page.remove_from_level(option, i_level)
 
     def add_value(self, option, value):
         self.values[option]["values"].append(value)
@@ -55,6 +57,8 @@ class BatchWizard(Wizard):
         self.values[option]["values"].pop()
 
     def alter_level(self, option, level):
+        old_level = self.values[option]["level"]
+        self.name_page.move_between_levels(option, old_level, level)
         self.values[option]["level"] = level
 
     def get_option_class(self, option):
