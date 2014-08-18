@@ -122,15 +122,15 @@ class MainFrame(wx.Frame):
                 flat_ol[option.lower()].SetFDFValue(value)
                 d.pop(option)
         # all remaining options go to extras
-        self.extra_page.Populate(d)
+        self.extra_page.populate(d)
 
     def export_FDF(self, fname):
         with open(fname, 'w') as f:
             for _, value in self.fdf_ol.iteritems():
                 for k, v in value.iteritems():
                     if v.IsEnabled():
-                        if isinstance(v, fdf_options.Block):
-                            print v.FDF_string(k)
-                        print v
-#                    f.write("%s\n" % (v,))
+    #                    f.write("%s\n" % (v.FDF_string(k),))
+                        print v.FDF_string(k)
+            s = self.extra_page.extract()
+            print s
 

@@ -11,6 +11,7 @@ import wx.lib.agw.ultimatelistctrl as ulc
 
 'A class collection representing extra options panel'
 
+
 class ExtraPN(wx.ScrolledWindow):
     
     blocks = {}
@@ -23,7 +24,8 @@ class ExtraPN(wx.ScrolledWindow):
         self.OptTE = wx.TextCtrl(self, -1)
         self.ValTE = wx.TextCtrl(self, -1)
         
-        self.ExtraList = ulc.UltimateListCtrl(self, -1, agwStyle=wx.LC_REPORT|wx.LC_VRULES|wx.LC_HRULES|ulc.ULC_HAS_VARIABLE_ROW_HEIGHT)
+        self.ExtraList = ulc.UltimateListCtrl(self, -1, agwStyle=wx.LC_REPORT | wx.LC_VRULES | wx.LC_HRULES |
+                                              ulc.ULC_HAS_VARIABLE_ROW_HEIGHT)
         
         self.AddBtn = wx.Button(self, -1, 'Add')
         self.AddBlockBtn = wx.Button(self, -1, 'Add block')
@@ -67,7 +69,7 @@ class ExtraPN(wx.ScrolledWindow):
         dlg = AddBlockDlg(self, def_opt = self.OptTE.GetValue())
         if dlg.ShowModal() == wx.ID_OK:
             opt, val = dlg.GetBlock()
-            self.AddBlock(opt, val)
+            self.add_block(opt, val)
         dlg.Destroy()
     
     def OnShowBtn(self, evt):
@@ -88,28 +90,42 @@ class ExtraPN(wx.ScrolledWindow):
                 dlg.Destroy()
                 break 
     
-    def AddBlock(self, opt, val):
+    def add_block(self, opt, val):
         # 'show' button
         show_btn = wx.Button(self.ExtraList, -1, 'Show')
         # add to blocks
         self.blocks[opt] = [show_btn, val]
         # add to list
         ind = self.ExtraList.InsertStringItem(sys.maxint, opt)
-        self.ExtraList.SetItemWindow(ind, 1, show_btn, expand = True)
+        self.ExtraList.SetItemWindow(ind, 1, show_btn, expand=True)
         # bind show_btn
         self.Bind(wx.EVT_BUTTON, self.OnShowBtn, show_btn)
     
-    def Populate(self, d):
+    def populate(self, d):
         'Populates extras pane with values from fdf dictionary'
-        for key, Tval in d.iteritems():
+        for key, t_val in d.iteritems():
             try:
-                if Tval.__class__.__name__ == 'BlockValue':
-                    self.AddBlock(key, '\n'.join([' '.join(s) for s in Tval.value]))    
+                if t_val.__class__.__name__ == 'BlockValue':
+                    self.add_block(key, '\n'.join([' '.join(s) for s in t_val.value]))
                 else:
                     ind = self.ExtraList.InsertStringItem(sys.maxint, key)
-                    self.ExtraList.SetStringItem(ind, 1, str(Tval))
+                    self.ExtraList.SetStringItem(ind, 1, str(t_val))
             except IndexError:
                 continue
+
+    def extract(self):
+        s = ""
+        items = []
+        for i in range(self.ExtraList.GetItemCount()):
+            items.append([self.ExtraList.GetItem(itemOrId=i, col=j).GetText() for j in range(2)])
+        for k, v in items:
+            if k in self.blocks:
+                s += ("%block {0}\n"
+                      "  {1}\n"
+                      "%endblock {0}\n").format(k, self.blocks[k][1])
+            else:
+                s += "{0:<25}\t{1}\n".format(k, v)
+        return s
     
     def __set_properties(self):
         self.SetScrollRate(0, 10)

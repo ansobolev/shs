@@ -74,7 +74,7 @@ class Line(FDFOption):
     def SetLabel(self, label):
         self._sizer.SetLabel(label)
 
-    def FDF_string(self):
+    def FDF_string(self, *args):
         return "{0:<25}\t{1}".format(self.fdf_text, self.GetFDFValue())
 
     def __str__(self):

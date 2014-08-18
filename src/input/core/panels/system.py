@@ -1,14 +1,17 @@
 import sys
 import wx
-from shs.const import PeriodicTable 
+from wx.lib.agw import floatspin as fs
+
+from shs.const import PeriodicTable
+
 try:
     from core import fdf_options
     from core import fdf_wx
+    from core.dialogs import ac_init
 except ImportError:
     from .. import fdf_options
     from .. import fdf_wx
-
-from wx.lib.agw import floatspin as fs
+    from ..dialogs import ac_init
 
 __title__ = "System"
 __page__ = 1
@@ -118,6 +121,7 @@ class LatticeConstant(fdf_options.MeasuredLine):
     units = ['Bohr', 'Ang']
     box = "Atomic coordinates"
     priority = 30    
+
 
 class LatticeParVec(fdf_options.Block):
     box = "Atomic coordinates"
@@ -286,6 +290,7 @@ class LatticeParVec(fdf_options.Block):
         else:
             self.hide()
 
+
 class AtomicCoordinates(fdf_options.Block):
     box = "Atomic coordinates"
     priority = 50
@@ -310,6 +315,9 @@ class AtomicCoordinates(fdf_options.Block):
         # create bindings here
         self.AddBtn.Bind(wx.EVT_BUTTON, self.on_AddBtn_press)
         self.RmBtn.Bind(wx.EVT_BUTTON, self.on_RmBtn_press)
+        self.bindings = [(self.InitBtn,
+                          wx.EVT_BUTTON,
+                          self.on_InitBtn_press)]
         self.LC.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_sel)
         self.LC.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.on_sel)
         self.LC.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.on_edit)
@@ -362,11 +370,22 @@ class AtomicCoordinates(fdf_options.Block):
         except:
             self.LC.SetStringItem(row, col, '0.0')                         
 
-    def on_InitBtn_press(self, evt):
-        data = self.GetCSLData()
-        dlg = dialogs.LCInitDialog(None, types = [d['label'] for d in data])
+    def on_InitBtn_press(self, evt, ChemicalSpeciesLabel):
+        lc = ChemicalSpeciesLabel.LC
+        labels = [lc.GetItem(itemId=i, col=2).GetText() for i in range(lc.GetItemCount())]
+        dlg = ac_init.ACInitDialog(None, types=labels)
         if dlg.ShowModal() == wx.ID_OK:
             g_opts = dlg.init_geom()
             self.SetGeom(g_opts)
         dlg.Destroy()
 
+    def FDF_string(self, k):
+        if k == "NumberOfAtoms".lower():
+            return "{0:<25}\t{1}".format("NumberOfAtoms", self.LC.GetItemCount())
+        elif k == "AtomicCoordinatesAndAtomicSpecies".lower():
+            s = "%block AtomicCoordinatesAndAtomicSpecies\n"
+            for i in range(self.LC.GetItemCount()):
+                items = [self.LC.GetItem(itemId=i, col=j+1).GetText() for j in range(4)]
+                s += "  {0:<13}\t{1:<13}\t{2:<13}\t{3:<3}\n".format(*items)
+            s += "%endblock AtomicCoordinatesAndAtomicSpecies"
+            return s
