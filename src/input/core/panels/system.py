@@ -23,15 +23,16 @@ class ChemicalSpeciesLabel(fdf_options.Block):
     proportion = 1
 
     def __init__(self, parent):
+        super(ChemicalSpeciesLabel, self).__init__()
         self.parent = parent
         self._sizer = self.__create_sizer(parent)
 
     def __create_sizer(self, parent):
         self.LC = fdf_wx.TEListCtrl(parent, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
-        self.LC.InsertColumn(0, 'No.', width = 50)
-        self.LC.InsertColumn(1, 'Charge', width = 100)
-        self.LC.InsertColumn(2, 'Label', width = 150)       
-        self.LC.InsertColumn(3, 'Mass', width = 100)
+        self.LC.InsertColumn(0, 'No.', width=50)
+        self.LC.InsertColumn(1, 'Charge', width=100)
+        self.LC.InsertColumn(2, 'Label', width=150)
+        self.LC.InsertColumn(3, 'Mass', width=100)
 
         self.AddBtn = wx.Button(parent, -1, 'Add')
         self.RmBtn = wx.Button(parent, -1, 'Remove')
@@ -136,6 +137,7 @@ class LatticeParVec(fdf_options.Block):
         choices = ['by lattice parameters', 'by lattice vectors']
 
     def __init__(self, parent):
+        super(LatticeParVec, self).__init__()
         self.parent = parent
         self._sizer = self.__create_sizer(parent)
         # create bindings here
@@ -182,15 +184,15 @@ class LatticeParVec(fdf_options.Block):
         return sizer  
 
     def __create_latVec(self, parent):
-        self.ax = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01, value = 1.0)
-        self.ay = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01)
-        self.az = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01)
-        self.bx = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01)
-        self.by = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01, value = 1.0)
-        self.bz = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01)
-        self.cx = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01)
-        self.cy = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01)
-        self.cz = fs.FloatSpin(parent, -1, digits = 3, increment = 0.01, value = 1.0)
+        self.ax = fs.FloatSpin(parent, -1, digits=3, increment=0.01, value=1.0)
+        self.ay = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
+        self.az = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
+        self.bx = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
+        self.by = fs.FloatSpin(parent, -1, digits=3, increment=0.01, value=1.0)
+        self.bz = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
+        self.cx = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
+        self.cy = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
+        self.cz = fs.FloatSpin(parent, -1, digits=3, increment=0.01, value=1.0)
 
         al = wx.StaticText(parent, -1, '   vec1 = ')
         bl = wx.StaticText(parent, -1, '   vec2 = ')
@@ -298,6 +300,7 @@ class AtomicCoordinates(fdf_options.Block):
     proportion = 2
 
     def __init__(self, parent):
+        super(AtomicCoordinates, self).__init__()
         self.parent = parent
         self._sizer = self.__create_sizer(parent)
 
@@ -307,11 +310,11 @@ class AtomicCoordinates(fdf_options.Block):
         self.InitBtn = wx.Button(parent, -1, 'Initialize')
         self.ImportBtn = wx.Button(parent, -1, 'Import')
         self.LC = fdf_wx.NumberedTEListCtrl(parent, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
-        self.LC.InsertColumn(0, 'No.', width = 50)
-        self.LC.InsertColumn(1, 'X', width = 112)
-        self.LC.InsertColumn(2, 'Y', width = 112)
-        self.LC.InsertColumn(3, 'Z', width = 112)
-        self.LC.InsertColumn(4, 'Species', width = 58)
+        self.LC.InsertColumn(0, 'No.', width=50)
+        self.LC.InsertColumn(1, 'X', width=112)
+        self.LC.InsertColumn(2, 'Y', width=112)
+        self.LC.InsertColumn(3, 'Z', width=112)
+        self.LC.InsertColumn(4, 'Species', width=58)
         # create bindings here
         self.AddBtn.Bind(wx.EVT_BUTTON, self.on_AddBtn_press)
         self.RmBtn.Bind(wx.EVT_BUTTON, self.on_RmBtn_press)
@@ -376,8 +379,11 @@ class AtomicCoordinates(fdf_options.Block):
         dlg = ac_init.ACInitDialog(None, types=labels)
         if dlg.ShowModal() == wx.ID_OK:
             g_opts = dlg.init_geom()
-            self.SetGeom(g_opts)
+            self.set_geom(g_opts)
         dlg.Destroy()
+
+    def set_geom(self, options):
+        self.LC.SetValue(options)
 
     def FDF_string(self, k):
         if k == "NumberOfAtoms".lower():
@@ -385,7 +391,8 @@ class AtomicCoordinates(fdf_options.Block):
         elif k == "AtomicCoordinatesAndAtomicSpecies".lower():
             s = "%block AtomicCoordinatesAndAtomicSpecies\n"
             for i in range(self.LC.GetItemCount()):
-                items = [self.LC.GetItem(itemId=i, col=j+1).GetText() for j in range(4)]
-                s += "  {0:<13}\t{1:<13}\t{2:<13}\t{3:<3}\n".format(*items)
+                items = [float(self.LC.GetItem(itemId=i, col=j+1).GetText()) if j < 3
+                         else int(self.LC.GetItem(itemId=i, col=j+1).GetText()) for j in range(4)]
+                s += "  {0:<12.8f}\t{1:<12.8f}\t{2:<12.8f}\t{3:<3d}\n".format(*items)
             s += "%endblock AtomicCoordinatesAndAtomicSpecies"
             return s

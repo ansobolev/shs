@@ -91,7 +91,7 @@ class BlockValue():
             s += (fmt.format(line) + '\n')
         return s
     
-    def alter(self,altblock):
+    def alter(self, altblock):
         self.value = altblock
 
 class MeasuredValue():

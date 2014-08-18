@@ -164,6 +164,9 @@ class MeasuredLine(Line):
         self.FS = self.widgets[0]
         self.CB = self.widgets[1]
 
+    def GetValue(self):
+        return self.FS.GetValue(), self.CB.GetValue()
+
     def GetFDFValue(self):
         value = self.FS.GetValue()
         if self.digits == 0:

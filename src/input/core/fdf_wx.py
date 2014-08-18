@@ -17,6 +17,7 @@ class TEListCtrl(wx.ListCtrl, TextEditMixin):
 
     def SetValue(self, Tval):
         'Sets block value'
+        self.DeleteAllItems()
         ncol = self.GetColumnCount()
         if ncol < max([len(s) for s in Tval.value]):
             print 'Warning: can\'t populate ListCtrl with block data'
@@ -37,6 +38,7 @@ class NumberedTEListCtrl(wx.ListCtrl, TextEditMixin):
 
     def SetValue(self, Tval):
         'Sets block value'
+        self.DeleteAllItems()
         ncol = self.GetColumnCount()
         if (ncol - 1) < max([len(s) for s in Tval.value]):
             print 'Warning: can\'t populate ListCtrl with block data'

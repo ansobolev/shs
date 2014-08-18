@@ -15,7 +15,6 @@ except ImportError:
     from shs.geom import Geom
 
 from .. import panels
-from .. import fdf_options
 from ..dialogs.batch import BatchWizard
 from init_panel import NBPage
 from extra_panel import ExtraPN
