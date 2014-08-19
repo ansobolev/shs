@@ -118,7 +118,7 @@ class BatchWizard(Wizard):
             with open(os.path.join(calc_dir, 'CALC.fdf'), 'w') as f:
                 for k, v in options.iteritems():
                     if v.IsEnabled():
-                       f.write("%s\n" % (v.FDF_string(k),))
+                        f.write("%s\n" % (v.FDF_string(k),))
                 f.write(self.extra)
         else:
             changes_level = changes[0]

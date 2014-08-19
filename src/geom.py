@@ -487,7 +487,7 @@ class Geom():
         ntyp = len(Composition.keys())
         i = np.arange(1, ntyp + 1)
         label = np.array(Composition.keys())
-        z = np.array([Const.PeriodicTable[l] for l in label])
+        z = np.array([Const.PeriodicTable.get(l, 0) for l in label])
         self.names = np.rec.fromarrays([i,z,label], names = 'i,z,label', formats = '|i1,|i2,|S2')            
 # now calculate number of atoms of each type
 # fractions

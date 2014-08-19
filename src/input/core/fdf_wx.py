@@ -10,9 +10,9 @@ EvtRL, EVT_RADIOLINE = newevent.NewCommandEvent()
 class TEListCtrl(wx.ListCtrl, TextEditMixin):
     """ Editable list control
     """
-    def __init__(self, parent, ID, pos=wx.DefaultPosition,
+    def __init__(self, parent, id, pos=wx.DefaultPosition,
                  size=wx.DefaultSize, style=0):
-        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
+        wx.ListCtrl.__init__(self, parent, id, pos, size, style)
         TextEditMixin.__init__(self)
 
     def SetValue(self, Tval):

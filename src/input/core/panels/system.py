@@ -300,8 +300,8 @@ class AtomicCoordinates(fdf_options.Block):
     fdf_text = ["NumberOfAtoms","AtomicCoordinatesAndAtomicSpecies"]
     proportion = 2
 
-    def __init__(self, parent):
-        super(AtomicCoordinates, self).__init__()
+    def __init__(self, parent, *args, **kwds):
+        super(AtomicCoordinates, self).__init__(*args, **kwds)
         self.parent = parent
         self._sizer = self.__create_sizer(parent)
 
@@ -319,9 +319,12 @@ class AtomicCoordinates(fdf_options.Block):
         # create bindings here
         self.AddBtn.Bind(wx.EVT_BUTTON, self.on_AddBtn_press)
         self.RmBtn.Bind(wx.EVT_BUTTON, self.on_RmBtn_press)
-        self.bindings = [(self.InitBtn,
-                          wx.EVT_BUTTON,
-                          self.on_InitBtn_press)]
+        if self.parent.__class__.__name__ == "NBPage":
+            self.bindings = [(self.InitBtn,
+                              wx.EVT_BUTTON,
+                              self.on_InitBtn_press)]
+        else:
+            self.InitBtn.Bind(wx.EVT_BUTTON, self.on_InitBtn_press)
         self.LC.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_sel)
         self.LC.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.on_sel)
         self.LC.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.on_edit)
@@ -365,6 +368,7 @@ class AtomicCoordinates(fdf_options.Block):
 
     def on_sel(self, evt):
         self.RmBtn.Enable(self.LC.GetSelectedItemCount())
+        evt.Skip()
 
     def on_edit(self, evt):
         row = evt.m_itemIndex
@@ -374,10 +378,14 @@ class AtomicCoordinates(fdf_options.Block):
         except:
             self.LC.SetStringItem(row, col, '0.0')                         
 
-    def on_InitBtn_press(self, evt, ChemicalSpeciesLabel):
-        lc = ChemicalSpeciesLabel.LC
-        labels = [lc.GetItem(itemId=i, col=2).GetText() for i in range(lc.GetItemCount())]
+    def on_InitBtn_press(self, evt, ChemicalSpeciesLabel=None):
+        if ChemicalSpeciesLabel is None:
+            labels = []
+        else:
+            lc = ChemicalSpeciesLabel.LC
+            labels = [lc.GetItem(itemId=i, col=2).GetText() for i in range(lc.GetItemCount())]
         dlg = ac_init.ACInitDialog(None, types=labels)
+
         if dlg.ShowModal() == wx.ID_OK:
             g_opts = dlg.init_geom()
             self.set_geom(g_opts)
