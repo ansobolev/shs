@@ -9,11 +9,7 @@
 
 import wx
 
-try:
-    from RootFrame import RootFrame
-except ImportError:
-    print 'Importing installed GUI...'
-    from shs.gui.RootFrame import RootFrame
+from shs.gui.RootFrame import RootFrame
     
 if __name__ == "__main__":
 
