@@ -107,7 +107,7 @@ class MainFrame(wx.Frame):
 
     def on_batch(self, event):
         """Runs batch wizard"""
-        wiz = BatchWizard(self, -1, options=self.fdf_ol)
+        wiz = BatchWizard(self, -1, options=self.fdf_ol, extra=self.extra_page.extract())
         wiz.run()
         wiz.Destroy()
 
@@ -128,8 +128,9 @@ class MainFrame(wx.Frame):
             for _, value in self.fdf_ol.iteritems():
                 for k, v in value.iteritems():
                     if v.IsEnabled():
-    #                    f.write("%s\n" % (v.FDF_string(k),))
-                        print v.FDF_string(k)
+                        f.write("%s\n" % (v.FDF_string(k),))
+#                       print v.FDF_string(k)
             s = self.extra_page.extract()
-            print s
+            f.write(s)
+#            print s
 

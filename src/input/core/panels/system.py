@@ -16,6 +16,7 @@ except ImportError:
 __title__ = "System"
 __page__ = 1
 
+
 class ChemicalSpeciesLabel(fdf_options.Block):
     fdf_text = ["NumberOfSpecies", "ChemicalSpeciesLabel"]
     box = "Chemical species"
@@ -90,9 +91,9 @@ class ChemicalSpeciesLabel(fdf_options.Block):
         self.LC.SetValue(value)
 
     def FDF_string(self, k):
-        if k == "NumberOfSpecies".lower():
+        if k.lower() == "NumberOfSpecies".lower():
             return "{0:<25}\t{1}".format("NumberOfSpecies", self.LC.GetItemCount())
-        elif k == "ChemicalSpeciesLabel".lower():
+        elif k.lower() == "ChemicalSpeciesLabel".lower():
             s = "%block ChemicalSpeciesLabel\n"
             for i in range(self.LC.GetItemCount()):
                 items = [self.LC.GetItem(itemId=i, col=j).GetText() for j in range(3)]
@@ -153,13 +154,13 @@ class LatticeParVec(fdf_options.Block):
         return self.__do_layout()
     
     def __create_latPar(self, parent):
-        self.a = fs.FloatSpin(parent, -1, digits = 2, increment = 0.01, value = 1.0)
-        self.b = fs.FloatSpin(parent, -1, digits = 2, increment = 0.01, value = 1.0)
-        self.c = fs.FloatSpin(parent, -1, digits = 2, increment = 0.01, value = 1.0)
+        self.a = fs.FloatSpin(parent, -1, digits=2, increment=0.01, value=1.0)
+        self.b = fs.FloatSpin(parent, -1, digits=2, increment=0.01, value=1.0)
+        self.c = fs.FloatSpin(parent, -1, digits=2, increment=0.01, value=1.0)
         
-        self.alpha = fs.FloatSpin(parent, -1, digits = 2, increment = 0.01, min_val = 0., max_val = 180., value = 90.0)
-        self.beta = fs.FloatSpin(parent, -1, digits = 2, increment = 0.01, min_val = 0., max_val = 180., value = 90.0)
-        self.gamma = fs.FloatSpin(parent, -1, digits = 2, increment = 0.01, min_val = 0., max_val = 180., value = 90.0)
+        self.alpha = fs.FloatSpin(parent, -1, digits=2, increment=0.01, min_val=0., max_val=180., value=90.0)
+        self.beta = fs.FloatSpin(parent, -1, digits=2, increment=0.01, min_val=0., max_val=180., value=90.0)
+        self.gamma = fs.FloatSpin(parent, -1, digits=2, increment=0.01, min_val=0., max_val=180., value=90.0)
 
         al = wx.StaticText(parent, -1, '   a = ')
         bl = wx.StaticText(parent, -1, '   b = ')
@@ -253,9 +254,9 @@ class LatticeParVec(fdf_options.Block):
     def FDF_string(self, k):
         if not self.LatParOrVec.IsEnabled():
             return ""
-        if k == "LatticeParameters".lower():
+        if k.lower() == "LatticeParameters".lower():
             return ""
-        elif k == "LatticeVectors".lower():
+        elif k.lower() == "LatticeVectors".lower():
             s = "%block LatticeVectors\n"
             s += "  {0}    {1}    {2}\n".format(self.ax.GetValue(),
                                                 self.ay.GetValue(),
@@ -386,9 +387,9 @@ class AtomicCoordinates(fdf_options.Block):
         self.LC.SetValue(options)
 
     def FDF_string(self, k):
-        if k == "NumberOfAtoms".lower():
+        if k.lower() == "NumberOfAtoms".lower():
             return "{0:<25}\t{1}".format("NumberOfAtoms", self.LC.GetItemCount())
-        elif k == "AtomicCoordinatesAndAtomicSpecies".lower():
+        elif k.lower() == "AtomicCoordinatesAndAtomicSpecies".lower():
             s = "%block AtomicCoordinatesAndAtomicSpecies\n"
             for i in range(self.LC.GetItemCount()):
                 items = [float(self.LC.GetItem(itemId=i, col=j+1).GetText()) if j < 3

@@ -1,5 +1,6 @@
-from collections import OrderedDict
+import os
 import wx
+from collections import OrderedDict
 from wx.wizard import Wizard, WizardPageSimple
 from batch_pages import SelectPage, FillInPage, DirHierarchyPage, DirNamePage
 
@@ -8,7 +9,9 @@ class BatchWizard(Wizard):
 
     def __init__(self, *args, **kwds):
         options = kwds.pop('options', None)
+        self.extra = kwds.pop('extra', '')
         self.values = {}
+        self.fdf_options = options
         self.options = self.make_options_dict(options)
         
         Wizard.__init__(self, *args, **kwds)
@@ -71,19 +74,68 @@ class BatchWizard(Wizard):
     def __do_layout(self):
         pass
 
-    def prepare_calc_dirs(self):
+    def get_calc_dir(self):
         calc_dir = None
         dlg = wx.DirDialog(self, message="Select root directory for calculations", style=wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal() == wx.ID_OK:
             calc_dir = dlg.GetPath()
         dlg.Destroy()
-        if calc_dir is None:
-            return
+        return calc_dir
+
+    def check_changes(self):
+        changes = []
+        n_levels = max([option['level'] for option in self.values.values()])
+        for i_level in range(1, n_levels+1):
+            options_level = {option: values['values'] for (option, values) in self.values.iteritems()
+                             if self.values[option]["level"] == i_level}
+            if any([len(v) == 0 for v in options_level.values()]):
+                wx.MessageBox("No values given for some of chosen FDF options!", style=wx.ICON_WARNING)
+                return None
+            changes.append(options_level)
+        return changes
+
+    def dir_names(self, changes, i_level):
+        changes_level = changes[0]
+        dir_title = self.name_page.dir_title(i_level)
+        if dir_title == "Ordinal numbers":
+            for i in range(1, len(changes_level.values()[0])+1):
+                yield str(i)
+        else:
+            for value in changes_level[dir_title]:
+                yield str(value.GetValue())
+
+    def export_FDF(self, options, calc_dir, changes, i_level=1):
+        """ Main recursive function for exporting FDFs
+        :param options:
+        :param calc_dir: A root calculation directory (string)
+        :param changes: A list with value changes
+        :param i_level: Level number (default is 1)
+        :return: Error code (0 is OK)
+        """
+        if len(changes) == 0:
+            # we are in the leaf
+            os.makedirs(calc_dir)
+            with open(os.path.join(calc_dir, 'CALC.fdf'), 'w') as f:
+                for k, v in options.iteritems():
+                    if v.IsEnabled():
+                       f.write("%s\n" % (v.FDF_string(k),))
+                f.write(self.extra)
+        else:
+            changes_level = changes[0]
+            fdf_lines = changes_level.keys()
+            fdf_values = [changes_level[key] for key in fdf_lines]
+            fdf_values = [dict(zip(fdf_lines, v)) for v in zip(*fdf_values)]
+            for (dir_name, fdf_value) in zip(self.dir_names(changes, i_level), fdf_values):
+                options.update(fdf_value)
+                self.export_FDF(options, os.path.join(calc_dir, dir_name), changes[1:], i_level+1)
 
     def run(self):
         if self.RunWizard(self.select_page):
-            self.prepare_calc_dirs()
-
+            calc_dir = self.get_calc_dir()
+            if calc_dir is None:
+                return None
+            changes = self.check_changes()
+            self.export_FDF(self.options, calc_dir, changes)
 
 if __name__ == '__main__':
     "A simple test"

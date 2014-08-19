@@ -366,6 +366,9 @@ class DirNamePage(WizardPageSimple):
         self._sizer.Remove(i_level)
         self.Layout()
 
+    def dir_title(self, i_level):
+        return self._levels[i_level-1].GetValue()
+
     def __set_properties(self):
         pass
 
