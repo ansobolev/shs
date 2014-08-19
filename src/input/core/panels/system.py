@@ -29,7 +29,7 @@ class ChemicalSpeciesLabel(fdf_options.Block):
         self._sizer = self.__create_sizer(parent)
 
     def __create_sizer(self, parent):
-        self.LC = fdf_wx.TEListCtrl(parent, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.LC = fdf_wx.TEListCtrl(parent, -1, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
         self.LC.InsertColumn(0, 'No.', width=50)
         self.LC.InsertColumn(1, 'Charge', width=100)
         self.LC.InsertColumn(2, 'Label', width=150)
@@ -38,11 +38,11 @@ class ChemicalSpeciesLabel(fdf_options.Block):
         self.AddBtn = wx.Button(parent, -1, 'Add')
         self.RmBtn = wx.Button(parent, -1, 'Remove')
         # binding events
-        self.AddBtn.Bind(wx.EVT_BUTTON, self.on_AddBtn_press)
-        self.RmBtn.Bind(wx.EVT_BUTTON, self.on_RmBtn_press)
-        self.LC.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_sel)
-        self.LC.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.on_sel)
-        self.LC.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.on_edit)
+        self.AddBtn.Bind(wx.EVT_BUTTON, self._on_AddBtn_press)
+        self.RmBtn.Bind(wx.EVT_BUTTON, self._on_RmBtn_press)
+        self.LC.Bind(wx.EVT_LIST_ITEM_SELECTED, self._on_sel)
+        self.LC.Bind(wx.EVT_LIST_ITEM_DESELECTED, self._on_sel)
+        self.LC.Bind(wx.EVT_LIST_END_LABEL_EDIT, self._on_edit)
 
         self.__set_properties()
         return self.__do_layout()
@@ -61,10 +61,10 @@ class ChemicalSpeciesLabel(fdf_options.Block):
         main_sizer.Add(btn_sizer, 0, wx.EXPAND, 0)
         return main_sizer
 
-    def on_AddBtn_press(self, evt):
+    def _on_AddBtn_press(self, evt):
         self.LC.InsertStringItem(sys.maxint, str(self.LC.GetItemCount() + 1))
 
-    def on_RmBtn_press(self, evt):
+    def _on_RmBtn_press(self, evt):
         # delete
         for _ in range(self.LC.GetSelectedItemCount()):
             self.LC.DeleteItem(self.LC.GetFirstSelected())
@@ -73,12 +73,14 @@ class ChemicalSpeciesLabel(fdf_options.Block):
             self.LC.SetStringItem(i, 0, str(i + 1))
         self.RmBtn.Enable(False)
 
-    def on_sel(self, evt):
+    def _on_sel(self, evt):
         self.RmBtn.Enable(self.LC.GetSelectedItemCount())
         evt.Skip()
 
-    def on_edit(self, evt):
-        'Gets default charge for atoms in CSL block'
+    def _on_edit(self, evt):
+        """
+        Event handler; gets default charge for atoms in CSL block
+        """
         row = evt.m_itemIndex
         col = evt.m_col
         if col == 2:
@@ -148,12 +150,12 @@ class LatticeParVec(fdf_options.Block):
     def __create_sizer(self, parent):
 
         self.LatParOrVec = self.Choice(parent) 
-        self.latPar = self.__create_latPar(parent)
-        self.latVec = self.__create_latVec(parent)        
+        self.latPar = self.__create_lat_par(parent)
+        self.latVec = self.__create_lat_vec(parent)
         self.__set_properties()
         return self.__do_layout()
     
-    def __create_latPar(self, parent):
+    def __create_lat_par(self, parent):
         self.a = fs.FloatSpin(parent, -1, digits=2, increment=0.01, value=1.0)
         self.b = fs.FloatSpin(parent, -1, digits=2, increment=0.01, value=1.0)
         self.c = fs.FloatSpin(parent, -1, digits=2, increment=0.01, value=1.0)
@@ -184,7 +186,7 @@ class LatticeParVec(fdf_options.Block):
         sizer.Add(self.gamma, 0, wx.EXPAND, 0)
         return sizer  
 
-    def __create_latVec(self, parent):
+    def __create_lat_vec(self, parent):
         self.ax = fs.FloatSpin(parent, -1, digits=3, increment=0.01, value=1.0)
         self.ay = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
         self.az = fs.FloatSpin(parent, -1, digits=3, increment=0.01)
@@ -220,9 +222,9 @@ class LatticeParVec(fdf_options.Block):
 
     def __do_layout(self):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
-        main_sizer.Add(self.LatParOrVec.sizer, 0, wx.ALL|wx.EXPAND, 2)
-        main_sizer.Add(self.latPar, 0, wx.ALL|wx.EXPAND, 2)
-        main_sizer.Add(self.latVec, 0, wx.ALL|wx.EXPAND, 2)
+        main_sizer.Add(self.LatParOrVec.sizer, 0, wx.ALL | wx.EXPAND, 2)
+        main_sizer.Add(self.latPar, 0, wx.ALL | wx.EXPAND, 2)
+        main_sizer.Add(self.latVec, 0, wx.ALL | wx.EXPAND, 2)
 
         return main_sizer
 
@@ -231,13 +233,13 @@ class LatticeParVec(fdf_options.Block):
         if value.key == "LatticeParameters":
             self.LatParOrVec.SetValue(0)
             self.show_by_value(0)
-            self.set_latPar_value(value.value)
+            self.set_lat_par_value(value.value)
         else:
             self.LatParOrVec.SetValue(1)
             self.show_by_value(1)
             self.set_latVec_value(value.value)
 
-    def set_latPar_value(self, value):
+    def set_lat_par_value(self, value):
         pass
 
     def set_latVec_value(self, value):
@@ -297,7 +299,7 @@ class LatticeParVec(fdf_options.Block):
 class AtomicCoordinates(fdf_options.Block):
     box = "Atomic coordinates"
     priority = 50
-    fdf_text = ["NumberOfAtoms","AtomicCoordinatesAndAtomicSpecies"]
+    fdf_text = ["NumberOfAtoms", "AtomicCoordinatesAndAtomicSpecies"]
     proportion = 2
 
     def __init__(self, parent, *args, **kwds):
@@ -310,7 +312,7 @@ class AtomicCoordinates(fdf_options.Block):
         self.RmBtn = wx.Button(parent, -1, 'Remove')
         self.InitBtn = wx.Button(parent, -1, 'Initialize')
         self.ImportBtn = wx.Button(parent, -1, 'Import')
-        self.LC = fdf_wx.NumberedTEListCtrl(parent, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.LC = fdf_wx.NumberedTEListCtrl(parent, -1, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
         self.LC.InsertColumn(0, 'No.', width=50)
         self.LC.InsertColumn(1, 'X', width=112)
         self.LC.InsertColumn(2, 'Y', width=112)
@@ -375,7 +377,7 @@ class AtomicCoordinates(fdf_options.Block):
         col = evt.m_col
         try:
             float(evt.GetText())
-        except:
+        except ValueError:
             self.LC.SetStringItem(row, col, '0.0')                         
 
     def on_InitBtn_press(self, evt, ChemicalSpeciesLabel=None):
