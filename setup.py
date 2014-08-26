@@ -1,7 +1,7 @@
 #!/opt/epd/bin/python
 # -*- coding: utf8 -*-
 
-from distutils.core import setup
+from setuptools import setup
 
 long_description = '''
 This python module is a set of routines designed to ease the way of making SIESTA calculations,
@@ -20,6 +20,7 @@ setup(name='SHS',
                 'shs.voronoi',
                 'shs.voronoi.numpy',
                 'shs.gui',
+                'shs.input'
                 ],
       package_dir={'shs' : 'shs',
                    'shs.vtkxml': 'shs/vtkxml',
@@ -27,6 +28,7 @@ setup(name='SHS',
                    'shs.voronoi.numpy': 'shs/voronoi/numpy',
                    'shs.voronoi.pyvoro': 'shs/voronoi/pyvoro',
                    'shs.gui': 'shs/gui',
+                   'shs.input': 'shs/input',
                    },
       package_data={'shs' : ['PBS/*.pbs', 'slurm/*'],
                     'shs.gui': ['data-export-icon.png', ],
@@ -42,5 +44,5 @@ setup(name='SHS',
                         "matplotlib>=1.3.1",
                         "wxPython>=2.8.11.0"],
       license='MIT'
-     )
+      )
 
