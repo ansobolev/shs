@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 
-import os, time, subprocess
+import os
+import sys
+import time
+import subprocess
 import wx
+import ConfigParser
 from wx.lib.mixins.listctrl import getListCtrlSelection
-from wx.lib.pubsub import Publisher 
+from wx.lib.pubsub import Publisher
 
 from gui.RootGUI import RootGUI
-import StepsDialog as SD, PlotFrame as PF, CorrDialog as CD
+import StepsDialog as SD
+import PlotFrame as PF
 import interface
 import mbox
 
 class RootFrame(RootGUI):
 
-    if os.path.exists('/home/physics/calc'):
-        root = '/home/physics/calc'
-    else:
-        root = '/home/andrey/calc'
-
     calcs = []
 
     def __init__(self, *args, **kwds):
         super(RootFrame, self).__init__(*args, **kwds)
+        # set root
+        self.root = self.set_root()
         # initialize choices
         self.propChoices = interface.dataClasses()
         calc_data_types = self.propChoices.types()
@@ -40,6 +42,35 @@ class RootFrame(RootGUI):
         self.calcList.InsertColumn(0,'Directory', width = 180)
         self.calcList.InsertColumn(1,'Type', width = 70)
         self.calcList.InsertColumn(2,'NSteps', width = 100)
+
+    def set_root(self):
+        """
+        Sets root directory fr GUI based on config file
+        :return: Root directory
+        """
+        config_dir = os.path.expanduser("~/.local/shs")
+        config_file = os.path.join(config_dir, "shs_gui.cfg")
+        # check the file and create one if it's not there
+        if not os.path.isfile(config_file):
+            os.makedirs(config_dir)
+            open(config_file, 'w').close()
+        config = ConfigParser.ConfigParser()
+        config.read(config_file)
+        # if config exists and has needed option
+        if config.has_option("general", "root_dir"):
+            return config.get("general", "root_dir")
+        # make config
+        if not config.has_section("general"):
+            config.add_section("general")
+        dlg = wx.DirDialog(self, "Select root directory")
+        if dlg.ShowModal() == wx.ID_OK:
+            root_dir = dlg.GetPath()
+            config.set("general", "root_dir", root_dir)
+        else:
+            sys.exit(1)
+        with open(config_file, 'w') as f:
+            config.write(f)
+        return root_dir
 
     def buildTree(self,root,ctype):
         '''Add a new root element and then its children'''        
