@@ -4,7 +4,10 @@ import math
 import os
 import wx
 from wx.lib.mixins.listctrl import getListCtrlSelection
-from wx.lib.pubsub import Publisher
+try:
+    from wx.lib.pubsub import Publisher
+except ImportError:
+    from wx.lib.pubsub.pub import Publisher
 
 import matplotlib.cm as cm
 from matplotlib.figure import Figure

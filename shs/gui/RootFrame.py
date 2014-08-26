@@ -7,7 +7,10 @@ import subprocess
 import wx
 import ConfigParser
 from wx.lib.mixins.listctrl import getListCtrlSelection
-from wx.lib.pubsub import pub
+try:
+    from wx.lib.pubsub import Publisher
+except ImportError:
+    from wx.lib.pubsub.pub import Publisher
 
 from gui.RootGUI import RootGUI
 from StepsDialog import StepsDialog
@@ -252,7 +255,7 @@ class RootFrame(RootGUI):
         except (AttributeError, wx.PyDeadObjectError):
             self.plot_frame = PlotFuncFrame(self)
             self.plot_frame.Show()
-        pub.Publisher().sendMessage(('data.plot'), msg)
+        Publisher().sendMessage(('data.plot'), msg)
 
     def plot_correlation(self):
         # correlate options - get all the data to plot
@@ -266,4 +269,4 @@ class RootFrame(RootGUI):
         except (AttributeError, wx.PyDeadObjectError):
             self.plot_frame = PlotCorrFrame(self)
             self.plot_frame.Show()
-        pub.Publisher().sendMessage(('corr.plot'), msg)
+        Publisher().sendMessage(('corr.plot'), msg)

@@ -28,7 +28,7 @@ setup(name='SHS',
       install_requires=["numpy>=1.8.1",
                         "scipy>=0.14.0",
                         "matplotlib>=1.3.1",
-                        "wxPython>=2.8.11.0"],
+                        "wxPython>=2.8.10.0"],
       license='MIT'
       )
 
