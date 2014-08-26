@@ -1,6 +1,5 @@
 
-import wx
-from input import fdf_options
+from shs.input import fdf_options
 
 __title__ = "Ions"
 __page__ = 3

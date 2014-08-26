@@ -5,7 +5,7 @@ import sys
 
 import wx
 
-from input.dialogs.add_block import AddBlockDlg
+from shs.input.dialogs.add_block import AddBlockDlg
 
 
 #import fdf_base as fdf

@@ -4,7 +4,7 @@ import wx
 import wx.lib.newevent as newevent
 from wx.lib.mixins.listctrl import TextEditMixin
 
-from input import fdf_values
+from shs.input import fdf_values
 
 
 EvtRL, EVT_RADIOLINE = newevent.NewCommandEvent()

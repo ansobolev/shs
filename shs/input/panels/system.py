@@ -4,9 +4,9 @@ from wx.lib.agw import floatspin as fs
 
 from shs.const import PeriodicTable
 
-from input import fdf_options
-from input import fdf_wx
-from input.dialogs import ac_init
+from shs.input import fdf_options
+from shs.input import fdf_wx
+from shs.input.dialogs import ac_init
 
 __title__ = "System"
 __page__ = 1

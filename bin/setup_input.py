@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import wx
-from input.frames.main import MainFrame
+from shs.input.frames.main import MainFrame
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

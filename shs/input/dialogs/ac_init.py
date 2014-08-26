@@ -1,9 +1,9 @@
 import wx
 from wx.lib.agw.floatspin import FloatSpin, EVT_FLOATSPIN
 
-from input.fdf_wx import LineSizer
-from input.fdf_options import Line, ChoiceLine, MeasuredLine, NumberLine
-from input.fdf_values import FDFValue
+from shs.input.fdf_wx import LineSizer
+from shs.input.fdf_options import Line, ChoiceLine, MeasuredLine, NumberLine
+from shs.input.fdf_values import FDFValue
 
 try:
     from geom import Geom

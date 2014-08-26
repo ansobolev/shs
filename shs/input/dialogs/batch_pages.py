@@ -4,7 +4,7 @@ from wx.wizard import WizardPageSimple
 from wx.lib.mixins.listctrl import getListCtrlSelection
 
 from fillin_page import FillInNBPage
-from input.fdf_options import ChoiceLine
+from shs.input.fdf_options import ChoiceLine
 
 
 class SelectPage(WizardPageSimple):

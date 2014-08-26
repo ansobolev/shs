@@ -10,10 +10,10 @@ from shs.sio import FDFFile
 from shs.options import Options
 from shs.geom import Geom
 
-from input import panels
-from input.dialogs.batch import BatchWizard
-from input.frames.init_panel import NBPage
-from input.frames.extra_panel import ExtraPN
+from shs.input import panels
+from shs.input.dialogs.batch import BatchWizard
+from shs.input.frames.init_panel import NBPage
+from shs.input.frames.extra_panel import ExtraPN
 
 class MainFrame(wx.Frame):
 

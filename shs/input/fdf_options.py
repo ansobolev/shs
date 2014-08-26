@@ -1,6 +1,6 @@
 import wx
 
-from input import fdf_wx
+from shs.input import fdf_wx
 
 
 """ Classes representing FDF options

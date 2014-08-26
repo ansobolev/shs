@@ -4,7 +4,7 @@ import os
 import wx
 from wx.wizard import Wizard, WizardPageSimple
 
-from input.dialogs.batch_pages import SelectPage, FillInPage, DirHierarchyPage, DirNamePage
+from shs.input.dialogs.batch_pages import SelectPage, FillInPage, DirHierarchyPage, DirNamePage
 
 
 class BatchWizard(Wizard):
