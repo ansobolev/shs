@@ -7,7 +7,7 @@ import math
 import numpy as N
 import matplotlib.pyplot as plt
 import pylab as p
-import mpl_toolkits.mplot3d.axes3d as p3
+#import mpl_toolkits.mplot3d.axes3d as p3
 
 ''' A module for plotting various data
 '''
@@ -68,13 +68,13 @@ def scatter(x,y, xlabel = None, ylabel = None):
         plt.ylabel(ylabel)
     plt.show()
     
-def scatter3d(x, y, z):
-    fig=p.figure()
-    ax = p3.Axes3D(fig)
+#def scatter3d(x, y, z):
+#    fig=p.figure()
+#    ax = p3.Axes3D(fig)
 # scatter3D requires a 1D array for x, y, and z
 # ravel() converts the 100x100 array into a 1x10000 array
-    ax.scatter3D(x,y,z)
+#    ax.scatter3D(x,y,z)
 
-    p.show()
+#    p.show()
 
 

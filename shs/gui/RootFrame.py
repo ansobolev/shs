@@ -91,7 +91,7 @@ class RootFrame(RootGUI):
             if interface.isCalcOfType(calc_type, dn=dir_names, fn=file_names):
                 # find the number of steps in MDE file, quickly
                 nsteps = interface.GetNumMDESteps(dir_path)
-                ancdirs = dir_path.split('/')[r:]
+                ancdirs = dir_path.split(os.sep)[r:]
                 if nsteps is not None:
                     ancdirs[-1] += ' [%i]' % nsteps
                 ad = root
@@ -111,7 +111,7 @@ class RootFrame(RootGUI):
             parent = self.calcTree.GetItemParent(parent)
 # calculation directory
         calc_dir = os.sep.join(path[::-1]).split()[0]
-        return calc_dir
+        return os.sep.join((self.root, calc_dir))
     
     def onSelChange(self, event):
 # calculation type        
