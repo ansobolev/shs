@@ -6,11 +6,10 @@
 # See http://github.com/ansobolev/shs for details
 #
 # ---------------------------------------------
-__author__ = 'andrey'
 
 """ The module runs a (quick) test for voronoi calculations
 """
-
+__author__ = 'andrey'
 import matplotlib.pyplot as plt
 from shs.calc import SiestaCalc
 
@@ -22,5 +21,5 @@ if __name__ == "__main__":
     print len(faces.flatten().compressed())
     print faces.flatten().compressed().mean()
     raw = calc.evol.geom[0].vp.v
-    # plt.hist(faces.flatten().compressed(), bins=50)
-    #plt.show()
+    plt.hist(faces.flatten().compressed(), bins=50)
+    plt.show()

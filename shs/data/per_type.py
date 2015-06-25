@@ -3,17 +3,18 @@
 #
 # (c) Andrey Sobolev, 2013
 #
+
 import numpy as np
 from shs.geom import r
 from abstract import OneTypeData, InteractingTypesData
 
 
 class VAFData(OneTypeData):
-    ''' Get VAF of evolution (type-wise)
-        NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results. 
+    """ Get VAF of evolution (type-wise)
+        NB: As it uses only one cell vector set, when calculating VAF for NPT ensemble one should expect getting strange results.
         In:
-         -> atype (int?) - atomic type we need to calculate VAF for 
-        '''
+         -> atype (int?) - atomic type we need to calculate VAF for
+    """
     
     _shortDoc = "Velocity autocorrelation"
 
@@ -42,6 +43,7 @@ class VAFData(OneTypeData):
                 vaf[delta_t] += np.sum(v_cor)
         vaf = vaf / num
         return t, vaf
+
 
 class MSDData(OneTypeData):
     """ Get MSD of evolution (type-wise)
@@ -72,21 +74,22 @@ class MSDData(OneTypeData):
                 msd[delta_t] += np.sum(dr)
         msd = msd / num
         return t, msd
-    
+
+
 class RDFData(InteractingTypesData):
     """ Data class for calculating partial RDFs 
     """
     _shortDoc = "Partial RDFs"
     
     def __init__(self, *args, **kwds):
-        self.rmax = kwds.get("rmax", None)
+        self.rmax = kwds.get("rmax", 0.)
         self.dr = kwds.get("dr", 0.05)
         super(RDFData, self).__init__(*args, **kwds)
 
     def getData(self, calc):
         self.traj, self.vc = calc.evol.trajectory()
         # get rmax
-        if self.rmax is None:
+        if self.rmax == 0.:
             self.rmax = np.max(self.vc)/2.
         self.y = []
         self.x_title = "Distance"
@@ -120,10 +123,10 @@ class RDFData(InteractingTypesData):
         '''
 #        sij = coords[:,:,None,...] - coords[:,None,...]
 # number of bins
-        nbins = int((self.rmax-self.dr)/self.dr)
+        nbins = int((self.rmax - self.dr) / self.dr)
         nsteps = len(self.vc)
         dists = np.zeros(nbins)
-
+        x = np.linspace(0., self.rmax, nbins)
         for crd_i, vc_i, n1_i, n2_i in zip(self.traj, self.vc, n1, n2):
 # fractional coordinates
             nat1 = len(n1_i)
@@ -133,15 +136,16 @@ class RDFData(InteractingTypesData):
             rij = r(crd_i, vc_i, (n1_i, n2_i))
             dist = np.sqrt((rij**2.0).sum(axis = 1))
 # found distances, now get histogram
-            hist, x = np.histogram(dist, bins = nbins, range = (self.dr, self.rmax))
+            hist, x = np.histogram(dist, bins=nbins, range=(self.dr, self.rmax))
             dists += hist / (nat1 / vol * nat2) 
 # find rdf
         rdf = dists / nsteps
 # norm rdf
         x = (x + self.dr/2.)[:-1]        
-        rdf = rdf / (4.*np.pi*(x**2.)*self.dr)
+        rdf /= (4.*np.pi*(x**2.)*self.dr)
         return x, rdf
-  
+
+
 class VPRDFData(InteractingTypesData):
     """ Data class for calculating partial RDFs based on VP 
     """
@@ -185,7 +189,6 @@ class VPRDFData(InteractingTypesData):
             self.y.append(hist)
         self.x = (x + self.dr/2.)[:-1]       
         
-    
     def calculatePartial(self, ti, tj = None):
         if tj is None:
             return np.hstack([np.ma.compressed(self.data[i][t_i]) for (i,t_i) 

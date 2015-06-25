@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 # -*- coding : utf8 -*-
 
-import os, string, re
+""" Container for working with files in FDF, XV, MDE, OUT format
+"""
+
+import os
+import string
+import re
+import glob
+
 from collections import OrderedDict
 import xml.dom.minidom as xml
 
-import numpy as N
+import numpy as np
 import const as C
 import errors as Err
-
-
-''' Container for working with files in FDF, XV, MDE, OUT format
-'''
 
 # --- Methods ---
 
@@ -34,8 +37,8 @@ def data2file(data, title, fname):
         fmt += ' {0[%i]:^8} ' % (i, )    
 
     file.write(fmt.format(names) + '\n')
-    d = N.column_stack(tuple(data))
-    N.savetxt(file, d, fmt='%-9.5f')      
+    d = np.column_stack(tuple(data))
+    np.savetxt(file, d, fmt='%-9.5f')
     file.close()
 
 
@@ -159,7 +162,7 @@ def GetPDOSenergyValues(dom):
     # Read energy values
     node = dom.getElementsByTagName('energy_values')[0] # First (and only) entry
     data = node.childNodes[0].data.split()
-    return N.array(data, dtype = N.float)
+    return np.array(data, dtype = np.float)
 
 def GetPDOSfromOrbitals(dom,species,ldict):
     nodes = dom.getElementsByTagName('orbital')
@@ -178,7 +181,7 @@ def GetPDOSfromOrbitals(dom,species,ldict):
         for l in ls:
             data = [node.getElementsByTagName('data')[0].childNodes[0].data.split() for node in nodes \
                     if node.attributes['species'].value == sp and int(node.attributes['l'].value) == l]
-            data = N.array(data, dtype = N.float)
+            data = np.array(data, dtype = np.float)
             names.append(sp + '-' + orbs[l])
             d.append(data.sum(axis = 0))                
     return names, d
@@ -255,29 +258,40 @@ class LMPFile():
         x = float(lines[5].split()[1])
         y = float(lines[6].split()[1])
         z = float(lines[7].split()[1])        
-        self.vc.append(N.diag([x, y, z]))
-        step = N.array([line.split() for line in lines[11:nat+11]])
+        self.vc.append(np.diag([x, y, z]))
+        step = np.array([line.split() for line in lines[11:nat+11]])
         i = step[:,0]
         ityp = step[:,1]
-        label = N.array([C.PeriodicTable[typ] for typ in ityp.astype(N.int)])
+        label = np.array([C.PeriodicTable[typ] for typ in ityp.astype(np.int)])
         crd = step[:,2:]
-        self.atoms.append(N.rec.fromarrays([crd,ityp,i,label], formats=['3f8','i4','i4', 'S2'], names=['crd','itype','id','label']))
-                                       
-    
+        self.atoms.append(np.rec.fromarrays([crd,ityp,i,label], formats=['3f8','i4','i4', 'S2'], names=['crd','itype','id','label']))
+
     def __del__(self):
         self.f.flush()
         self.f.close()
 
 class MDEFile():
+    """ Class for reading MDE files
+    """
 
-    def __init__(self, mdefn):
-        dt = {'names' : ('step', 'temp', 'e_ks', 'e_tot', 'vol', 'p'),
-             'formats' : ('i4','f4','f4','f4','f4','f4')}
+    def __init__(self, calc):
+        """ MDE file data initialization
 
-        data = N.loadtxt(mdefn, dtype = dt)
+        :param calc: Siesta calculation
+        """
+        # get MDE file name
+        mde_name = glob.glob(os.path.join(calc.dir, '*.MDE'))
+        if len(mde_name) != 1:
+            raise ValueError('Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, ))
+
+        dt = {'names': ('step', 'temp', 'e_ks', 'e_tot', 'vol', 'p'),
+              'formats': ('i4','f4','f4','f4','f4','f4')
+              }
+
+        data = np.loadtxt(mde_name, dtype = dt)
         self.nsteps = len(data['step'])
         print 'SIO.ReadMDE : Found %i steps' % (self.nsteps,)
-        data['step'] = N.arange(self.nsteps)
+        data['step'] = np.arange(self.nsteps)
         self.data = data
 
 class ANIFile():
@@ -301,7 +315,7 @@ class ANIFile():
         xvf = os.path.join(os.path.dirname(anif),self.sl + '.XV')
         xv = XVFile(xvf)
 # vc in Bohr
-        vc = N.array(xv.vc)
+        vc = np.array(xv.vc)
         self.vcunit = 'Bohr'
         nat = len(xv.crd)
         lines = self.f.readlines()
@@ -317,15 +331,15 @@ class ANIFile():
         for istep in stepnums:
 # ANI file offset
             offset = istep * (nat + 2)
-            step = N.array([line.split() for line in lines[offset+2:offset+nat+2]])
+            step = np.array([line.split() for line in lines[offset+2:offset+nat+2]])
             self.vc.append(vc)
             crd = step[:,1:]
             typ = step[:,0]
-            i = N.arange(1, nat+1)
-            types = N.unique(typ)
+            i = np.arange(1, nat+1)
+            types = np.unique(typ)
             label2ityp = dict(zip(types,xrange(1, len(types) + 1)))
-            ityp = N.array([label2ityp[l] for l in typ])
-            self.atoms.append(N.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','i4','S2'], names=['crd','itype','id','label']))
+            ityp = np.array([label2ityp[l] for l in typ])
+            self.atoms.append(np.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','i4','S2'], names=['crd','itype','id','label']))
         self.aunit = 'Ang'
         
     def __del__(self):
@@ -421,26 +435,26 @@ class OUTFile():
         head = at_list.pop(0)
         au = re.search(r'\(.+?\)', str(head))
         self.aunit = au.group(0)[1:-1]
-        a = N.array(at_list)
+        a = np.array(at_list)
         crd = a[:,0:3]
         ityp = a[:,3]
         i = a[:,4]
         typ = a[:,5]
         try:
-            return N.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','i4','S2'], names=['crd','itype','id','label'])
+            return np.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','i4','S2'], names=['crd','itype','id','label'])
         except (ValueError,):
-            return N.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','S2','i4'], names=['crd','itype','label','id'])
+            return np.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','S2','i4'], names=['crd','itype','label','id'])
 
     def list2vc(self, vc_list):
 # find unit of measurement
         head = vc_list.pop(0)
         vcu = re.search(r'\(.+?\)', str(head))
         self.vcunit = vcu.group(0)[1:-1]
-        return N.array(vc_list).astype('float')
+        return np.array(vc_list).astype('float')
 
     def list2forces(self, forces_list):
         forces = [line[1:] for line in forces_list[1:]]
-        return N.rec.fromarrays([N.array(forces).astype('float')], names = 'forces', formats = '3f8' )
+        return np.rec.fromarrays([np.array(forces).astype('float')], names = 'forces', formats = '3f8' )
 
     def list2spins(self, spins_list, typ):
         'Now supports only collinear spin'
@@ -453,8 +467,8 @@ class OUTFile():
             ntyp[x] += 1        
 # now we know the number of atoms (both of each type and total)
 # initializing arrays
-        up = N.zeros(nat, dtype='float')
-        dn = N.zeros(nat, dtype='float')
+        up = np.zeros(nat, dtype='float')
+        dn = np.zeros(nat, dtype='float')
 # TODO: read orbital partitioning of charge        
         species = []
         orbs = []
@@ -483,7 +497,7 @@ class OUTFile():
         ind = 6 + orbs[0]
         for i in range(len(ntyp)):
             nl = orbs[i]*ntyp[species[i]]
-            s = N.array(spins_list[ind:ind+nl:orbs[i]])
+            s = np.array(spins_list[ind:ind+nl:orbs[i]])
             ats = s[:,0].astype('int')
             spins = s[:,1].astype('float')
             up[ats-1] = spins
@@ -494,7 +508,7 @@ class OUTFile():
         ind += 3 + orbs[0]
         for i in range(len(ntyp)):
             nl = orbs[i]*ntyp[species[i]]
-            s = N.array(spins_list[ind:ind+nl:orbs[i]])
+            s = np.array(spins_list[ind:ind+nl:orbs[i]])
             ats = s[:,0].astype('int')
             spins = s[:,1].astype('float')
             dn[ats-1] = spins
@@ -502,4 +516,4 @@ class OUTFile():
                 ind += nl + 3 + orbs[i+1]
             except:
                 pass
-        return N.rec.fromarrays([up, dn], formats=['f4','f4'], names=['up','dn'])
+        return np.rec.fromarrays([up, dn], formats=['f4','f4'], names=['up','dn'])

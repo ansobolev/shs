@@ -19,38 +19,44 @@ from geom import Geom
 from options import Options
 from plot import plotmde
 import sio
+from data import Data
 import vtkxml.xml_write as VTKxml
 
 
-class Calc():
-    ''' Generic class for Siesta & TranSiesta calculations 
-    '''
-    pass
+class Calc(object):
+    """ Generic class for Siesta & TranSiesta calculations
+    """
+    def __init__(self, *args, **kwargs):
+        pass
 
 class SiestaCalc(Calc):
-    ''' Class for Siesta calculations
+    """ Class for Siesta calculations
         Global variables:
             SC.keys : all possible FDF keys for the calculation options (dict)
             SC.geom : a calculation model geometry (Geom class)
             SC.opts : calculation options (dict with values as FDFTypes objects)
-    '''
+    """
 
     def __init__(self, calc_dir, calc_type=None, steps=None):
+        """ Initialize a Siesta calculation
+            :param calc_dir: calculation directory (relative or absolute)
+            :param calc_type: calculation type (can be one of 'fdf', 'out' or 'ani')
+            :param steps: time step number (or an iterable made of time step numbers).
+            Negative numbers are also supported.
+            :return: SiestaCalc instance
+            """
+        super(SiestaCalc, self).__init__()
         self.dir = calc_dir
-        # Default calc
         self.opts = Options({})
-        # Default geom
         self.geom = Geom()
-        # Default calctype = None
         self.ctype = CalcType()
         self.data = {}
-        # reading calc if we have to
         if calc_type is not None:
             self.dtype = calc_type
             self.read(calc_type, steps)
 
     def __len__(self):
-        """ The length of the calculation equals the length of its evolution
+        """ The length of the calculation equals to the length of its evolution
         """
         if hasattr(self, 'evol'):
             return len(self.evol)
@@ -58,17 +64,17 @@ class SiestaCalc(Calc):
             return 1
 
 # Read ---
-    def read(self, dtype, steps):
+    def read(self, calc_type, steps):
         """ Reading calculation options
-        Input:
-          -> dtype  - data type (can be 'fdf' or 'out')
-          -> steps - number of steps needed 
+
+        :param calc_type: calculation type (can be 'fdf', 'ani' or 'out')
+        :param steps: number of steps needed
         """
         act = {'fdf': self.readfdf,
                'out': self.readout,
                'ani': self.readani
                }
-        act.get(dtype, self.readunsupported)(steps)
+        act.get(calc_type, self.readunsupported)(steps)
     
     def readfdf(self, steps):
         fdfnl = glob.glob(os.path.join(self.dir, '*.fdf'))
@@ -120,7 +126,7 @@ class SiestaCalc(Calc):
         self.opts.write(fn, includes = ['STRUCT.fdf', 'CTYPE.fdf'])
         self.geom.write(calcdir)
         self.ctype.write(calcdir)
-# Copying pseudos
+        # Copying pseudos
         for atype in self.geom.types['label']:
             pseudo = atype + '.psf'
             shutil.copy(os.path.join(self.dir,pseudo), calcdir)
@@ -128,27 +134,23 @@ class SiestaCalc(Calc):
     def alter(self, altdata):
         self.opts.alter(altdata)
 
-# Get information ---
-    def get_info(self, itype):
-        ''' Returns information of desired type
-        '''
+    # Get information ---
+    def get_info(self, info_type):
+        """ Gets information of desired type
 
-# TODO: get data with data object
-    def get_data(self, dtype):
+        :param info_type:
+        :return:
+        """
+
+    def get_data(self, data_type):
         """ Returns data of desired type
+
+        :param data_type:
+        :return:
         """
-      
-    def mde(self):
-        """ Reads information from MDE file
-        """
-        mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
-        if len(mdef) != 1:
-            print 'Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, )
-            return -1
-        mde = sio.MDEFile(mdef[0])
-        self.nsteps = mde.nsteps
-        return mde.data
-           
+        DataClass = Data().get_type_by_name(data_type)
+        self.data[data_type] = DataClass(self)
+
     def dos(self):
         if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
             fname = os.path.join(self.dir, 'pdos.xml')

@@ -21,6 +21,7 @@ class Data(object):
         for mod in data_modules:
             data_class_list += inspect.getmembers(mod, lambda m: inspect.isclass(m) and not inspect.isabstract(m))
         self._classes = dict(zip(self._types, [{} for _ in self._types]))
+        self._name2class = dict()
         for name, cl in data_class_list:
             if cl.isFunction:
                 self._classes['Function'][cl.shortDoc()] = cl
@@ -28,6 +29,7 @@ class Data(object):
                 self._classes['Histogram'][cl.shortDoc()] = cl
             if cl.isTimeEvol:
                 self._classes['Time evolution'][cl.shortDoc()] = cl
+            self._name2class[cl.__name__.lower()] = cl
 
     def types(self):
         return sorted(self._types)
@@ -40,3 +42,13 @@ class Data(object):
         assert t in self._types
         assert c in self._classes[t].keys()
         return self._classes[t][c]
+
+    def names(self):
+        return self._name2class.keys()
+
+    def get_type_by_name(self, name):
+        name = name.lower()
+        if name not in self._name2class:
+            raise ValueError("%s is not a possible data type name" % (name, ))
+        return self._name2class[name]
+

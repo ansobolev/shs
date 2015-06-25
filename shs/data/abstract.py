@@ -7,14 +7,16 @@
 from abc import ABCMeta, abstractmethod
 
 import shs.errors
-
 import plotdata
 
-class classproperty(object):
+
+class ClassProperty(object):
     def __init__(self, getter):
-        self.getter= getter
+        self.getter = getter
+
     def __get__(self, instance, owner):
         return self.getter(owner)
+
 
 class AbstractData(object):
     __metaclass__ = ABCMeta
@@ -23,7 +25,6 @@ class AbstractData(object):
     _isHistogram = None
     _shortDoc = None
     
-
     def __init__(self, *args, **kwds):
         assert args[0].__class__.__name__ == "SiestaCalc"
         calc = args[0]
@@ -35,17 +36,17 @@ class AbstractData(object):
         self.y_titles = []
         self.getData(calc)
 
-    @classproperty
+    @ClassProperty
     def isFunction(self):
         assert self._isFunction is not None
         return self._isFunction
 
-    @classproperty
+    @ClassProperty
     def isTimeEvol(self):
         assert self._isTimeEvol is not None
         return self._isTimeEvol
 
-    @classproperty
+    @ClassProperty
     def isHistogram(self):
         assert self._isHistogram is not None
         return self._isHistogram
@@ -64,7 +65,7 @@ class AbstractData(object):
         pass
 
     @abstractmethod
-    def calculatePartial(self, n):
+    def calculatePartial(self, *args):
         pass
     
     def plotData(self, plot_type, plot_options = None):
@@ -76,6 +77,7 @@ class AbstractData(object):
         assertion, plot_class = choice[plot_type]
         assert assertion
         return plot_class(self, **plot_options)
+
 
 class PerAtomData(AbstractData):
     _isFunction = False
@@ -104,6 +106,7 @@ class PerAtomData(AbstractData):
     def calculateTotal(self):
         return self.data
 
+
 class PerEvolData(AbstractData):
     _isFunction = True
     _isTimeEvol = False
@@ -115,6 +118,7 @@ class PerEvolData(AbstractData):
     def calculatePartial(self, n):
         pass
 
+
 class PerTypeData(AbstractData):
     """ Base class for per-type functions
     """
@@ -125,6 +129,7 @@ class PerTypeData(AbstractData):
     def __init__(self, *args, **kwds):
         self.partial = kwds.get("partial", True)
         super(PerTypeData, self).__init__(*args, **kwds)
+
 
 class PerStepData(AbstractData):
     """ Base class for per-type functions
@@ -138,6 +143,7 @@ class PerStepData(AbstractData):
         self.rm_small = kwds.get("rm_small", True)
         self.eps = kwds.get("eps", True)
         super(PerStepData, self).__init__(*args, **kwds)
+
 
 class OneTypeData(PerTypeData):
     """ Data with consistent types (VAF, MSD)
@@ -165,7 +171,8 @@ class OneTypeData(PerTypeData):
             self.y.append(y)
             self.y_titles.append(label)
         self.x = x
-        
+
+
 class InteractingTypesData(PerTypeData):
     """ Data with non-consistent interacting types (RDF)
     """

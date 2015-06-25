@@ -1,15 +1,16 @@
 # -*- coding: utf8 -*-
 
+""" Container for working with files in FDF, XV, MDE, OUT format
+"""
+
 from collections import defaultdict
-import numpy as N
+import numpy as np
 
-import geom as G
+from geom import r, Geom
 
-''' Container for working with files in FDF, XV, MDE, OUT format
-'''
 class EvolStep():
-    ''' One evolution step, data is a dictionary
-    '''
+    """ One evolution step, data is a dictionary
+    """
     def __init__(self, atoms, vc, au, vcu, data):
         self.atoms = atoms
         self.vc = vc
@@ -17,9 +18,10 @@ class EvolStep():
         self.vcunit = vcu
         self.data = data
 
+
 class Evolution():
-    ''' Works with a set of geometries; RDF, diffusion should be calculated here
-    '''
+    """ Works with a set of geometries; RDF, diffusion should be calculated here
+    """
     def __init__(self, steps, atoms, vc, au='Ang', vcu='Bohr', data=None):
 # check length of each list, should be the same
         self.geom = []
@@ -33,16 +35,16 @@ class Evolution():
             else:
                 ds = None
             es = EvolStep(at, ivc, au, vcu, ds)
-            self.geom.append(G.Geom('es', es))
+            self.geom.append(Geom('es', es))
             
     def __getitem__(self, item):
-        if type(item) == type(''):
+        if isinstance(item, str):
             try:
                 return [g.atoms[item] for g in self.geom]
             except ValueError:
                 if item == 'vc':
                     return [g.vc for g in self.geom]
-        elif type(item) == type(0):
+        elif isinstance(item, int):
             return self.geom[item]
         else:
             raise TypeError('Evolution: Only int or string key is allowed')
@@ -55,12 +57,12 @@ class Evolution():
         return len(self.geom)
     
     def filter(self, name, f):
-        ''' Filters evolution by field name & value
-        '''
+        """ Filters evolution by field name & value
+        """
         return [g.filter(name, f) for g in self.geom]
 
     def trajectory(self):
-        return N.array(self['crd']), N.array(self['vc'])
+        return np.array(self['crd']), np.array(self['vc'])
     
     def mean_distance(self, n):
         ''' Calculate mean distance between atoms with indexes in n
@@ -68,8 +70,8 @@ class Evolution():
         coords, vc = self.trajectory()
         md = []
         for crd_step, vc_step in zip(coords, vc):
-            rij = G.r(crd_step, vc_step, n = (n,n))
-            dist = N.sqrt((rij**2.0).sum(axis = 1))
+            rij = r(crd_step, vc_step, n = (n,n))
+            dist = np.sqrt((rij**2.0).sum(axis = 1))
             nat = len(n[0])
             dist = dist.reshape(nat,nat)
             md.append(dist)
@@ -114,11 +116,11 @@ class Evolution():
         # check if atoms belong to the same type
         for _, at in types.iteritems():
             try:
-                N.array(at)
+                np.array(at)
             except:
                 # evolsteps contain different number of atoms of a type
                 return False
-            if not N.all(at == at[0]):
+            if not np.all(at == at[0]):
                 return False
         return True
   
