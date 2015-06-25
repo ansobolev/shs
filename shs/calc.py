@@ -4,7 +4,7 @@
 #
 # This file is a part of Siesta Help Scripts
 #
-# (c) Andrey Sobolev, 2011-2013
+# (c) Andrey Sobolev, 2011-2015
 #
 
 
@@ -151,31 +151,7 @@ class SiestaCalc(Calc):
         DataClass = Data().get_type_by_name(data_type)
         self.data[data_type] = DataClass(self)
 
-    def dos(self):
-        if os.path.isfile(os.path.join(self.dir, 'pdos.xml')):
-            fname = os.path.join(self.dir, 'pdos.xml')
-        elif os.path.isfile(os.path.join(self.dir, self.sl + '.PDOS')):
-            fname = os.path.join(self.dir, self.sl + '.PDOS')
-        else:
-            raise Exception('No possible DOS files found!')
-        print 'calc.DOS : Took %s as DOS file' % (fname, )                
-        dom = sio.ReadPDOSFile(fname)
-        nspin = sio.GetPDOSnspin(dom)
-        ev = sio.GetPDOSenergyValues(dom)
-        names = ['energy']
-        data = []
-        raw_names, raw_data = sio.GetPDOSfromOrbitals(dom,species = [],ldict = {})
-        if nspin == 2:
-            for n, d in zip(raw_names, raw_data):
-                names.append(n + '_up')
-                data.append(d[::2])
-                names.append(n + '_dn')
-                data.append(-1.0 * d[1::2])
-        elif nspin == 1:
-            names += raw_names
-            data += raw_data
-        return (names, ev, data), {'nspin': nspin}
- 
+
     def animate(self):
         def sign(x):
             return 1 if x >= 0 else -1

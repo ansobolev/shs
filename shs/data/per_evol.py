@@ -17,8 +17,7 @@ class MDEData(PerEvolData):
     _shortDoc = "MDE evolution"
 
     def getData(self, calc):
-
-        mde = sio.MDEFile(mdef[0])
+        mde = sio.MDEFile(calc)
         calc.nsteps = mde.nsteps
         self.parseData(mde.data)
 
@@ -33,9 +32,28 @@ class DOSData(PerEvolData):
     """ Densities of electronic states
     """
     _shortDoc = "Density of states (DOS)"
-    
-    def getData(self, calc, title=None):
-        (names, x, data), info = calc.dos()
+
+    def getData(self, calc):
+        dos = sio.PDOSFile(calc)
+        nspin = dos.GetPDOSnspin()
+        ev = dos.GetPDOSenergyValues()
+        names = ['energy']
+        data = []
+        raw_names, raw_data = dos.GetPDOSfromOrbitals(species=[],
+                                                      ldict={}
+                                                      )
+        if nspin == 2:
+            for n, d in zip(raw_names, raw_data):
+                names.append(n + '_up')
+                data.append(d[::2])
+                names.append(n + '_dn')
+                data.append(-1.0 * d[1::2])
+        elif nspin == 1:
+            names += raw_names
+            data += raw_data
+        self.parseData(names, ev, data, {'nspin': nspin})
+
+    def parseData(self, names, x, data, info):
         self.x_title = names[0]
         self.x = x
         self.y_titles = names[1:]

@@ -61,6 +61,10 @@ class AbstractData(object):
         pass
 
     @abstractmethod
+    def parseData(self, *args):
+        pass
+
+    @abstractmethod
     def calculate(self):
         pass
 

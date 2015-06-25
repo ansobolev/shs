@@ -150,48 +150,57 @@ def timesteps(blocks,time=None):         # filter of time
         if istep in time:
             yield istep, b
 
-
-# Reading XML files (c) Inelastica package
-
-def GetPDOSnspin(dom):
-    "Returns an integer for the number of spins (variable nspin)"
-    node = dom.getElementsByTagName('nspin')[0] # First (and only) entry
-    return int(node.childNodes[0].data)
-
-def GetPDOSenergyValues(dom):
-    # Read energy values
-    node = dom.getElementsByTagName('energy_values')[0] # First (and only) entry
-    data = node.childNodes[0].data.split()
-    return np.array(data, dtype = np.float)
-
-def GetPDOSfromOrbitals(dom,species,ldict):
-    nodes = dom.getElementsByTagName('orbital')
-    names = []
-    d = []
-    orbs = {0:'s', 1:'p', 2:'d', 3:'f'}
-    if not species:
-        species = set([node.attributes['species'].value for node in nodes])
-    if not ldict:
-        for sp in species:
-            sp_nodes = [node for node in nodes if node.attributes['species'].value == sp]
-            sp_l = set([int(node.attributes['l'].value) for node in sp_nodes])
-            ldict[sp] = sorted(list(sp_l))
-    
-    for sp, ls in ldict.iteritems():
-        for l in ls:
-            data = [node.getElementsByTagName('data')[0].childNodes[0].data.split() for node in nodes \
-                    if node.attributes['species'].value == sp and int(node.attributes['l'].value) == l]
-            data = np.array(data, dtype = np.float)
-            names.append(sp + '-' + orbs[l])
-            d.append(data.sum(axis = 0))                
-    return names, d
-
-def ReadPDOSFile(filename):
-    # Reads SIESTA *.PDOS files summing up contributions from orbitals
-    # belonging to a subset specified by the keywords
-    dom = xml.parse(filename)
-    return dom
 # --- Classes ---
+
+class PDOSFile():
+    """ Class for reading partial density of electronic states, use code
+    """
+    def __init__(self, calc):
+        # get file name
+        if os.path.isfile(os.path.join(calc.dir, 'pdos.xml')):
+            self.file_name = os.path.join(calc.dir, 'pdos.xml')
+        elif os.path.isfile(os.path.join(calc.dir, calc.sl + '.PDOS')):
+            self.file_name = os.path.join(calc.dir, calc.sl + '.PDOS')
+        else:
+            raise Exception('No possible DOS files found!')
+        print 'calc.DOS : Took %s as DOS file' % (self.file_name, )
+        self.dom = xml.parse(self.file_name)
+
+    # Reading XML files (c) Inelastica package
+
+    def GetPDOSnspin(self):
+        "Returns an integer for the number of spins (variable nspin)"
+        node = self.dom.getElementsByTagName('nspin')[0] # First (and only) entry
+        return int(node.childNodes[0].data)
+
+    def GetPDOSenergyValues(self):
+        # Read energy values
+        node = self.dom.getElementsByTagName('energy_values')[0] # First (and only) entry
+        data = node.childNodes[0].data.split()
+        return np.array(data, dtype = np.float)
+
+    def GetPDOSfromOrbitals(self, species, ldict):
+        nodes = self.dom.getElementsByTagName('orbital')
+        names = []
+        d = []
+        orbs = {0:'s', 1:'p', 2:'d', 3:'f'}
+        if not species:
+            species = set([node.attributes['species'].value for node in nodes])
+        if not ldict:
+            for sp in species:
+                sp_nodes = [node for node in nodes if node.attributes['species'].value == sp]
+                sp_l = set([int(node.attributes['l'].value) for node in sp_nodes])
+                ldict[sp] = sorted(list(sp_l))
+
+        for sp, ls in ldict.iteritems():
+            for l in ls:
+                data = [node.getElementsByTagName('data')[0].childNodes[0].data.split() for node in nodes \
+                        if node.attributes['species'].value == sp and int(node.attributes['l'].value) == l]
+                data = np.array(data, dtype = np.float)
+                names.append(sp + '-' + orbs[l])
+                d.append(data.sum(axis = 0))
+        return names, d
+
 
 class FDFFile():
     
@@ -280,19 +289,19 @@ class MDEFile():
         :param calc: Siesta calculation
         """
         # get MDE file name
-        mde_name = glob.glob(os.path.join(calc.dir, '*.MDE'))
-        if len(mde_name) != 1:
+        mde_names = glob.glob(os.path.join(calc.dir, '*.MDE'))
+        if len(mde_names) != 1:
             raise ValueError('Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, ))
-
         dt = {'names': ('step', 'temp', 'e_ks', 'e_tot', 'vol', 'p'),
               'formats': ('i4','f4','f4','f4','f4','f4')
               }
-
-        data = np.loadtxt(mde_name, dtype = dt)
+        self.file_name = mde_names[0]
+        data = np.loadtxt(self.file_name, dtype=dt)
         self.nsteps = len(data['step'])
         print 'SIO.ReadMDE : Found %i steps' % (self.nsteps,)
         data['step'] = np.arange(self.nsteps)
         self.data = data
+
 
 class ANIFile():
     ''' Class for reading ANI file
