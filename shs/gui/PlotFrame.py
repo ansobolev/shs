@@ -5,9 +5,9 @@ import os
 import wx
 from wx.lib.mixins.listctrl import getListCtrlSelection
 try:
-    from wx.lib.pubsub import Publisher
-except ImportError:
     from wx.lib.pubsub.pub import Publisher
+except ImportError:
+    from wx.lib.pubsub import pub
 
 import matplotlib.cm as cm
 from matplotlib.figure import Figure
@@ -167,10 +167,10 @@ class PlotFuncFrame(PlotFrame):
 
     def __init__(self, *args, **kwds):
         PlotFrame.__init__(self, *args, **kwds)
-        Publisher().subscribe(self.plot,('data.plot'))
+        pub.subscribe(self.plot, 'data.plot')
 
-    def plot(self, msg):
-        self.data = msg.data
+    def plot(self, message):
+        self.data = message
         self.initplot()
         self.replot()
 
@@ -303,7 +303,7 @@ class PlotFuncFrame(PlotFrame):
         print info
     
     def OnClose(self, evt):
-        Publisher().unsubscribe(self.plot,('data.plot'))
+        pub.unsubscribe(self.plot, 'data.plot')
         self.Destroy()
 
 # end of class PlotFrame
@@ -313,14 +313,14 @@ class PlotCorrFrame(PlotFrame):
 
     def __init__(self, *args, **kwds):
         PlotFrame.__init__(self, *args, **kwds)
-        Publisher().subscribe(self.plot,('corr.plot'))
+        pub.subscribe(self.plot, 'corr.plot')
     
-    def plot(self, msg):
-        self.calcs = msg.data[0]
-        self.data = msg.data[1]
+    def plot(self, message):
+        self.calcs = message[0]
+        self.data = message[1]
         # a number of tuples (x, y1, ... yn)
         # self.names = self.data[0][1].dtype.names
-        self.names = msg.data[2]
+        self.names = message[2]
         self.initplot()
         self.replot()       
 

@@ -7,10 +7,7 @@ import subprocess
 import wx
 import ConfigParser
 from wx.lib.mixins.listctrl import getListCtrlSelection
-try:
-    from wx.lib.pubsub import Publisher
-except ImportError:
-    from wx.lib.pubsub.pub import Publisher
+from wx.lib.pubsub import pub
 
 from gui.RootGUI import RootGUI
 from StepsDialog import StepsDialog
@@ -106,12 +103,13 @@ class RootFrame(RootGUI):
         item = self.calcTree.GetSelection()
         parent = self.calcTree.GetItemParent(item)
         path = [self.calcTree.GetItemText(item)]
-        while self.calcTree.GetItemText(parent) != '':
+        while parent.IsOk():
             path.append(self.calcTree.GetItemText(parent))
             parent = self.calcTree.GetItemParent(parent)
 # calculation directory
         calc_dir = os.sep.join(path[::-1]).split()[0]
-        return os.sep.join((self.root, calc_dir))
+        return calc_dir
+        # return os.sep.join((self.root, calc_dir))
     
     def onSelChange(self, event):
 # calculation type        
@@ -171,7 +169,7 @@ class RootFrame(RootGUI):
         self.calcList.SetStringItem(clc, 2, str(len(r)) if r is not None else '')
         return 0
 
-    def on_enqueue_press(self, event):
+    def on_enqueue_press(self, _):
         from sshutils import getMount, getDevice, getRemoteDir
         # on which device are we?
         calc_dir = self.get_selection_dir()
@@ -255,7 +253,7 @@ class RootFrame(RootGUI):
         except (AttributeError, wx.PyDeadObjectError):
             self.plot_frame = PlotFuncFrame(self)
             self.plot_frame.Show()
-        Publisher().sendMessage(('data.plot'), msg)
+        pub.sendMessage('data.plot', message=msg)
 
     def plot_correlation(self):
         # correlate options - get all the data to plot
@@ -269,4 +267,4 @@ class RootFrame(RootGUI):
         except (AttributeError, wx.PyDeadObjectError):
             self.plot_frame = PlotCorrFrame(self)
             self.plot_frame.Show()
-        Publisher().sendMessage(('corr.plot'), msg)
+        pub.sendMessage('corr.plot', message=msg)

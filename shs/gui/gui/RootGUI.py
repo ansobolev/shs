@@ -16,7 +16,7 @@ class RootGUI(wx.Frame):
         # begin wxGlade: RootGUI.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.rf_statusbar = self.CreateStatusBar(0, wx.ST_SIZEGRIP)
+        self.rf_statusbar = self.CreateStatusBar(1, wx.ST_SIZEGRIP)
         self.calcTree = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HAS_BUTTONS | wx.TR_NO_LINES | wx.TR_HIDE_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
         self.typeRBox = wx.RadioBox(self, wx.ID_ANY, "Type", choices=[".FDF", ".ANI", ".output", "pdos.xml"], majorDimension=4, style=wx.RA_SPECIFY_COLS)
         self.downBtn = wx.Button(self, wx.ID_ANY, ">>")
@@ -56,7 +56,7 @@ class RootGUI(wx.Frame):
         # begin wxGlade: RootGUI.__set_properties
         self.SetTitle("Siesta help scripts GUI")
         self.SetSize((820, 505))
-        self.rf_statusbar.SetStatusWidths([])
+        self.rf_statusbar.SetStatusWidths([820,])
         # statusbar fields
         rf_statusbar_fields = []
         for i in range(len(rf_statusbar_fields)):

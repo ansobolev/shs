@@ -15,7 +15,7 @@ def getCalc(cdir, ctype, steps):
              '.ANI':'ani',
              '.output':'out',
              'pdos.xml':'fdf'}
-    return Sc(cdir, dtype = copts[ctype], steps = steps)
+    return Sc(cdir, calc_type = copts[ctype], steps = steps)
 
 def dataClasses():
     return Data()
