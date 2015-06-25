@@ -77,7 +77,7 @@ class MSDData(OneTypeData):
 
 
 class RDFData(InteractingTypesData):
-    """ Data class for calculating partial RDFs 
+    """ Data class for calculating partial RDFs
     """
     _shortDoc = "Partial RDFs"
     

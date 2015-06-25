@@ -159,6 +159,9 @@ class OneTypeData(PerTypeData):
         self.x_title = "Steps"
         self.calculate()
 
+    def parseData(self):
+        pass
+
     def calculate(self):
         data_type = self.__class__.__name__
         if self.partial:
