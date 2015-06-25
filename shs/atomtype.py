@@ -127,7 +127,7 @@ if __name__ == "__main__":
     from calc import SiestaCalc
     example = '../examples/FeCANI'
 
-    c = SiestaCalc(example, dtype = "ani", steps = range(-3,0,1))
+    c = SiestaCalc(example, calc_type= "ani", steps = range(-3,0,1))
     c.evol[0].types.removeTypes()
 
     comp = Comparison('vp_totvolume', '>', '12')

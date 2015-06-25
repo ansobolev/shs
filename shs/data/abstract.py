@@ -64,7 +64,7 @@ class AbstractData(object):
         pass
 
     @abstractmethod
-    def calculatePartial(self):
+    def calculatePartial(self, n):
         pass
     
     def plotData(self, plot_type, plot_options = None):
@@ -112,7 +112,7 @@ class PerEvolData(AbstractData):
     def calculate(self):
         pass
 
-    def calculatePartial(self):
+    def calculatePartial(self, n):
         pass
 
 class PerTypeData(AbstractData):

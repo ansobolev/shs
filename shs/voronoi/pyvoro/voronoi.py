@@ -11,18 +11,22 @@ import numpy as np
 import numpy.lib.recfunctions as nlrf
 import pyvoro
 
+
 class model_voronoi():
     
     def __init__(self, d = {}):
-# time: timestep number
+        # time: timestep number
         self.time=d.get('time',0)
-# box: numpy array of lattice vectors
+        # box: numpy array of lattice vectors
         box = d.get('box',np.zeros((3,3)))
         self.box = box
-        if box.shape == (3,3): self.vc = box
-        elif box.shape == (3): self.vc = np.diag(box)
-        else:                  raise ValueError ('Box should be (3,3) or (3) array')
-# atoms: atoms numpy array
+        if box.shape == (3,3):
+            self.vc = box
+        elif box.shape == (3):
+            self.vc = np.diag(box)
+        else:
+            raise ValueError ('Box should be (3,3) or (3) array')
+        # atoms: atoms numpy array
         atoms = d.get('atoms',[])
         
         leg_list = atoms.dtype.names
@@ -40,11 +44,12 @@ class model_voronoi():
                 atoms = nlrf.append_fields(atoms, 'itype', np.ones(len(atoms)), asrecarray=True, usemask=False)
 
         self.atoms = atoms
-        
+
     def voronoi(self, pbc, ratio):
-        ''' The main function for computing Voronoi tesselation 
-        '''
-        self.v = pyvoro.compute_voronoi(self.atoms['crd'], self.vc, np.max(self.vc)/4.)
+        """ The main function for computing Voronoi tessellation
+        """
+        vc = [[0., self.vc[0,0]], [0., self.vc[1,1]], [0., self.vc[2,2]]]
+        self.v = pyvoro.compute_voronoi(self.atoms['crd'], vc, np.max(self.vc)/4., periodic=[True]*3)
     
     def vp_faces(self):
         return None

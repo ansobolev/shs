@@ -81,9 +81,9 @@ class Evolution():
         props = None
         for g in self.geom:
             if props is None:
-                props = g.getPropNames()
+                props = g.get_prop_names()
             else:
-                assert props == g.getPropNames()
+                assert props == g.get_prop_names()
         return props
 
 # Functions dealing with types ---
@@ -92,7 +92,7 @@ class Evolution():
         ''' Updates geometries with given types
         '''
         for ig in range(len(self.geom)):
-            self.geom[ig].updateWithTypes(types)
+            self.geom[ig].update_with_types(types)
 
     def getAtomsByType(self):
         labels = []

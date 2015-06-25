@@ -173,7 +173,7 @@ def getcalc(cdir, ctype, steps):
              '.output':'out',
              'pdos.xml':'fdf'}
     
-    return SiestaCalc(cdir, dtype = copts[ctype], steps = steps)
+    return SiestaCalc(cdir, calc_type= copts[ctype], steps = steps)
 
 if __name__== '__main__':
     app = wx.PySimpleApp(0)

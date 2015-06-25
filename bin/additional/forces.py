@@ -16,7 +16,7 @@ if __name__== '__main__':
     forces = [] 
     nsteps_beg = 1400
     nsteps_end = 0
-    sc = SiestaCalc(calc_dir, dtype='out', steps = range(-nsteps_beg,-nsteps_end,1))
+    sc = SiestaCalc(calc_dir, calc_type='out', steps = range(-nsteps_beg,-nsteps_end,1))
     n = sc.evol[0].filter('label',lambda x: x == 'C')
     for step, g in sc.evol:
         crd.append(g.atoms['crd'][n])

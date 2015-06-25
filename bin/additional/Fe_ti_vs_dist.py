@@ -13,7 +13,7 @@ import shs.plot as Plot
 def ti_vs_distance():
     steps = range(-300,0,7)
     dir = '/home/andrey/calc/Fe/Spin/MD/BCC/Fe1923'
-    c = SiestaCalc(dir, dtype='ani', steps = steps)
+    c = SiestaCalc(dir, calc_type='ani', steps = steps)
 #    nC = c.evol[0].filter('label','C')[0]
     nFe = c.evol[0].filter('label','Fe')[0]
     

@@ -12,7 +12,7 @@ import plot as Plot
 def setup():
     template = '../test'
     c = SiestaCalc(template, dtype = 'fdf')
-    c.geom.initialize('FCC', {'Fe':3, 'C':6}, [5,4,4], 2.5, 'Ang', DistLevel = 10.0)
+    c.geom.initialize('FCC', {'Fe':3, 'C':6}, [5,4,4], 2.5, 'Ang', dist_level= 10.0)
     c.geom.geom2opts()
     for temp in range(773, 2773, 200): 
         for et in range(100, 400, 100):

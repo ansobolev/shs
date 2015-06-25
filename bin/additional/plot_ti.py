@@ -15,7 +15,7 @@ except (ImportError,):
 def ti():
 
     calc_dir = '/home/andrey/calc/FeC/Fe161C39/NVT/1'
-    c = SiestaCalc(calc_dir, dtype = 'ani', steps = [-1,])
+    c = SiestaCalc(calc_dir, calc_type= 'ani', steps = [-1,])
 
 # C atoms
     cats = c.evol[0].filter('label','C')

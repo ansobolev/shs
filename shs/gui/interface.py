@@ -42,9 +42,9 @@ def getProperties(clist):
     props = None
     for c in clist:
         if props is None:
-            props = c.getPropNames()
+            props = c.get_prop_names()
         else:
-            assert c.getPropNames() == props
+            assert c.get_prop_names() == props
     return props
 
 

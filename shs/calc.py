@@ -8,17 +8,19 @@
 #
 
 
-import os, glob
-import numpy as N
+import os
+import glob
+import numpy as np
 
-import calctypes as CT
-import errors as Err
-import evolution as Evol
-import geom as G
-import options as Opts
-import plot as Plot
-import sio as SIO
+from calctypes import CalcType
+from errors import FileError, UnsupportedError
+from evolution import Evolution
+from geom import Geom
+from options import Options
+from plot import plotmde
+import sio
 import vtkxml.xml_write as VTKxml
+
 
 class Calc():
     ''' Generic class for Siesta & TranSiesta calculations 
@@ -33,19 +35,19 @@ class SiestaCalc(Calc):
             SC.opts : calculation options (dict with values as FDFTypes objects)
     '''
 
-    def __init__(self, cdir, dtype = None, steps = None):
-        self.dir = cdir
+    def __init__(self, calc_dir, calc_type=None, steps=None):
+        self.dir = calc_dir
         # Default calc
-        self.opts = Opts.Options({})
+        self.opts = Options({})
         # Default geom
-        self.geom = G.Geom()
+        self.geom = Geom()
         # Default calctype = None
-        self.ctype = CT.CalcType()
+        self.ctype = CalcType()
         self.data = {}
         # reading calc if we have to
-        if dtype is not None:
-            self.dtype = dtype
-            self.read(dtype, steps)
+        if calc_type is not None:
+            self.dtype = calc_type
+            self.read(calc_type, steps)
 
     def __len__(self):
         """ The length of the calculation equals the length of its evolution
@@ -57,14 +59,14 @@ class SiestaCalc(Calc):
 
 # Read ---
     def read(self, dtype, steps):
-        ''' Reading calculation options
+        """ Reading calculation options
         Input:
           -> dtype  - data type (can be 'fdf' or 'out')
           -> steps - number of steps needed 
-        '''
-        act = {'fdf' : self.readfdf,
-               'out' : self.readout, 
-               'ani' : self.readani
+        """
+        act = {'fdf': self.readfdf,
+               'out': self.readout,
+               'ani': self.readani
                }
         act.get(dtype, self.readunsupported)(steps)
     
@@ -72,12 +74,14 @@ class SiestaCalc(Calc):
         fdfnl = glob.glob(os.path.join(self.dir, '*.fdf'))
         if os.path.join(self.dir, 'CALC.fdf') in fdfnl:
             fdfn = os.path.join(self.dir, 'CALC.fdf')
+        elif len(fdfnl) > 0:
+            fdfn = fdfnl[0]
         else:
-            fdfn = fdfnl[0]        
+            raise FileError("Calc.ReadFDF: no fdf files in selected directory!")
         print 'Calc.ReadFDF: Took %s as a FDF file\n' % (fdfn, )
-        fdff = SIO.FDFFile(fdfn)
+        fdff = sio.FDFFile(fdfn)
         # Reading calculation options (in blocks?) 
-        self.opts = Opts.Options(fdff.d)
+        self.opts = Options(fdff.d)
 
         # Taking from opts only those needed by Geom:
         self.geom.read('fdf', self.opts.divide(self.geom.fdf_options()))
@@ -90,20 +94,20 @@ class SiestaCalc(Calc):
     def readout(self, steps):
         'Reading calculation options and geometry from output files'
         outfns = '*.output'
-        outf = SIO.OUTFile(outfns, self.dir, steps)
+        outf = sio.OUTFile(outfns, self.dir, steps)
         self.steps = outf.steps
-        self.evol = Evol.Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
+        self.evol = Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
 
     def readani(self, steps):
         'Reading calculation options and geometry from output files'
         anifn =  glob.glob(os.path.join(self.dir, '*.ANI'))
-        anif = SIO.ANIFile(anifn[0], steps)
+        anif = sio.ANIFile(anifn[0], steps)
         self.sl = anif.sl
         self.steps = anif.steps
-        self.evol = Evol.Evolution(anif.steps, anif.atoms, anif.vc, anif.aunit, anif.vcunit)
+        self.evol = Evolution(anif.steps, anif.atoms, anif.vc, anif.aunit, anif.vcunit)
 
     def readunsupported(self, steps):
-        raise Err.UnsupportedError('Reading calculation options is supported only from fdf or out file')
+        raise UnsupportedError('Reading calculation options is supported only from fdf or out file')
 
 # Change ---
 
@@ -131,16 +135,17 @@ class SiestaCalc(Calc):
 
 # TODO: get data with data object
     def get_data(self, dtype):
-        ''' Returns data of desired type
-        '''
+        """ Returns data of desired type
+        """
       
     def mde(self):
-        ' Reads information from MDE file'
+        """ Reads information from MDE file
+        """
         mdef = glob.glob(os.path.join(self.dir, '*.MDE'))
         if len(mdef) != 1:
             print 'Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, )
             return -1
-        mde = SIO.MDEFile(mdef[0])
+        mde = sio.MDEFile(mdef[0])
         self.nsteps = mde.nsteps
         return mde.data
            
@@ -152,12 +157,12 @@ class SiestaCalc(Calc):
         else:
             raise Exception('No possible DOS files found!')
         print 'calc.DOS : Took %s as DOS file' % (fname, )                
-        dom = SIO.ReadPDOSFile(fname)
-        nspin = SIO.GetPDOSnspin(dom)
-        ev = SIO.GetPDOSenergyValues(dom)
+        dom = sio.ReadPDOSFile(fname)
+        nspin = sio.GetPDOSnspin(dom)
+        ev = sio.GetPDOSenergyValues(dom)
         names = ['energy']
         data = []
-        raw_names, raw_data = SIO.GetPDOSfromOrbitals(dom,species = [],ldict = {})
+        raw_names, raw_data = sio.GetPDOSfromOrbitals(dom,species = [],ldict = {})
         if nspin == 2:
             for n, d in zip(raw_names, raw_data):
                 names.append(n + '_up')
@@ -170,7 +175,6 @@ class SiestaCalc(Calc):
         return (names, ev, data), {'nspin': nspin}
  
     def animate(self):
-        
         def sign(x):
             return 1 if x >= 0 else -1
         
@@ -192,7 +196,7 @@ class SiestaCalc(Calc):
         '''
         if 'step' not in cols:
             cols = ['step', ] + cols
-        Plot.plotmde(self.mdedata[cols])
+        plotmde(self.mde()[cols])
 
 # Dealing with LAMMPS dumps for sas
 class LammpsCalc(Calc):
@@ -204,7 +208,7 @@ class LammpsCalc(Calc):
     def __init__(self, calc_dir, steps = None):
         self.dir = calc_dir
         # Default geom
-        self.geom = G.Geom()
+        self.geom = Geom()
 
         # reading calc
         self.read(steps)
@@ -216,8 +220,8 @@ class LammpsCalc(Calc):
           -> steps - number of steps needed 
         '''
         lmpfn =  glob.glob(os.path.join(self.dir, '*.lmp'))
-        lmpf = SIO.LMPFile(lmpfn[0])
-        self.evol = Evol.Evolution(lmpf.steps, lmpf.atoms, lmpf.vc, lmpf.aunit, lmpf.vcunit)        
+        lmpf = sio.LMPFile(lmpfn[0])
+        self.evol = Evolution(lmpf.steps, lmpf.atoms, lmpf.vc, lmpf.aunit, lmpf.vcunit)
 
 # Get information ---
     def rdf(self, partial = True, n = None):
@@ -229,8 +233,8 @@ class LammpsCalc(Calc):
         title = ['R',]
         total_rdf = []
 # get r_max
-        vc = N.diag(self.evol[0].vc)
-        rmax = N.min(vc/1.6)
+        vc = np.diag(self.evol[0].vc)
+        rmax = np.min(vc/1.6)
         if partial:
             if n is None:
 # get the list of atom types (from the first geometry in evolution)

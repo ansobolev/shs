@@ -22,7 +22,7 @@ def vor_med(c):
 def voronoi_calc():
 #    print timeit.repeat('vor_pv(c)', setup='from __main__ import vor_pv, c', repeat = 10, number = 10)
     calc_dir = '/home/andrey/calc/FeC/Fe161C39/NVT/1'
-    c = SiestaCalc(calc_dir, dtype = 'out', steps = range(-10,0,1))
+    c = SiestaCalc(calc_dir, calc_type= 'out', steps = range(-10,0,1))
 
     for i in range(10):
         start = time.time()

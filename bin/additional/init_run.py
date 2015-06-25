@@ -17,7 +17,7 @@ def setup():
     newdir = './newdir'
     PBSout = os.path.join(newdir, 'RUN.pbs')
     c = SiestaCalc(template, type='fdf')
-    c.geom.initialize('BCC', {'Fe':175, 'C':25}, [5,5,4], 2.885, 'Ang', DistLevel = 0.0)
+    c.geom.initialize('BCC', {'Fe':175, 'C':25}, [5,5,4], 2.885, 'Ang', dist_level= 0.0)
     c.geom.geom2opts()
 #    c.ctype.alter('CG')
     c.write(newdir)

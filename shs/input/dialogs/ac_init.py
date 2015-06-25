@@ -152,6 +152,6 @@ class ACInitDialog(wx.Dialog):
         else:
             comp = dict(zip(self.types, [ifs.GetValue() for ifs in self.typefs]))
         g = Geom()
-        g.initialize(bravais, comp, sc, alat, unit, DistLevel=dist)
+        g.initialize(bravais, comp, sc, alat, unit, dist_level=dist)
         g.geom2opts()
         return g.opts["AtomicCoordinatesAndAtomicSpecies"]
