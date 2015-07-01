@@ -34,11 +34,12 @@ class DistortionLevel(NumberLine):
     range_val = (0., 100.)
     optional = False
 
+
 class ThreeNumValue(FDFValue):
 
     def __init__(self, parent, values=None):
         if values is None:
-            self._value = [1,1,1]
+            self._value = [1, 1, 1]
         else:
             assert type(values) == list and all([type(i) == int for i in values])
             self._value = values
@@ -57,6 +58,7 @@ class ThreeNumValue(FDFValue):
     def value(self):
         return self._value
 
+
 class ThreeNumSizer(LineSizer):
 
     def __init__(self, parent, label, optional):
@@ -66,6 +68,7 @@ class ThreeNumSizer(LineSizer):
             self.value.Enable(False)
         for widget in self.value.widgets:
             self.Add(widget, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
 
 class SuperCell(Line):
     label = 'Supercell'
@@ -78,7 +81,8 @@ class SuperCell(Line):
 
     def GetValue(self):
         return self._sizer.value.value
-    
+
+
 class ACInitDialog(wx.Dialog):
     
     def __init__(self, *args, **kwds):
@@ -124,13 +128,13 @@ class ACInitDialog(wx.Dialog):
         sizer.Add(self.alat.sizer, 0, wx.EXPAND, 0)
         sizer.Add(self.sc.sizer, 0, wx.EXPAND, 0)
         sizer.Add(self.dist.sizer, 0, wx.EXPAND, 0)
-        sizer.Add(self.CreateSeparatedButtonSizer(wx.OK|wx.CANCEL), 0, wx.ALL|wx.EXPAND, 5)
+        sizer.Add(self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALL | wx.EXPAND, 5)
         
         self.SetSizer(sizer)
         self.Fit()
         self.Layout()
 
-    def add_type(self, evt):
+    def add_type(self, _):
         self.comp_inside.Clear()
         self.comp_inside.SetCols(self.comp_inside.GetCols()+1)
         self.type_label.append(wx.TextCtrl(self, -1))

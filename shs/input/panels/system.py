@@ -56,14 +56,14 @@ class ChemicalSpeciesLabel(fdf_options.Block):
         main_sizer.Add(btn_sizer, 0, wx.EXPAND, 0)
         return main_sizer
 
-    def _on_AddBtn_press(self, evt):
+    def _on_AddBtn_press(self, _):
         self.LC.InsertStringItem(sys.maxint, str(self.LC.GetItemCount() + 1))
 
-    def _on_RmBtn_press(self, evt):
+    def _on_RmBtn_press(self, _):
         # delete
         for _ in range(self.LC.GetSelectedItemCount()):
             self.LC.DeleteItem(self.LC.GetFirstSelected())
-        #renumber
+        # renumber
         for i in range(self.LC.GetItemCount()):
             self.LC.SetStringItem(i, 0, str(i + 1))
         self.RmBtn.Enable(False)
@@ -110,6 +110,7 @@ class AtomicCoordinatesFormat(fdf_options.ChoiceLine):
     optional = True
     priority = 20
 
+
 class LatticeConstant(fdf_options.MeasuredLine):
     label = 'Lattice constant'
     fdf_text = 'LatticeConstant'
@@ -128,8 +129,8 @@ class LatticeParVec(fdf_options.Block):
     fdf_text = ["LatticeParameters", "LatticeVectors"]
 
     class Choice(fdf_options.RadioLine):
-        ''' Radio buttons line with choice
-        '''
+        """ Radio buttons line with choice
+        """
         label = 'Cell construction'
         optional = True
         choices = ['by lattice parameters', 'by lattice vectors']
@@ -284,7 +285,7 @@ class LatticeParVec(fdf_options.Block):
     def on_choice(self, event):
         self.show_by_value(event.value)
 
-    def on_enable(self, event):
+    def on_enable(self, _):
         if self.LatParOrVec.IsEnabled():
             self.show_by_value(self.LatParOrVec.GetValue())
         else:
@@ -351,14 +352,14 @@ class AtomicCoordinates(fdf_options.Block):
             return None 
         self.LC.SetValue(value)
 
-    def on_AddBtn_press(self, evt):
+    def on_AddBtn_press(self, _):
         self.LC.InsertStringItem(sys.maxint, str(self.LC.GetItemCount() + 1))
 
-    def on_RmBtn_press(self, evt):
+    def on_RmBtn_press(self, _):
         # delete
         for _ in range(self.LC.GetSelectedItemCount()):
             self.LC.DeleteItem(self.LC.GetFirstSelected())
-        #renumber
+        # renumber
         for i in range(self.LC.GetItemCount()):
             self.LC.SetStringItem(i, 0, str(i + 1))
         self.RmBtn.Enable(False)
@@ -375,7 +376,7 @@ class AtomicCoordinates(fdf_options.Block):
         except ValueError:
             self.LC.SetStringItem(row, col, '0.0')                         
 
-    def on_InitBtn_press(self, evt, ChemicalSpeciesLabel=None):
+    def on_InitBtn_press(self, _, ChemicalSpeciesLabel=None):
         if ChemicalSpeciesLabel is None:
             labels = []
         else:

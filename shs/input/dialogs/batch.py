@@ -1,6 +1,5 @@
-from collections import OrderedDict
-
 import os
+from collections import OrderedDict
 import wx
 from wx.wizard import Wizard, WizardPageSimple
 
@@ -10,7 +9,7 @@ from shs.input.dialogs.batch_pages import SelectPage, FillInPage, DirHierarchyPa
 class BatchWizard(Wizard):
 
     def __init__(self, *args, **kwds):
-        options = kwds.pop('options', None)
+        options = kwds.pop('options', {})
         self.extra = kwds.pop('extra', '')
         self.values = {}
         self.fdf_options = options

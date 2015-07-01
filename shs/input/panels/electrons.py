@@ -1,8 +1,10 @@
 import wx
 from shs.input import fdf_options
 
+
 __title__ = "Electrons"
 __page__ = 2
+
 
 class XCFunctional(fdf_options.ChoiceLine):
     label = 'XC functional'
@@ -12,12 +14,14 @@ class XCFunctional(fdf_options.ChoiceLine):
     choices = ['LDA', 'GGA']
     priority = 10
 
+
 class XCAuthors(fdf_options.ChoiceLine):
     label = 'XC authors'
     fdf_text = 'XC.Authors'
     optional = True
-    choices = ['CA','PW92','PBE', 'revPBE', 'RPBE', 'WC', 'PBEsol', 'LYP']
+    choices = ['CA', 'PW92', 'PBE', 'revPBE', 'RPBE', 'WC', 'PBEsol', 'LYP']
     priority = 20
+
 
 class MaxSCFIterations(fdf_options.NumberLine):
     label = 'Max SCF iterations'
@@ -28,12 +32,14 @@ class MaxSCFIterations(fdf_options.NumberLine):
     optional = True
     priority = 25
 
+
 class SolutionMethod(fdf_options.ChoiceLine):
     label = 'Solution method'
     fdf_text = 'SolutionMethod'
     optional = True
     choices = ['diagon', 'orderN']
     priority = 30
+
 
 class MeshCutoff(fdf_options.MeasuredLine):
     label = 'Mesh cutoff'
@@ -45,6 +51,7 @@ class MeshCutoff(fdf_options.MeasuredLine):
     units = ['K', 'eV', 'Ry']
     priority = 35    
 
+
 class ElectronicTemperature(fdf_options.MeasuredLine):
     label = 'Electronic temperature'
     fdf_text = 'ElectronicTemperature'
@@ -55,6 +62,7 @@ class ElectronicTemperature(fdf_options.MeasuredLine):
     units = ['K', 'eV', 'Ry']
     priority = 40    
 
+
 class PAOBasisType(fdf_options.ChoiceLine):
     label = 'Basis type'
     fdf_text = 'PAO.BasisType'
@@ -63,6 +71,7 @@ class PAOBasisType(fdf_options.ChoiceLine):
     box = 'PAO basis'
     priority = 50
 
+
 class PAOBasisSize(fdf_options.ChoiceLine):
     label = 'Basis size'
     fdf_text = 'PAO.BasisSize'
@@ -70,6 +79,7 @@ class PAOBasisSize(fdf_options.ChoiceLine):
     choices = ['SZ', 'SZP', 'DZ', 'DZP', 'DZDP', 'TZ', 'TZP', 'TZDP']
     box = 'PAO basis'
     priority = 60
+
 
 class PAOEnergyShift(fdf_options.MeasuredLine):
     label = 'Energy shift'
@@ -82,6 +92,7 @@ class PAOEnergyShift(fdf_options.MeasuredLine):
     box = 'PAO basis'
     priority = 70    
 
+
 class SpinPolarized(fdf_options.BooleanLine):
     label = 'Spin polarization'
     fdf_text = 'SpinPolarized'
@@ -93,16 +104,17 @@ class SpinPolarized(fdf_options.BooleanLine):
         self.bindings = [(self.CB,
                           wx.EVT_CHECKBOX,
                           self.show_spin_options
-                         ),
-                          (self.switch,
+                          ),
+                         (self.switch,
                           wx.EVT_CHECKBOX,
                           self.show_spin_options
-                         )]
+                          )]
 
     def show_spin_options(self, event, NonCollinearSpin, DMInitSpinAF):
         NonCollinearSpin.Show(self.IsEnabled() and self.CB.IsChecked())
         DMInitSpinAF.Show(self.IsEnabled() and self.CB.IsChecked())
         event.Skip()
+
 
 class NonCollinearSpin(fdf_options.BooleanLine):
     label = 'Non-collinear spin'
@@ -110,6 +122,7 @@ class NonCollinearSpin(fdf_options.BooleanLine):
     optional = True
     priority = 90
     hidden = True
+
 
 class DMInitSpinAF(fdf_options.BooleanLine):
     label = 'Antiferromagnetic run'

@@ -349,7 +349,7 @@ class DirNamePage(WizardPageSimple):
         if level == len(self._levels) and level_line.get_count() == 1:
             self.remove_level(level)
 
-    def move_between_levels(self, choice, l1,l2):
+    def move_between_levels(self, choice, l1, l2):
         self.add_to_level(choice, l2)
         self.remove_from_level(choice, l1)
 
@@ -362,7 +362,7 @@ class DirNamePage(WizardPageSimple):
 
     def remove_level(self, i_level):
         assert i_level == len(self._levels)
-        level = self._levels.pop(i_level-1)
+        self._levels.pop(i_level-1)
         self._sizer.Hide(i_level)
         self._sizer.Remove(i_level)
         self.Layout()

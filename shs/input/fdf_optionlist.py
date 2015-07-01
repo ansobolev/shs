@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 class FDFOptionList(object):
 
-    def __init__(self,parent,panel):
+    def __init__(self, parent, panel):
         self._ol = OrderedDict()
         self._fdf_ol = OrderedDict()
         options = inspect.getmembers(panel, inspect.isclass)

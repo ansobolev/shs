@@ -1,8 +1,10 @@
 
 from shs.input import fdf_options
 
+
 __title__ = "Ions"
 __page__ = 3
+
 
 class MDNumCGSteps(fdf_options.NumberLine):
     label = 'Number of CG steps'
@@ -14,11 +16,12 @@ class MDNumCGSteps(fdf_options.NumberLine):
     priority = 10
 
     def show_by_calctype(self, calctype):
-        good_types = ['CG','Broyden']
+        good_types = ['CG', 'Broyden']
         if calctype in good_types:
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDMaxForceTol(fdf_options.MeasuredLine):
     label = 'Max force tolerance'
@@ -31,11 +34,12 @@ class MDMaxForceTol(fdf_options.MeasuredLine):
     priority = 20
 
     def show_by_calctype(self, calctype):
-        good_types = ['CG','Broyden', 'FIRE']
+        good_types = ['CG', 'Broyden', 'FIRE']
         if calctype in good_types:
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDMaxCGDispl(fdf_options.MeasuredLine):
     label = 'Max atom displacement'
@@ -48,11 +52,12 @@ class MDMaxCGDispl(fdf_options.MeasuredLine):
     priority = 30
 
     def show_by_calctype(self, calctype):
-        good_types = ['CG','Broyden', 'FIRE']
+        good_types = ['CG', 'Broyden', 'FIRE']
         if calctype in good_types:
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDVariableCell(fdf_options.BooleanLine):
     label = 'Variable cell'
@@ -61,11 +66,12 @@ class MDVariableCell(fdf_options.BooleanLine):
     priority = 40
 
     def show_by_calctype(self, calctype):
-        good_types = ['CG','Broyden', 'FIRE']
+        good_types = ['CG', 'Broyden', 'FIRE']
         if calctype in good_types:
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDFinalTimeStep(fdf_options.NumberLine):
     label = 'Number of MD timesteps'
@@ -83,6 +89,7 @@ class MDFinalTimeStep(fdf_options.NumberLine):
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDLengthTimeStep(fdf_options.MeasuredLine):
     label = 'Length of a timestep'
@@ -102,6 +109,7 @@ class MDLengthTimeStep(fdf_options.MeasuredLine):
         else:
             self.Show(False)
 
+
 class MDInitialTemperature(fdf_options.MeasuredLine):
     label = 'Initial system temperature'
     fdf_text = 'MD.InitialTemperature'
@@ -119,6 +127,7 @@ class MDInitialTemperature(fdf_options.MeasuredLine):
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDTargetTemperature(fdf_options.MeasuredLine):
     label = 'Target system temperature'
@@ -150,11 +159,12 @@ class MDTargetPressure(fdf_options.MeasuredLine):
     priority = 95
 
     def show_by_calctype(self, calctype):
-        good_types = ['CG','Broyden', 'ParrinelloRahman', 'NoseParrinelloRahman']
+        good_types = ['CG', 'Broyden', 'ParrinelloRahman', 'NoseParrinelloRahman']
         if calctype in good_types:
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDNoseMass(fdf_options.MeasuredLine):
     label = 'Nose mass'
@@ -173,6 +183,7 @@ class MDNoseMass(fdf_options.MeasuredLine):
             self.Show(True)
         else:
             self.Show(False)
+
 
 class MDParrinelloRahmanMass(fdf_options.MeasuredLine):
     label = 'Parrinello-Rahman mass'

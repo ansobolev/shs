@@ -2,18 +2,16 @@ import functools
 import pkgutil
 import inspect
 from collections import OrderedDict
-
 import wx
-
 
 from shs.sio import FDFFile
 from shs.options import Options
-from shs.geom import Geom
 
 from shs.input import panels
 from shs.input.dialogs.batch import BatchWizard
 from shs.input.frames.init_panel import NBPage
 from shs.input.frames.extra_panel import ExtraPN
+
 
 class MainFrame(wx.Frame):
 
@@ -25,9 +23,9 @@ class MainFrame(wx.Frame):
             loader = importer.find_module(modname)
             module = loader.load_module(modname)
             panels_list.append(module)
-        panels_list.sort(key = lambda panel: panel.__page__)
+        panels_list.sort(key=lambda panel: panel.__page__)
         wx.Frame.__init__(self, *args, **kwds)
-        self.NB = wx.Notebook(self, -1, style = 0)
+        self.NB = wx.Notebook(self, -1, style=0)
         for panel in panels_list:
             page = NBPage(self.NB, -1, panel=panel)
             self.NB.AddPage(page, panel.__title__)
@@ -64,12 +62,10 @@ class MainFrame(wx.Frame):
                         fun = functools.partial(fun, **kwds)
                     self.Bind(event, fun, widget)
 
-
     def __set_properties(self):
         pass
 
     def __do_layout(self):
-
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         main_sizer.Add(self.NB, 2, wx.ALL | wx.EXPAND, 5)
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -82,7 +78,7 @@ class MainFrame(wx.Frame):
         self.Center()
 
     def on_import(self, event):
-        'Gets FDF file dictionary'
+        """Gets FDF file dictionary"""
         dlg = wx.FileDialog(self, 'Choose FDF file to import', wildcard='*.fdf', style=wx.ID_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
@@ -95,7 +91,7 @@ class MainFrame(wx.Frame):
     def on_export(self, event):
         """Exports FDF file dictionary to file"""
         dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard='*.fdf',
-                            style=wx.ID_SAVE|wx.DD_NEW_DIR_BUTTON)
+                            style=wx.ID_SAVE | wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
             self.export_FDF(fdfn)
@@ -129,4 +125,3 @@ class MainFrame(wx.Frame):
             s = self.extra_page.extract()
             f.write(s)
 #            print s
-

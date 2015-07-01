@@ -6,15 +6,18 @@ from shs.input import fdf_options
 __title__ = "Control"
 __page__ = 0
 
+
 class SystemName(fdf_options.TextEditLine):
     label = 'System name'
     fdf_text = 'SystemName'
     priority = 10
 
+
 class SystemLabel(fdf_options.TextEditLine):
     label = 'System label'
     fdf_text = 'SystemLabel'
     priority = 20
+
 
 class MDTypeOfRun(fdf_options.ChoiceLine):
     label = 'Calculation type'
@@ -28,7 +31,7 @@ class MDTypeOfRun(fdf_options.ChoiceLine):
         self.bindings = [(self.CB,
                           wx.EVT_CHOICE,
                           self.show_by_calctype,
-                       )]
+                          )]
 
     def show_by_calctype(self, event, MDNumCGSteps,
                          MDMaxForceTol,
@@ -48,12 +51,14 @@ class MDTypeOfRun(fdf_options.ChoiceLine):
             instance.show_by_calctype(self.GetValue())
         event.Skip()
 
+
 class UseSaveData(fdf_options.BooleanLine):
     label = 'Use save data'
     fdf_text = 'UseSaveData'
     box = "Input options"
     optional = True
     priority = 40
+
 
 class DMUseSaveDM(fdf_options.BooleanLine):
     label = 'Use density matrix'
@@ -62,12 +67,14 @@ class DMUseSaveDM(fdf_options.BooleanLine):
     optional = True
     priority = 50
 
+
 class MDUseSaveXV(fdf_options.BooleanLine):
     label = 'Use data from XV file'
     fdf_text = 'MD.UseSaveXV'
     box = "Input options"
     optional = True
     priority = 60
+
 
 class LongOutput(fdf_options.BooleanLine):
     label = 'Long output'
@@ -76,12 +83,14 @@ class LongOutput(fdf_options.BooleanLine):
     optional = True
     priority = 70
 
+
 class WriteCoorStep(fdf_options.BooleanLine):
     label = 'Coordinates (stepwise)'
     fdf_text = 'WriteCoorStep'
     box = "Output options"
     optional = True
     priority = 80
+
 
 class WriteMDHistory(fdf_options.BooleanLine):
     label = 'MD history (.MD, .MDE)'
@@ -90,6 +99,7 @@ class WriteMDHistory(fdf_options.BooleanLine):
     optional = True
     priority = 90
 
+
 class WriteMDXmol(fdf_options.BooleanLine):
     label = 'MD file for Xmol (.ANI)'
     fdf_text = 'WriteMDXmol'
@@ -97,14 +107,16 @@ class WriteMDXmol(fdf_options.BooleanLine):
     optional = True
     priority = 100
 
+
 class AtomCoorFormatOut(fdf_options.ChoiceLine):
     label = 'Coordinates output format'
     fdf_text = 'AtomCoorFormatOut'
     choices = ['NotScaledCartesianBohr', 'NotScaledCartesianAng', 
-                'ScaledCartesian', 'ScaledByLatticeVectors']
+               'ScaledCartesian', 'ScaledByLatticeVectors']
     box = "Output options"
     optional = True
     priority = 110
+
 
 class WriteForces(fdf_options.BooleanLine):
     label = 'Atomic forces'
@@ -113,6 +125,7 @@ class WriteForces(fdf_options.BooleanLine):
     optional = True
     priority = 120
 
+
 class WriteCoorXmol(fdf_options.BooleanLine):
     label = 'Coordinates for Xmol'
     fdf_text = 'WriteCoorXmol'
@@ -120,12 +133,14 @@ class WriteCoorXmol(fdf_options.BooleanLine):
     optional = True
     priority = 130
 
+
 class WriteCoorCerius(fdf_options.BooleanLine):
     label = 'Coordinates for Cerius'
     fdf_text = 'WriteCoorCerius'
     box = "Output options"
     optional = True
     priority = 140
+
 
 class WriteMulllikenPop(fdf_options.ChoiceLine):
     label = 'Mulliken population'
@@ -135,12 +150,14 @@ class WriteMulllikenPop(fdf_options.ChoiceLine):
     optional = True
     priority = 150
 
+
 class SaveTotalPotential(fdf_options.BooleanLine):
     label = 'Total potential'
     fdf_text = 'SaveTotalPotential'
     box = "Output options"
     optional = True
     priority = 160
+
 
 class SaveElectrostaticPotential(fdf_options.BooleanLine):
     label = 'Electrostatic potential'
@@ -149,12 +166,14 @@ class SaveElectrostaticPotential(fdf_options.BooleanLine):
     optional = True
     priority = 170
 
+
 class SaveRho(fdf_options.BooleanLine):
     label = 'Charge density (.RHO)'
     fdf_text = 'SaveRho'
     box = "Output options"
     optional = True
     priority = 180
+
 
 class WriteKPoints(fdf_options.BooleanLine):
     label = 'K-points'
@@ -163,12 +182,14 @@ class WriteKPoints(fdf_options.BooleanLine):
     optional = True
     priority = 190
 
+
 class WriteKBands(fdf_options.BooleanLine):
     label = 'K-bands'
     fdf_text = 'WriteKBands'
     box = "Output options"
     optional = True
     priority = 200
+
 
 class WriteEigenvalues(fdf_options.BooleanLine):
     label = 'Eigenvalues'
@@ -177,12 +198,14 @@ class WriteEigenvalues(fdf_options.BooleanLine):
     optional = True
     priority = 210
 
+
 class COOPWrite(fdf_options.BooleanLine):
     label = 'COOP wavefunctions (.WFSX)'
     fdf_text = 'COOP.Write'
     box = "Output options"
     optional = True
     priority = 220
+
 
 class WriteWaveFunctions(fdf_options.BooleanLine):
     label = 'Wavefunctions'
