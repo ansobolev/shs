@@ -316,9 +316,10 @@ class Geom():
     
     def vp_distance(self, pbc=True, ratio=0.5, rm_small=False, eps=0.5):
         """Finds distances between VP neighbors"""
-        if not hasattr(self, 'vp'):
+
+        if self.vp is None:
             self.voronoi(pbc, ratio)
-        f = self.vp.vp_faces()        
+        f = self.vp.vp_faces()
         if rm_small:
             fa = self.vp.vp_face_area(f)
             f = self.vp.remove_small_faces(f, fa, eps)

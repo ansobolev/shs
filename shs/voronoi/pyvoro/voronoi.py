@@ -76,8 +76,8 @@ class model_voronoi():
         return self.vp_volume, self.vp_area
     
     def vp_distance(self, f):
-        ''' Returns a dictionary of distances 
-        '''
+        """ Returns a dictionary of distances
+        """
         if not hasattr(self, 'v'):
             self.voronoi()
         dists = [{} for _ in self.v]

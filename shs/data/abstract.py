@@ -61,10 +61,6 @@ class AbstractData(object):
         pass
 
     @abstractmethod
-    def parseData(self, *args):
-        pass
-
-    @abstractmethod
     def calculate(self):
         pass
 
@@ -159,9 +155,6 @@ class OneTypeData(PerTypeData):
         self.x_title = "Steps"
         self.calculate()
 
-    def parseData(self):
-        pass
-
     def calculate(self):
         data_type = self.__class__.__name__
         if self.partial:
@@ -183,4 +176,4 @@ class OneTypeData(PerTypeData):
 class InteractingTypesData(PerTypeData):
     """ Data with non-consistent interacting types (RDF)
     """
-    
+

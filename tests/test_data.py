@@ -4,7 +4,7 @@ import unittest
 from shs.calc import SiestaCalc
 from shs.data import Data
 from shs.data.per_evol import MDEData, DOSData
-from shs.data.per_type import VAFData, MSDData
+from shs.data.per_type import VAFData, MSDData, RDFData, VPRDFData
 
 
 class TestDataClass(unittest.TestCase):
@@ -14,13 +14,15 @@ class TestDataClass(unittest.TestCase):
         names = DataClass.names()
         self.assertIn("mdedata", names)
         self.assertIn("dosdata", names)
+        self.assertIn("vafdata", names)
+        self.assertIn("msddata", names)
 
 
 class TestMDE(unittest.TestCase):
 
     def setUp(self):
         calc_dir = '../examples/FeCANI'
-        self.calc = SiestaCalc(calc_dir, 'ani', [0,])
+        self.calc = SiestaCalc(calc_dir, 'ani', [0, ])
         self.calc.get_data('mdedata')
 
     def test_mde_data(self):
@@ -37,7 +39,7 @@ class TestPDOS(unittest.TestCase):
 
     def setUp(self):
         calc_dir = '../examples/FeCANI'
-        self.calc = SiestaCalc(calc_dir, 'ani', [0,])
+        self.calc = SiestaCalc(calc_dir, 'ani', [0, ])
         self.calc.get_data(self.name)
 
     def test_dos_data(self):
@@ -54,7 +56,7 @@ class TestVAF(unittest.TestCase):
 
     def setUp(self):
         calc_dir = '../examples/FeCANI'
-        self.calc = SiestaCalc(calc_dir, 'ani', range(-10, 0, 1))
+        self.calc = SiestaCalc(calc_dir, 'ani', range(-5, 0, 1))
         self.calc.get_data(self.name)
 
     def test_vaf_data(self):
@@ -71,7 +73,7 @@ class TestMSD(unittest.TestCase):
 
     def setUp(self):
         calc_dir = '../examples/FeCANI'
-        self.calc = SiestaCalc(calc_dir, 'ani', range(-10, 0, 1))
+        self.calc = SiestaCalc(calc_dir, 'ani', range(-5, 0, 1))
         self.calc.get_data(self.name)
 
     def test_vaf_data(self):
@@ -79,6 +81,41 @@ class TestMSD(unittest.TestCase):
         self.assertIsInstance(self.calc.data[self.name], self.data_class,
                               "calc.data[%s] is not the %s instance" % (self.name, self.data_class.__name__))
         self.assertIn("Fe", self.calc.data[self.name].y_titles)
+
+
+class TestRDF(unittest.TestCase):
+
+    name = "rdfdata"
+    data_class = RDFData
+
+    def setUp(self):
+        calc_dir = '../examples/FeCANI'
+        self.calc = SiestaCalc(calc_dir, 'ani', range(-5, 0, 1))
+        self.calc.get_data(self.name)
+
+    def test_rdf_data(self):
+        self.assertIn(self.name, self.calc.data, "calc.data doesn't have %s in it" % (self.name,))
+        self.assertIsInstance(self.calc.data[self.name], self.data_class,
+                              "calc.data[%s] is not the %s instance" % (self.name, self.data_class.__name__))
+        self.assertIn("Fe-Fe", self.calc.data[self.name].y_titles)
+
+
+class TestVPRDF(unittest.TestCase):
+
+    name = "vprdfdata"
+    data_class = VPRDFData
+
+    def setUp(self):
+        calc_dir = '../examples/FeCANI'
+        self.calc = SiestaCalc(calc_dir, 'ani', range(-5, 0, 1))
+        self.calc.get_data(self.name)
+
+    def test_rdf_data(self):
+        self.assertIn(self.name, self.calc.data, "calc.data doesn't have %s in it" % (self.name,))
+        self.assertIsInstance(self.calc.data[self.name], self.data_class,
+                              "calc.data[%s] is not the %s instance" % (self.name, self.data_class.__name__))
+        self.assertIn("Fe-Fe", self.calc.data[self.name].y_titles)
+
 
 
 if __name__ == '__main__':
