@@ -40,7 +40,7 @@ class NumberedTEListCtrl(wx.ListCtrl, TextEditMixin):
         TextEditMixin.__init__(self)
 
     def SetValue(self, Tval):
-        'Sets block value'
+        """Sets block value"""
         self.DeleteAllItems()
         ncol = self.GetColumnCount()
         if (ncol - 1) < max([len(s) for s in Tval.value]):

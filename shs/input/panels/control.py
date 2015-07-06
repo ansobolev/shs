@@ -33,7 +33,8 @@ class MDTypeOfRun(fdf_options.ChoiceLine):
                           self.show_by_calctype,
                           )]
 
-    def show_by_calctype(self, event, MDNumCGSteps,
+    def show_by_calctype(self, event,
+                         MDNumCGSteps,
                          MDMaxForceTol,
                          MDMaxCGDispl,
                          MDVariableCell,

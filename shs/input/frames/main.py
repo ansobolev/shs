@@ -1,3 +1,7 @@
+"""
+  The main frame class for siesta input GUI
+"""
+
 import functools
 import pkgutil
 import inspect
@@ -58,7 +62,8 @@ class MainFrame(wx.Frame):
                     if len(fun_args) > 2:
                         kwds = {}
                         for fun_arg in fun_args[2:]:
-                            kwds[fun_arg] = self.ol[fun_arg]
+                            if fun_arg in self.ol:
+                                kwds[fun_arg] = self.ol[fun_arg]
                         fun = functools.partial(fun, **kwds)
                     self.Bind(event, fun, widget)
 
@@ -91,7 +96,7 @@ class MainFrame(wx.Frame):
     def on_export(self, event):
         """Exports FDF file dictionary to file"""
         dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard='*.fdf',
-                            style=wx.ID_SAVE | wx.DD_NEW_DIR_BUTTON)
+                            style=wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
             self.export_FDF(fdfn)
