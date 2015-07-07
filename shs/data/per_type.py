@@ -180,12 +180,11 @@ class VPRDFData(InteractingTypesData):
             self.y_titles = ["Total"]
             raise NotImplementedError
         # histogram is calculated here, as it is a function
-        r_min = min([np.min(data_i) for data_i in data])   
+        r_min = min([np.min(data_i) for data_i in data])
         r_max = max([np.max(data_i) for data_i in data])   
         nbins = int((r_max-r_min) / self.dr)
         for yi in data:
-            hist, x = np.histogram(yi, bins = nbins, range = (r_min, r_max))
-            print hist.shape, x.shape
+            hist, x = np.histogram(yi, bins=nbins, range=(r_min, r_max))
             self.y.append(hist)
         self.x = (x + self.dr/2.)[:-1]       
         

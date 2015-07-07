@@ -117,6 +117,5 @@ class TestVPRDF(unittest.TestCase):
         self.assertIn("Fe-Fe", self.calc.data[self.name].y_titles)
 
 
-
 if __name__ == '__main__':
     unittest.main()

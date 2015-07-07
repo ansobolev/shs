@@ -106,7 +106,7 @@ class SiestaCalc(Calc):
 
     def readani(self, steps):
         'Reading calculation options and geometry from output files'
-        anifn =  glob.glob(os.path.join(self.dir, '*.ANI'))
+        anifn = glob.glob(os.path.join(self.dir, '*.ANI'))
         anif = sio.ANIFile(anifn[0], steps)
         self.sl = anif.sl
         self.steps = anif.steps
