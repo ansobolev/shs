@@ -112,7 +112,7 @@ class VPFaceAreaData(PerAtomData):
         self.x_title = "Face area"
         self.data = []
         for _, g in calc.evol:
-            self.data.append(np.ma.getdata(g.vp_facearea(self.pbc, self.ratio)))
+            self.data.append(np.ma.getdata(self._get_vp_facearea(g)))
         self.calculate()
     
     def calculate(self):
@@ -139,6 +139,29 @@ class VPFaceAreaData(PerAtomData):
         else:
             return  [self.data[i][t_i][:,t_j].flatten() for i,(t_i,t_j) in enumerate(zip(ti,tj))]
 
+    def _get_vp_facearea(self, geom):
+        """ Finds face areas of Voronoi tesselation
+        """
+        if geom.vp is None:
+            geom.voronoi(self.pbc, self.ratio)
+        f = geom.vp.vp_faces()
+        # TODO: Remove small VP faces (may be check pyvoro?)
+        # if rm_small:
+        #     fa = self.vp.vp_face_area(f)
+        #     f = self.vp.remove_small_faces(f, fa, eps)
+        fa = geom.vp.vp_face_area(f)
+        # here fa is the list of dictionaries, we make it a 2d numpy array
+        # with masked values
+        # WARNING: O(nat^2 * nsteps) memory consumption!
+        nat = len(fa)
+        fa_np = np.zeros((nat, nat), dtype=np.float)
+        for iat, ngbr in enumerate(fa):
+            for jat, area in ngbr.iteritems():
+                fa_np[iat, jat] = area
+        fa_np = np.ma.masked_values(fa_np, 0.)
+        return fa_np
+
+
 class MagneticMoment(PerAtomData):
     _shortDoc = "Magnetic moment"
     
@@ -149,8 +172,12 @@ class MagneticMoment(PerAtomData):
         self.x_title = "Magnetic moment"
         self.data = []
         for _, g in calc.evol:
-            self.data.append(g.magmom())
+            self.data.append(self._get_magmom(g))
         self.calculate()
+
+    def _get_magmom(self, geom):
+        return geom.atoms['up'] - geom.atoms['dn']
+
 
 class AbsMagneticMoment(PerAtomData):
     _shortDoc = "Absolute magnetic moment"
@@ -162,8 +189,12 @@ class AbsMagneticMoment(PerAtomData):
         self.x_title = "Absolute magnetic moment"
         self.data = []
         for _, g in calc.evol:
-            self.data.append(g.magmom(abs_mm = True))
+            self.data.append(self._get_magmom(g))
         self.calculate()
+
+    def _get_magmom(self, geom):
+        return np.abs(geom.atoms['up'] - geom.atoms['dn'])
+
 
 class SpinFlipsData(PerAtomData):
     _isHistogram = False
@@ -194,6 +225,7 @@ class SpinFlipsData(PerAtomData):
         from plotdata import CumSumData
         return CumSumData(self)
 
+
 class TopologicalIndices(PerAtomData):
     _isTimeEvol = False
     _shortDoc = 'Topological indices'
@@ -203,8 +235,7 @@ class TopologicalIndices(PerAtomData):
         self.x_title = 'VP TIs'
         self.data = []
         for _, g in calc.evol:
-            # pbc, ratio, rm_small, eps
-            self.data.append(g.vp_ti())
+            self.data.append(self._get_vp_ti(g))
         self.calculate()
 
     def calculateTotal(self):
@@ -219,3 +250,17 @@ class TopologicalIndices(PerAtomData):
     def plotData(self, plot_type):
         from plotdata import VarXData
         return VarXData(self, **self.plot_options)
+
+    def _get_vp_ti(self, geom):
+        """ Finds topological indices of Voronoi polihedra
+        """
+
+        if geom.vp is None:
+            geom.voronoi(self.pbc, self.ratio)
+        f = geom.vp.vp_faces()
+        # TODO: remove small faces!
+        # if rm_small:
+        #     fa = self.vp.vp_face_area(f)
+        #     f = self.vp.remove_small_faces(f, fa, eps)
+        ti = self.vp.vp_topological_indices()
+        return ti

@@ -48,24 +48,15 @@ class Geom(object):
         self.types = None
         self.opts = None
         self.vp = None
-        # props constructor
-        self.props = {'label': self.label,
-                      'vp_ti': self.vp_ti,
-                      'magmom': self.magmom,
-                      'absmagmom': self.magmom,
-                      'vp_cn': self.vp_neighbors
-                      }
-        # pairwise properties constructor
-        self.pwprops = {'vp_distance': self.vp_distance,
-                        }
-        self.kwds = {'common': {'pbc': True,
-                                'ratio': 0.5,
-                                'rm_small': True,
-                                'eps': 0.5
-                                },
-                     'absmagmom': {'abs_mm': True},
-                     'magmom': {'abs_mm': False},
-                     }
+
+        # self.kwds = {'common': {'pbc': True,
+        #                         'ratio': 0.5,
+        #                         'rm_small': True,
+        #                         'eps': 0.5
+        #                         },
+        #              'absmagmom': {'abs_mm': True},
+        #              'magmom': {'abs_mm': False},
+        #              }
         # reading if we need to
         if calc_type is not None:
             self.read(calc_type, data)
@@ -89,17 +80,17 @@ class Geom(object):
         act.get(calc_type, self.unsupported2geom)(data)
         # adjusting coordinates to cell
         self.to_cell()
-        # update props with distances to group
-        labels = self.names['label']
-        for label in labels:
-            at = self.filter('label', lambda x: x == label)
-            self.props['distance_' + label] = self.distance_to_group
-            self.kwds['distance_' + label] = {'group': at}
+        # # update props with distances to group
+        # labels = self.names['label']
+        # for label in labels:
+        #     at = self.filter('label', lambda x: x == label)
+        #     self.props['distance_' + label] = self.distance_to_group
+        #     self.kwds['distance_' + label] = {'group': at}
         # get atomType
         self.types = AtomType(self)
 
-    def get_prop_names(self):
-        return sorted(self.props.keys())
+    # def get_prop_names(self):
+    #     return sorted(self.props.keys())
 
     def fdf2geom(self, data):
         """ Geometry init from options data
@@ -227,19 +218,6 @@ class Geom(object):
         
     # End Auxiliary routines ---
 
-    def property(self, label, **global_kwds):
-        """ Returns per-atom properties of self.geom (by label)
-        """
-        kwds = self.kwds['common'].copy()
-        kwds.update(self.kwds.get(label, {}))
-        kwds.update(global_kwds)
-        if label in self.props.keys():
-            return self.props[label](**kwds)
-        elif label in self.pwprops.keys():
-            return self.pwprops[label](**kwds)
-        else:
-            raise Exception(label + ' not in the dictionary of properties')
-   
     def distance_to_group(self, **kwds):
         """ Finds distance to the nearest of the atoms belonging to group
         In:
@@ -331,48 +309,7 @@ class Geom(object):
                 dist_np[iat, jat] = distance
         dist_np = ma.masked_values(dist_np, 0.)
         return dist_np
-    
-    def vp_facearea(self, pbc=True, ratio=0.5, rm_small=False, eps=0.5):
-        """ Finds face areas of Voronoi tesselation
-        """
-        if self.vp is None:
-            self.voronoi(pbc, ratio)
-        f = self.vp.vp_faces()
-        if rm_small:
-            fa = self.vp.vp_face_area(f)
-            f = self.vp.remove_small_faces(f, fa, eps)
-        fa = self.vp.vp_face_area(f)
-        # here fa is the list of dictionaries, we make it a 2d numpy array
-        # with masked values
-        # WARNING: O(nat^2 * nsteps) memory consumption!
-        nat = len(fa)
-        fa_np = np.zeros((nat, nat), dtype=np.float)
-        for iat, ngbr in enumerate(fa):
-            for jat, area in ngbr.iteritems():
-                fa_np[iat, jat] = area
-        fa_np = ma.masked_values(fa_np, 0.)
-        return fa_np
 
-
-    def vp_ti(self, pbc=True, ratio=0.5, rm_small=False, eps=0.5):
-        """ Finds topological indices of Voronoi polihedra
-        """
-
-        if self.vp is None:
-            self.voronoi(pbc, ratio)
-        f = self.vp.vp_faces()        
-        if rm_small:
-            fa = self.vp.vp_face_area(f)
-            f = self.vp.remove_small_faces(f, fa, eps)
-        ti = self.vp.vp_topological_indices()
-        return ti
-
-    def magmom(self, abs_mm=False):
-        if abs_mm:
-            return np.abs(self.atoms['up'] - self.atoms['dn'])
-        else:
-            return self.atoms['up'] - self.atoms['dn']
-    
     def add_fields(self, name, field):
         """ Add fields to self.atoms
 
