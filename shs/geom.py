@@ -17,7 +17,7 @@ from voronoi import dump
 import voronoi.numpy.ngbr as NN
 
 
-class Geom():
+class Geom(object):
     """ Class for storing model geometry, model in Voronoi calc
         Can be read from : 
           -- FDF (done)
@@ -50,9 +50,6 @@ class Geom():
         self.vp = None
         # props constructor
         self.props = {'label': self.label,
-                      'vp_totvolume': self.vp_totvolume,
-                      'vp_totfacearea': self.vp_totfacearea,
-                      'vp_ksph': self.vp_ksph,
                       'vp_ti': self.vp_ti,
                       'magmom': self.magmom,
                       'absmagmom': self.magmom,
@@ -338,15 +335,15 @@ class Geom():
     def vp_facearea(self, pbc=True, ratio=0.5, rm_small=False, eps=0.5):
         """ Finds face areas of Voronoi tesselation
         """
-        if not hasattr(self, 'vp'):
+        if self.vp is None:
             self.voronoi(pbc, ratio)
-        f = self.vp.vp_faces()        
+        f = self.vp.vp_faces()
         if rm_small:
             fa = self.vp.vp_face_area(f)
             f = self.vp.remove_small_faces(f, fa, eps)
         fa = self.vp.vp_face_area(f)
         # here fa is the list of dictionaries, we make it a 2d numpy array
-        # with masked values 
+        # with masked values
         # WARNING: O(nat^2 * nsteps) memory consumption!
         nat = len(fa)
         fa_np = np.zeros((nat, nat), dtype=np.float)
@@ -355,53 +352,13 @@ class Geom():
                 fa_np[iat, jat] = area
         fa_np = ma.masked_values(fa_np, 0.)
         return fa_np
-    
-    def vp_totfacearea(self, pbc, ratio, n=None):
-        """ Finds total face areas for resulting Voronoi polihedra
-        n -> a tuple of arrays containing atomic numbers of corresponding type
-        """
 
-        if not hasattr(self, 'vp'):
-            self.voronoi(pbc, ratio)
-        if hasattr(self.vp, 'vp_area'):
-            return self.vp.vp_area
-        f = self.vp.vp_faces()        
-        _, a = self.vp.vp_volumes(f)
-        return a
 
-    def vp_totvolume(self, pbc, ratio, n=None):
-        """ Finds total volumes for resulting Voronoi polihedra
-        n -> a tuple of arrays containing atomic numbers of corresponding type
-        """
-        if not hasattr(self, 'vp'):
-            self.voronoi(pbc, ratio)
-        if hasattr(self.vp, 'vp_volume'):
-            return self.vp.vp_volume
-        f = self.vp.vp_faces()        
-        v, _ = self.vp.vp_volumes(f)
-        if n is not None:
-            v = [v[i] for i in n]
-        return v
-
-    def vp_ksph(self, pbc, ratio):
-        """ Finds total volumes for resulting Voronoi polihedra
-        """
-        if not hasattr(self, 'vp'):
-            self.voronoi(pbc, ratio)
-        if not hasattr(self.vp, 'vp_volume'): 
-            f = self.vp.vp_faces()        
-            v, a = self.vp.vp_volumes(f, partial=False)
-        else:
-            v = self.vp.vp_volume
-            a = self.vp.vp_area
-        ksph = 36. * np.pi * v * v / (a * a * a)
-        return ksph
-    
     def vp_ti(self, pbc=True, ratio=0.5, rm_small=False, eps=0.5):
         """ Finds topological indices of Voronoi polihedra
         """
 
-        if not hasattr(self, 'vp'):
+        if self.vp is None:
             self.voronoi(pbc, ratio)
         f = self.vp.vp_faces()        
         if rm_small:
@@ -418,11 +375,11 @@ class Geom():
     
     def add_fields(self, name, field):
         """ Add fields to self.atoms
-        Input:
-         -> name (str) - name of field
-         -> field - data to append
-          - field(ndarray) - field is added with input name
-          - field (recarray) - self.atoms is joined with field (thus preserving names from field recarray)
+
+        :param name: (str) name of field
+        :param field: data to append. If ndarray, field is added with input name. If recarray,self.atoms is joined with
+        field (thus preserving names from field recarray)
+        :return:
         """
         import numpy.lib.recfunctions as nlrf
         fcn = field.__class__.__name__
@@ -560,6 +517,13 @@ def array2block(arr):
 # TODO: get rid of all functions
 def convert(crd, alat=None, inunit='Bohr', outunit='Ang'):
     """ Converts crd array from inunits to outunits
+
+    :param crd: a matrix of coordinates
+    :param alat: lattice constant
+    :param inunit: Input units
+    :param outunit: Output units
+    :return:
+
     Units could be:
       -> 'Ang'   : Angstroms
       -> 'Bohr'  : Bohr radii

@@ -7,33 +7,70 @@
 import numpy as np
 from abstract import PerAtomData
 
+
 class VPVolumeData(PerAtomData):
     _shortDoc = "Total VP volume"
 
     def getData(self, calc):
         self.nsteps = len(calc)
         # default plot options         
-        self.plot_options['dx'] = 0.05
+        self.plot_options['dx'] = 0.1
         
         self.x_title = "Volume"
         self.data = []
         for _, g in calc.evol:
-            self.data.append(g.vp_totvolume(self.pbc, self.ratio))
+            self.data.append(self._get_vp_totvolume(g))
         self.calculate()
-   
+
+    def _get_vp_totvolume(self, geom, n=None):
+        """ Finds total volumes for resulting Voronoi polihedra
+
+                :param geom: a Geom instance
+                :param n: a tuple of arrays containing atomic numbers of corresponding type
+
+        :return:
+        """
+        if geom.vp is None:
+            geom.voronoi(self.pbc, self.ratio)
+        if hasattr(geom.vp, 'vp_volume'):
+            return geom.vp.vp_volume
+        f = geom.vp.vp_faces()
+        v, _ = geom.vp.vp_volumes(f)
+        if n is not None:
+            v = [v[i] for i in n]
+        return v
+
+
 class VPTotalFaceAreaData(PerAtomData):
     _shortDoc = "VP total face area"
     
     def getData(self, calc):
         self.nsteps = len(calc)
         # default plot options         
-        self.plot_options['dx'] = 0.1
+        self.plot_options['dx'] = 0.2
         
         self.x_title = "Face area"
         self.data = []
         for _, g in calc.evol:
-            self.data.append(g.vp_totfacearea(self.pbc, self.ratio))
+            self.data.append(self._get_vp_totfacearea(g))
         self.calculate()
+
+    def _get_vp_totfacearea(self, geom, n=None):
+        """
+        Finds total face areas for resulting Voronoi polihedra
+        :param geom: a Geom instance
+        :param n: a tuple of arrays containing atomic numbers of corresponding type
+        :return:
+        """
+
+        if geom.vp is None:
+            geom.voronoi(self.pbc, self.ratio)
+        if hasattr(geom.vp, 'vp_area'):
+            return geom.vp.vp_area
+        f = geom.vp.vp_faces()
+        _, a = geom.vp.vp_volumes(f)
+        return a
+
 
 class VPSphericityCoefficient(PerAtomData):
     _shortDoc = "VP sphericity coefficient"
@@ -41,14 +78,28 @@ class VPSphericityCoefficient(PerAtomData):
     def getData(self, calc):
         self.nsteps = len(calc)        
         # default plot options         
-        self.plot_options['dx'] = 0.02
+        self.plot_options['dx'] = 0.01
         
         self.x_title = "Ksph"
         self.data = []
         for _, g in calc.evol:
-            self.data.append(g.vp_ksph(self.pbc, self.ratio))
+            self.data.append(self._get_vp_ksph(g))
         self.calculate()
-    
+
+    def _get_vp_ksph(self, geom):
+        """ Finds total volumes for resulting Voronoi polyhedra
+        """
+        if geom.vp is None:
+            geom.voronoi(self.pbc, self.ratio)
+        if not hasattr(geom.vp, 'vp_volume'):
+            f = geom.vp.vp_faces()
+            v, a = geom.vp.vp_volumes(f, partial=False)
+        else:
+            v = geom.vp.vp_volume
+            a = geom.vp.vp_area
+        ksph = 36. * np.pi * v * v / (a * a * a)
+        return ksph
+
 
 class VPFaceAreaData(PerAtomData):
     _shortDoc = "VP face area"    
