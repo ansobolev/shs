@@ -7,15 +7,21 @@ import random
 import numpy as np
 import numpy.ma as ma
 
-import const as Const
-import errors as Err
-import options as Opts
+import const
+import errors
+import options
 import sio
 from atomtype import AtomType
 
 from voronoi import dump
 import voronoi.numpy.ngbr as NN
-
+# import first pyvoro:
+try:
+    import voronoi.pyvoro.voronoi as vn
+    print 'Imported pyvoro module!'
+except ImportError:
+    import voronoi.numpy.voronoi as vn
+    print 'Failure finding pyvoro module, resorting to scipy.spatial.Delaunay'
 
 class Geom(object):
     """ Class for storing model geometry, model in Voronoi calc
@@ -134,12 +140,12 @@ class Geom(object):
         self.vc = convert(data.vc, inunit=data.vcunit, outunit=data.aunit)
         # now get types
         ilabel, ind = np.unique(data.atoms['label'], return_index=True)
-        iz = np.array([Const.PeriodicTable[l] for l in ilabel])
+        iz = np.array([const.PeriodicTable[l] for l in ilabel])
         try:
             ityp = data.atoms['itype'][ind]
         except ValueError:
             ityp = np.arange(len(iz)) + 1    
-        ilabel = np.array([Const.PeriodicTable[z] for z in iz])
+        ilabel = np.array([const.PeriodicTable[z] for z in iz])
         self.names = np.rec.fromarrays([ityp, iz, ilabel], names='i,z,label', formats='|i1,|i2,|S2')
         if isinstance(data.data, dict):
             for name, field in data.data.iteritems():
@@ -166,13 +172,13 @@ class Geom(object):
         # now get types
         ityp, ind = np.unique(np.array(xv.ityp), return_index=True)
         iz = np.array(xv.z)[ind]
-        ilabel = np.array([Const.PeriodicTable[z] for z in iz])
+        ilabel = np.array([const.PeriodicTable[z] for z in iz])
         self.names = np.rec.fromarrays([ityp, iz, ilabel], names='i,z,label', formats='|i1,|i2,|S2')
 
     def unsupported2geom(self, data):
         """ Raise exception when one wants to read geometry from strange place
         """
-        raise Err.UnsupportedError('Now Geom instance supports reading only from fdf, evolstep (es) and xv file')
+        raise errors.UnsupportedError('Now Geom instance supports reading only from fdf, evolstep (es) and xv file')
 
     def update_with_types(self, types):
         self.types.removeTypes()
@@ -242,18 +248,11 @@ class Geom(object):
          -> pbc - whether to use periodic boundary conditions
 
         """
-        # import first pyvoro:
-        try:
-            import voronoi.pyvoro.voronoi as vn
-            print 'Geom.Voronoi: Found pyvoro module!'
-        except ImportError:
-            import voronoi.numpy.voronoi as vn
-            print 'Geom.Voronoi: Failure finding pyvoro module, resorting to scipy.spatial.Delaunay'
-
         vd = dump.dump_shs()
         d = vd.shs_geom(self)
         self.vp = vn.model_voronoi(d)
         self.vp.voronoi(pbc, ratio)
+
     
     def voronoi_med(self):
         """ Get voronoi tesselation of geometry by pure python Medvedev algorithm
@@ -362,7 +361,7 @@ class Geom(object):
                                                                      axis=0).T.tolist())
                 }
         print 'Geom.Geom2Opts : Geometry data -> Options'
-        self.opts = Opts.Options(data)
+        self.opts = options.Options(data)
 
     def initialize(self, lat_type, composition, scell_size, alat, alat_unit='Ang', Basis=None, dist_level=0.):
         """ Initializes geometry for CG run.
@@ -388,13 +387,13 @@ class Geom(object):
         crd = crd_list(lat_type, scell_size, alat, Basis, dist_level)
         nat = len(crd)
         if not (isinstance(composition, (dict, list))):
-            raise Err.NotImplementedError('Geom.Initialize : Composition has to be a dict or a list!')
+            raise errors.NotImplementedError('Geom.Initialize : Composition has to be a dict or a list!')
         if isinstance(composition, list):
             c = np.array(composition)
             ntyp = len(np.unique(c))
             i = np.arange(1, ntyp + 1)
             label = np.unique(c)
-            z = np.array([Const.PeriodicTable[l] for l in label])
+            z = np.array([const.PeriodicTable[l] for l in label])
             self.names = np.rec.fromarrays([i,z,label], names='i,z,label', formats='|i1,|i2,|S2')
             sc = scell_size[0] * scell_size[1] * scell_size[2]
             ityp = np.concatenate((c, ) * sc)
@@ -403,7 +402,7 @@ class Geom(object):
         ntyp = len(composition.keys())
         i = np.arange(1, ntyp + 1)
         label = np.array(composition.keys())
-        z = np.array([Const.PeriodicTable.get(l, 0) for l in label])
+        z = np.array([const.PeriodicTable.get(l, 0) for l in label])
         self.names = np.rec.fromarrays([i, z, label], names='i,z,label', formats='|i1,|i2,|S2')
 # now calculate number of atoms of each type
 # fractions
@@ -416,7 +415,7 @@ class Geom(object):
         perc = na / float(nat) * 100.0
         
         if sum(na) != nat:
-            raise Err.Error ('Can not determine the number of atoms of each type!')
+            raise errors.Error ('Can not determine the number of atoms of each type!')
 # print number of atoms of each type
         head = ['Label', 'Fract. asked', '% asked', 'Atoms', '%']
         head2 = [' --- ', ' ---------- ', ' ----- ', ' --- ', ' ----- ']
@@ -470,9 +469,9 @@ def convert(crd, alat=None, inunit='Bohr', outunit='Ang'):
     if inunit != outunit:
         print 'Geom.Convert : Converting geometry coordinates' 
         print '               %s -> %s\n' % (inunit, outunit)
-    convm = [[Const.Identity, Const.Bohr2Ang, Const.Unit2Alat],
-             [Const.Ang2Bohr, Const.Identity, Const.Unit2Alat],
-             [Const.Alat2Unit, Const.Alat2Unit, Const.Identity]]
+    convm = [[const.Identity, const.Bohr2Ang, const.Unit2Alat],
+             [const.Ang2Bohr, const.Identity, const.Unit2Alat],
+             [const.Alat2Unit, const.Alat2Unit, const.Identity]]
 # units dictionary
     ud = {'Ang':   0,
           'Bohr':  1,

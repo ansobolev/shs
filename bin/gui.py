@@ -13,8 +13,7 @@ from shs.gui.RootFrame import RootFrame
     
 if __name__ == "__main__":
 
-    app = wx.PySimpleApp(0)
-    wx.InitAllImageHandlers()
+    app = wx.App(0)
     rf = RootFrame(None, wx.ID_ANY, "")
     app.SetTopWindow(rf)
     rf.Show()

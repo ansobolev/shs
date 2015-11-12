@@ -6,12 +6,14 @@
 from collections import defaultdict
 import numpy as np
 
+
 class PlotData(object):
 
     def __init__(self, data, **kwds):
         self.title = data.title
         self.y = []
         self.y_titles = tuple(data.y_titles)
+
 
 class FunctionData(PlotData):
 
@@ -20,6 +22,7 @@ class FunctionData(PlotData):
         self.x = data.x
         self.x_title = data.x_title
         self.y = data.y
+
 
 class HistogramData(PlotData):
     
@@ -35,6 +38,7 @@ class HistogramData(PlotData):
         xmin = np.ceil(np.min(np.hstack(y))/dx) * dx
         xmax = np.ceil(np.max(np.hstack(y))/dx) * dx
         nbins = (xmax - xmin) / dx
+        bin_edges = []
         # make recarray out of data
         for y_typ in y:
             hist, bin_edges = np.histogram(y_typ, bins = nbins, range = (xmin, xmax))
@@ -73,6 +77,7 @@ class TimeEvolData(PlotData):
         for y_t in data.y:
             self.y.append([np.mean(y_i) for y_i in y_t])
 
+
 class CumSumData(PlotData):
    
     def __init__(self, data, **kwds):
@@ -85,6 +90,7 @@ class CumSumData(PlotData):
         y_summed = [np.sum(yi, axis = 1) for yi in data.y]
         self.x = np.arange(len(data.y[0]))
         self.y = [np.cumsum(yi) for yi in y_summed]
+
 
 class VarXData(HistogramData):
 
