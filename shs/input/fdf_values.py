@@ -43,6 +43,7 @@ class BoolValue(FDFValue):
         check_event.SetInt(int(self._cb.IsChecked()))
         wx.PostEvent(self._cb.GetEventHandler(), check_event)
 
+
 class TextValue(FDFValue):
 
     def __init__(self, parent, value=""):
@@ -64,6 +65,7 @@ class TextValue(FDFValue):
     def on_change(self, event):
         self._value = self._te.GetValue()
         event.Skip()
+
 
 class ChoiceValue(FDFValue):
 
@@ -206,3 +208,25 @@ class RadioValue(FDFValue):
                 self._value = ir
                 break
         event.Skip()
+
+
+class ThreeNumValue(FDFValue):
+
+    def __init__(self, parent, **kwds):
+        values = kwds.get("values")
+        assert type(values) == list and all([type(i) == int for i in values])
+        self._value = values
+
+        self.widgets = []
+        for value in self._value:
+            fs = FloatSpin(parent, -1, min_val=0, value=value, digits=0)
+            fs.Bind(EVT_FLOATSPIN, self.on_change)
+            self.widgets.append(fs)
+
+    def on_change(self, event):
+        self._value = [int(fs.GetValue()) for fs in self.widgets]
+        event.Skip()
+
+    @property
+    def value(self):
+        return self._value

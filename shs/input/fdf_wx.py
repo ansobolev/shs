@@ -85,6 +85,7 @@ class LineSizer(wx.BoxSizer):
     def SetLabel(self, label):
         self.label.SetLabel(label)
 
+
 class BooleanSizer(LineSizer):
     ''' Sizer with a checkbox
     '''
@@ -166,3 +167,14 @@ class RadioSizer(LineSizer):
         for radio in radios:
             radio_sizer.Add(radio, 0, wx.ALL | wx.EXPAND, 2)
         self.Add(radio_sizer, 2, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+
+class ThreeNumSizer(LineSizer):
+
+    def __init__(self, parent, label, optional, **kwds):
+        super(ThreeNumSizer, self).__init__(parent, label, optional)
+        self.value = fdf_values.ThreeNumValue(parent, **kwds)
+        if self._is_optional:
+            self.value.Enable(False)
+        for widget in self.value.widgets:
+            self.Add(widget, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)

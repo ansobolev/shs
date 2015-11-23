@@ -33,10 +33,12 @@ class OpticalCalculation(fdf_options.BooleanLine):
     def show_optical_options(self, event,
                              OpticalEnergyMinimum,
                              OpticalEnergyMaximum,
+                             OpticalMesh,
                              OpticalBroaden,
                              OpticalScissor):
         OpticalEnergyMinimum.Show(self.IsEnabled() and self.CB.IsChecked())
         OpticalEnergyMaximum.Show(self.IsEnabled() and self.CB.IsChecked())
+        OpticalMesh.Show(self.IsEnabled() and self.CB.IsChecked())
         OpticalBroaden.Show(self.IsEnabled() and self.CB.IsChecked())
         OpticalScissor.Show(self.IsEnabled() and self.CB.IsChecked())
         event.Skip()
@@ -63,6 +65,15 @@ class OpticalEnergyMaximum(fdf_options.MeasuredLine):
     increment = 1.
     units = ['eV', 'Ry']
     priority = 30
+    hidden = True
+
+
+class OpticalMesh(fdf_options.ThreeNumberLine):
+    label = 'Mesh'
+    fdf_text = 'Optical.Mesh'
+    optional = True
+    values = [5, 5, 5]
+    priority = 35
     hidden = True
 
 

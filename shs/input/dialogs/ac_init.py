@@ -1,9 +1,8 @@
 import wx
-from wx.lib.agw.floatspin import FloatSpin, EVT_FLOATSPIN
+from wx.lib.agw.floatspin import FloatSpin
 
-from shs.input.fdf_wx import LineSizer
-from shs.input.fdf_options import Line, ChoiceLine, MeasuredLine, NumberLine
-from shs.input.fdf_values import FDFValue
+from shs.input.fdf_options import ChoiceLine, MeasuredLine, NumberLine, ThreeNumberLine
+
 
 try:
     from geom import Geom
@@ -34,51 +33,12 @@ class DistortionLevel(NumberLine):
     range_val = (0., 100.)
     optional = False
 
-class ThreeNumValue(FDFValue):
 
-    def __init__(self, parent, values=None):
-        if values is None:
-            self._value = [1,1,1]
-        else:
-            assert type(values) == list and all([type(i) == int for i in values])
-            self._value = values
-
-        self.widgets = []
-        for _ in range(3):
-            fs = FloatSpin(parent, -1, min_val=0, value=1., digits=0)
-            fs.Bind(EVT_FLOATSPIN, self.on_change)
-            self.widgets.append(fs)
-
-    def on_change(self, event):
-        self._value = [int(fs.GetValue()) for fs in self.widgets]
-        event.Skip()
-
-    @property
-    def value(self):
-        return self._value
-
-class ThreeNumSizer(LineSizer):
-
-    def __init__(self, parent, label, optional):
-        super(ThreeNumSizer, self).__init__(parent, label, optional)
-        self.value = ThreeNumValue(parent)
-        if self._is_optional:
-            self.value.Enable(False)
-        for widget in self.value.widgets:
-            self.Add(widget, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-
-class SuperCell(Line):
+class SuperCell(ThreeNumberLine):
     label = 'Supercell'
     optional = False
 
-    def __init__(self, parent, *args, **kwds):
-        super(Line, self).__init__(*args, **kwds)
-        self._sizer = ThreeNumSizer(parent, self.label, self.optional)
-        super(SuperCell, self).__init__(parent, *args, **kwds)
 
-    def GetValue(self):
-        return self._sizer.value.value
-    
 class ACInitDialog(wx.Dialog):
     
     def __init__(self, *args, **kwds):

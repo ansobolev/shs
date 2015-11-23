@@ -105,6 +105,7 @@ class TextEditLine(Line):
         super(TextEditLine, self).__init__(parent, *args, **kwds)
         self.TE = self.widgets[0]
 
+
 class ChoiceLine(Line):
     choices = None
 
@@ -202,3 +203,16 @@ class RadioLine(Line):
 
     def SetValue(self, value):
         self.RBs[value].SetValue(True)
+
+
+class ThreeNumberLine(Line):
+    values = [1, 1, 1]
+
+    def __init__(self, parent, *args, **kwds):
+        super(Line, self).__init__(*args, **kwds)
+        kwds = {"values": self.values}
+        self._sizer = fdf_wx.ThreeNumSizer(parent, self.label, self.optional, **kwds)
+        super(ThreeNumberLine, self).__init__(parent, *args, **kwds)
+
+    def GetValue(self):
+        return self._sizer.value.value
