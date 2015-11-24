@@ -211,6 +211,9 @@ class RadioValue(FDFValue):
 
 
 class ThreeNumValue(FDFValue):
+    """
+    One string with three numbers
+    """
 
     def __init__(self, parent, **kwds):
         values = kwds.get("values")
@@ -226,6 +229,11 @@ class ThreeNumValue(FDFValue):
     def on_change(self, event):
         self._value = [int(fs.GetValue()) for fs in self.widgets]
         event.Skip()
+
+    def SetValue(self, value):
+        self._value = value
+        for widget, val in zip(self.widgets, self._value.value[0]):
+            widget.SetValue(float(val))
 
     @property
     def value(self):

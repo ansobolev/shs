@@ -95,7 +95,7 @@ class MainFrame(wx.Frame):
     def on_export(self, event):
         """Exports FDF file dictionary to file"""
         dlg = wx.FileDialog(self, 'Choose FDF file to export to', wildcard='*.fdf',
-                            style=wx.ID_SAVE|wx.DD_NEW_DIR_BUTTON)
+                            style=wx.FD_SAVE|wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal() == wx.ID_OK:
             fdfn = dlg.GetPath()
             self.export_FDF(fdfn)

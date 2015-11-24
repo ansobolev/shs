@@ -214,5 +214,12 @@ class ThreeNumberLine(Line):
         self._sizer = fdf_wx.ThreeNumSizer(parent, self.label, self.optional, **kwds)
         super(ThreeNumberLine, self).__init__(parent, *args, **kwds)
 
+    def FDF_string(self, _):
+        s = "%block {}\n".format(self.fdf_text)
+        s += "{}".format(self.GetValue())
+        s += "%endblock {}\n".format(self.fdf_text)
+        print s
+        return s
+
     def GetValue(self):
         return self._sizer.value.value

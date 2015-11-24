@@ -60,7 +60,8 @@ opts = ['Atom-Setup-Only', 'Atom.Debug.KB.Generation', 'AtomCoorFormatOut', 'Ato
         'NumberOfEigenStates', 'NumberOfSpecies', 'ON.ChemicalPotential', 'ON.ChemicalPotentialOrder', 
         'ON.ChemicalPotentialRc', 'ON.ChemicalPotentialTemperature', 'ON.ChemicalPotentialUse', 
         'ON.MaxNumIter', 'ON.UseSaveLWF', 'ON.eta', 'ON.eta_alpha', 'ON.eta_beta', 'ON.etol', 
-        'ON.functional', 'OccupationFunction', 'On.RcLWF', 'OpticalCalculation', 
+        'ON.functional', 'OccupationFunction', 'On.RcLWF', 'OpticalCalculation', 'Optical.EnergyMinimum',
+        'Optical.EnergyMaximum', 'Optical.Broaden', 'Optical.Mesh', 'Optical.Scissor', 'Optical.NumberOfBands',
         'Output-Structure-Only', 'PAO.Basis', 'PAO.BasisSize', 'PAO.BasisType', 'PAO.EnergyShift', 'PAO.Filter',
         'PAO.FixSplitTable', 'PAO.NewSplitCode', 'PAO.OldStylePolorbs', 'PAO.SoftDefault', 
         'PAO.SoftInnerRadius', 'PAO.SoftPotential', 'PAO.SplitNorm', 'PAO.SplitNormH', 
@@ -79,8 +80,9 @@ opts = ['Atom-Setup-Only', 'Atom.Debug.KB.Generation', 'AtomCoorFormatOut', 'Ato
         'WriteMDXmol', 'WriteMDhistory', 'WriteMullikenPop', 'WriteWaveDebug', 'WriteWaveFunctions', 
         'XML.AbortOnErrors', 'XML.AbortOnWarnings', 'XML.Write', 'ZM.CalcAllForces', 
         'ZM.ForceTolAngle', 'ZM.ForceTolLength', 'ZM.MaxDisplAngle', 'ZM.MaxDisplLength', 
-        'ZM.UnitsAngle', 'ZM.UnitsLength', 'alloc_report_level', 'blocksize', 'fdf-debug', 
-        'kgrid_cutoff', 'processorY', 'user-basis', 'user-basis-netcdf', 'xc.authors', 'xc.functional']
+        'ZM.UnitsAngle', 'ZM.UnitsLength', 'alloc_report_level', 'blocksize', 'fdf-debug',
+        'kgrid_Monkhorst_Pack', 'kgrid_cutoff', 'processorY', 'user-basis', 'user-basis-netcdf',
+        'xc.authors', 'xc.functional']
 
 
 def Identity(alat):

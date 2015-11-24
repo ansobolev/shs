@@ -48,7 +48,7 @@ class OpticalEnergyMinimum(fdf_options.MeasuredLine):
     label = 'Energy minimum'
     fdf_text = 'Optical.EnergyMinimum'
     optional = True
-    value = 1.
+    value = 0.
     digits = 1
     increment = 1.
     units = ['eV', 'Ry']
@@ -60,7 +60,7 @@ class OpticalEnergyMaximum(fdf_options.MeasuredLine):
     label = 'Energy maximum'
     fdf_text = 'Optical.EnergyMaximum'
     optional = True
-    value = 1.
+    value = 10.
     digits = 1
     increment = 1.
     units = ['eV', 'Ry']

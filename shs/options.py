@@ -8,17 +8,18 @@ import const as Const
 ''' Calculation options should be stored here
 '''
 
-class Options():
-    
+
+class Options(object):
+    """  Options class must be instantiated with a dict of FDF data
+    """
+
     def __init__(self, data):
-        '''Initialization of Options class with a dict of FDF data
-        '''
 
         self.opts = OrderedDict()
         # nonrecognized options
         self.nr_opts = OrderedDict()
         if data != {}:
-# we are creating not-empty options
+        # we are creating non-empty options
             self.read(data)
     
     def read(self, data):
@@ -31,10 +32,10 @@ class Options():
 
     def readfdf(self, data):
         # fdf types (a.k.a. actions)
-        act = {'b' : T.BlockValue,
-               'm' : T.MeasuredValue,
-               'n' : T.BoolOrNumberValue,
-               's' : T.StringValue,            
+        act = {'b': T.BlockValue,
+               'm': T.MeasuredValue,
+               'n': T.BoolOrNumberValue,
+               's': T.StringValue,
                }
         # iterating over data
         for key, value in data.iteritems():
@@ -46,8 +47,8 @@ class Options():
                 self.opts[vkey] = act.get(vtype)(vkey, value)
             else:
                 self.nr_opts[key] = value
-#        print 'Non-recognized options: ' + str(self.nr_opts)
-    
+        print 'Non-recognized options: ' + str(self.nr_opts)
+
     def readopts(self, data):
         self.opts = data
     
@@ -162,10 +163,10 @@ def MakeOption(key, default, value, pos):
        - value (int or float or str) - a value instead of default
        - pos (int) - position in FDF file
     '''
-    act = {'b' : T.BlockValue,
-           'm' : T.MeasuredValue,
-           'n' : T.BoolOrNumberValue,
-           's' : T.StringValue,            
+    act = {'b': T.BlockValue,
+           'm': T.MeasuredValue,
+           'n': T.BoolOrNumberValue,
+           's': T.StringValue,
                }
     if value is not None:
         data = [pos, ] + str(value).split()
