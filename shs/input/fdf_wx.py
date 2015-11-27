@@ -60,7 +60,7 @@ class LineSizer(wx.BoxSizer):
         self.parent = parent
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
         self._is_optional = optional
-        self.label = wx.StaticText(parent, -1, label = label) 
+        self.label = wx.StaticText(parent, -1, label=label)
         if self._is_optional:
             self.switch = wx.CheckBox(parent, -1, '')
             self.Add(self.switch, 0, wx.ALL|wx.EXPAND, 5)

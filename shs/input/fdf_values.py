@@ -103,7 +103,10 @@ class ChoiceValue(FDFValue):
         self._cb.Select(0)
 
     def SetValue(self, value):
-        value = str(value.value)
+        if hasattr(value, 'value'):
+            value = str(value.value)
+        else:
+            value = str(value)
         assert value in self._choices
         self._value = value
         self._cb.SetSelection(self._choices.index(self._value))
@@ -231,8 +234,11 @@ class ThreeNumValue(FDFValue):
         event.Skip()
 
     def SetValue(self, value):
-        self._value = value
-        for widget, val in zip(self.widgets, self._value.value[0]):
+        if hasattr(value, "value"):
+            self._value = value.value[0]
+        else:
+            self._value = value
+        for widget, val in zip(self.widgets, self._value):
             widget.SetValue(float(val))
 
     @property

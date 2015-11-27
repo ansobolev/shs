@@ -216,9 +216,8 @@ class ThreeNumberLine(Line):
 
     def FDF_string(self, _):
         s = "%block {}\n".format(self.fdf_text)
-        s += "{}".format(self.GetValue())
-        s += "%endblock {}\n".format(self.fdf_text)
-        print s
+        s += "{} {} {}\n".format(*self.GetValue())
+        s += "%endblock {}".format(self.fdf_text)
         return s
 
     def GetValue(self):
