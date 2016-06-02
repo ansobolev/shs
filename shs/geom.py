@@ -14,7 +14,7 @@ import sio
 from atomtype import AtomType
 
 from voronoi import dump
-import voronoi.numpy.ngbr as NN
+import voronoi.numpy.ngbr as nn
 # import first pyvoro:
 try:
     import voronoi.pyvoro.voronoi as vn
@@ -22,6 +22,7 @@ try:
 except ImportError:
     import voronoi.numpy.voronoi as vn
     print 'Failure finding pyvoro module, resorting to scipy.spatial.Delaunay'
+
 
 class Geom(object):
     """ Class for storing model geometry, model in Voronoi calc
@@ -55,14 +56,6 @@ class Geom(object):
         self.opts = None
         self.vp = None
 
-        # self.kwds = {'common': {'pbc': True,
-        #                         'ratio': 0.5,
-        #                         'rm_small': True,
-        #                         'eps': 0.5
-        #                         },
-        #              'absmagmom': {'abs_mm': True},
-        #              'magmom': {'abs_mm': False},
-        #              }
         # reading if we need to
         if calc_type is not None:
             self.read(calc_type, data)
@@ -80,23 +73,16 @@ class Geom(object):
         """
         act = {'fdf': self.fdf2geom,
                'es': self.es2geom,
-               'xv': self.xv2geom
+               'xv': self.xv2geom,
+               'mg': self.from_mg_structure
                }
         # as usual, switch triggering
         act.get(calc_type, self.unsupported2geom)(data)
         # adjusting coordinates to cell
         self.to_cell()
-        # # update props with distances to group
-        # labels = self.names['label']
-        # for label in labels:
-        #     at = self.filter('label', lambda x: x == label)
-        #     self.props['distance_' + label] = self.distance_to_group
-        #     self.kwds['distance_' + label] = {'group': at}
         # get atomType
         self.types = AtomType(self)
 
-    # def get_prop_names(self):
-    #     return sorted(self.props.keys())
 
     def fdf2geom(self, data):
         """ Geometry init from options data
@@ -127,6 +113,10 @@ class Geom(object):
         # crd units
         cu = cud[self.opts['AtomicCoordinatesFormat'].value]
         self.atoms['crd'] = convert(self.atoms['crd'], alat=self.alat, inunit=cu, outunit=self.unit)
+        # now get types
+        i_sorted = np.argsort(self.names['i'])
+        pos = np.searchsorted(self.names['i'][i_sorted], self.atoms['itype'])
+        self.add_fields('label', self.names['label'][i_sorted[pos]])
 
     def es2geom(self, data):
         """ initialize geom from EvolStep instance
@@ -175,7 +165,31 @@ class Geom(object):
         ilabel = np.array([const.PeriodicTable[z] for z in iz])
         self.names = np.rec.fromarrays([ityp, iz, ilabel], names='i,z,label', formats='|i1,|i2,|S2')
 
-    def unsupported2geom(self, data):
+    def from_mg_structure(self, struct):
+        """
+        Gets geometry from Pymatgen structure
+
+        :param struct: Pymatgen structure
+        :return:
+        """
+        # alat = 1 Ang
+        self.alat = 1.
+        self.unit = 'Ang'
+        self.vc = struct.lattice.matrix
+        atoms = np.array([site.coords for site in struct.sites])
+        labels = np.array([str(site.specie) for site in struct.sites])
+        ilabel = np.unique(labels)
+        iz = np.array([const.PeriodicTable[l] for l in ilabel])
+        ityp = np.arange(len(iz)) + 1
+        self.names = np.rec.fromarrays([ityp, iz, ilabel], names='i,z,label', formats='|i1,|i2,|S2')
+        self.atoms = np.rec.fromarrays([atoms, labels], names='crd, label', formats='|3f8,|S2')
+        # get itypes
+        i_sorted = np.argsort(ilabel)
+        pos = np.searchsorted(ilabel[i_sorted], labels)
+        self.add_fields('itype', ityp[i_sorted[pos]])
+
+    @staticmethod
+    def unsupported2geom(data):
         """ Raise exception when one wants to read geometry from strange place
         """
         raise errors.UnsupportedError('Now Geom instance supports reading only from fdf, evolstep (es) and xv file')
@@ -199,6 +213,8 @@ class Geom(object):
            :param calc_dir: directory where the file will be located
         """
         fn = os.path.join(calc_dir, 'STRUCT.fdf')
+        if self.opts is None:
+            self.opts = self.geom2opts()
         self.opts.write(fn)
 
     def filter(self, name, f):
@@ -253,13 +269,12 @@ class Geom(object):
         self.vp = vn.model_voronoi(d)
         self.vp.voronoi(pbc, ratio)
 
-    
     def voronoi_med(self):
         """ Get voronoi tesselation of geometry by pure python Medvedev algorithm
         """
         vd = dump.dump_shs()
         d = vd.shs_geom(self)
-        ngbr = NN.model_ngbr(d)
+        ngbr = nn.model_ngbr(d)
         ngbr.make_ngbr()
         mv = ngbr.toMV()
         mv.make_voronoi(1)
@@ -269,7 +284,7 @@ class Geom(object):
         self.add_fields('k_sph', np.array(k_sph))
         self.nb = pl_mv
 
-    def label(self, **kwds):
+    def label(self):
         return self.atoms['label']
 
     def vp_neighbors(self, **kwds):
@@ -278,7 +293,7 @@ class Geom(object):
         # FIXME: Works only with pyvoro
         pbc = kwds.get('pbc', True)
         ratio = kwds.get('ratio', 0.5)
-        if not hasattr(self,'vp'):
+        if not hasattr(self, 'vp'):
             self.voronoi(pbc, ratio)
         rm_small = kwds.get('rm_small', True)
         eps = kwds.get('eps', 0.05)
@@ -320,7 +335,7 @@ class Geom(object):
         import numpy.lib.recfunctions as nlrf
         fcn = field.__class__.__name__
         if fcn == 'ndarray':
-            nlrf.append_fields(self.atoms, name, field, asrecarray=True, usemask=False)
+            self.atoms = nlrf.append_fields(self.atoms, name, field, asrecarray=True, usemask=False)
         elif fcn == 'recarray':
             for name in field.dtype.names:
                 # FIXME: very, very dirty hack!
@@ -361,7 +376,7 @@ class Geom(object):
                                                                      axis=0).T.tolist())
                 }
         print 'Geom.Geom2Opts : Geometry data -> Options'
-        self.opts = options.Options(data)
+        return options.Options(data)
 
     def initialize(self, lat_type, composition, scell_size, alat, alat_unit='Ang', Basis=None, dist_level=0.):
         """ Initializes geometry for CG run.
@@ -394,7 +409,7 @@ class Geom(object):
             i = np.arange(1, ntyp + 1)
             label = np.unique(c)
             z = np.array([const.PeriodicTable[l] for l in label])
-            self.names = np.rec.fromarrays([i,z,label], names='i,z,label', formats='|i1,|i2,|S2')
+            self.names = np.rec.fromarrays([i, z, label], names='i,z,label', formats='|i1,|i2,|S2')
             sc = scell_size[0] * scell_size[1] * scell_size[2]
             ityp = np.concatenate((c, ) * sc)
             self.atoms = np.rec.fromarrays([crd, ityp], names='crd,itype', formats='|3f8,|S2')
@@ -445,8 +460,8 @@ def array2block(arr):
     """ Returns a list of strings from record array
     """
     l = []
-    for r in arr:
-        l.append([str(x) for x in r])
+    for record in arr:
+        l.append([str(x) for x in record])
     return l
 
 
@@ -500,7 +515,7 @@ def basis(lattice):
         raise NameError(lattice + " is not in the list of available lattice types")
 
 
-def crd(a, p, b, d):
+def crd_init(a, p, b, d):
     """ Returns atomic coordinate using given alat, place, basis atom coordinate and
     maximum random distortion value
     In:
@@ -511,7 +526,7 @@ def crd(a, p, b, d):
     Out:
      -> crd - an atomic coordinate (float)
     """
-    return a*(p+b+random.uniform(-d,d))
+    return a*(p+b+random.uniform(-d, d))
 
 
 def crd_list(lat, sc, alat, bas, dist):
@@ -531,9 +546,9 @@ def crd_list(lat, sc, alat, bas, dist):
         for j in range(sc[1]):
             for k in range(sc[2]):
                 for b in bas:
-                    at = [crd(alat[0], i, b[0], dist/100.),
-                          crd(alat[1], j, b[1], dist/100.),
-                          crd(alat[2], k, b[2], dist/100.)]
+                    at = [crd_init(alat[0], i, b[0], dist / 100.),
+                          crd_init(alat[1], j, b[1], dist / 100.),
+                          crd_init(alat[2], k, b[2], dist / 100.)]
                     atoms.append(at)
     return atoms
 

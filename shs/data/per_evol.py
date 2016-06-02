@@ -25,7 +25,7 @@ class MDEData(PerEvolData):
         self.x_title = data.dtype.names[0]
         self.x = data[self.x_title]
         self.y_titles = data.dtype.names[1:]
-        self.y = [data[ty] for ty in self.y_titles]
+        self.y = [data[ty].copy(order="C") for ty in self.y_titles]
     
 
 class DOSData(PerEvolData):

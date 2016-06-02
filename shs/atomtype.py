@@ -9,22 +9,24 @@
 
 import numpy as np
 
+
 class AtomType():
-    ''' Class dealing with atom types
-    
+    """
+    Class dealing with atom types
+
     Input:
      -> geom : Geometry
-    
-    Default: 
+
+    Default:
      Return types based on geom.atoms[typ]
-    '''    
-    
+    """
+
     def __init__(self, geom):
 
         self.geom = geom
         # default
         self.labels = geom.names['label'].tolist()
-        self.atoms = [np.where(geom.atoms['label'] == i)[0] for i in self.labels] 
+        self.atoms = [np.where(geom.atoms['label'] == i)[0] for i in self.labels]
         self.isFinalized = True
 
     def getAtoms(self, label):
@@ -38,8 +40,12 @@ class AtomType():
         self.isFinalized = False
 
     def addType(self, condition, typeLabel):
-        '''
-        '''
+        """
+
+        :param condition:
+        :param typeLabel:
+        :return:
+        """
         if len(self._untyped) == 0:
             self.finalize()
             raise Exception("No untyped atoms exist")
@@ -71,12 +77,12 @@ class AtomType():
 
 
 class Condition():
-    ''' Class for filtering atoms based on condition
+    """ Class for filtering atoms based on condition
     Input:
      -> label : the label of atomic property the filter is based on
      -> condition : the array -> boolean lambda function
      -> parent, connector -> internal use variables  
-    '''
+    """
     def __init__(self, label, condition, parent = None, connector = None):
         if parent is None:
             self.propLabels = [label]
@@ -99,7 +105,8 @@ class Condition():
     
     def getCondition(self):
         return self.cond
-    
+
+
 class Comparison(Condition):
     
     def __init__(self, label, compare, value, parent = None, connector = None):
@@ -121,7 +128,8 @@ class Comparison(Condition):
     
     def __str__(self):
         return self.str
-    
+
+
 if __name__ == "__main__":
 # some tests
     from calc import SiestaCalc

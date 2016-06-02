@@ -127,9 +127,9 @@ class SiestaCalc(Calc):
         self.geom.write(calcdir)
         self.ctype.write(calcdir)
         # Copying pseudos
-        for atype in self.geom.types['label']:
+        for atype in self.geom.types.labels:
             pseudo = atype + '.psf'
-            shutil.copy(os.path.join(self.dir,pseudo), calcdir)
+            shutil.copy(os.path.join(self.dir, pseudo), calcdir)
 
     def alter(self, altdata):
         self.opts.alter(altdata)
@@ -167,14 +167,6 @@ class SiestaCalc(Calc):
                                 spins = spins)
         vtk_writer.writePVD(os.path.join(pvpath, "SL.pvd"))
     
-    def plotmde(self,cols):
-        ''' Plots information found in MDE file.
-        Input:
-         -> cols (list) : a list of columns to be plotted
-        '''
-        if 'step' not in cols:
-            cols = ['step', ] + cols
-        plotmde(self.mde()[cols])
 
 # Dealing with LAMMPS dumps for sas
 class LammpsCalc(Calc):

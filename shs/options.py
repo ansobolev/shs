@@ -53,7 +53,7 @@ class Options(object):
         self.opts = data
     
     def __str__(self):
-        keys = [[self.opts[key].pos, key] for key in self.opts.keys()]
+        keys = [[self.opts[key].pos, key] for key in self.opts.keys() if self.opts[key] is not None]
         keys.sort()
         keylen = max([len(k[1]) for k in keys])
         s = ''
