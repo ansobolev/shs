@@ -6,10 +6,9 @@
 # See http://github.com/ansobolev/shs for details
 #
 # ---------------------------------------------
-
 """ The module runs a (quick) test for voronoi calculations
 """
-__author__ = 'andrey'
+
 import matplotlib.pyplot as plt
 from shs.calc import SiestaCalc
 from shs.data.per_type import *
@@ -25,6 +24,5 @@ if __name__ == "__main__":
     for (y, y_title) in zip(data.y, data.y_titles):
         if y_title == "Fe-Fe":
             plt.plot(data.x, y, label=y_title)
-            print y
     plt.legend()
     plt.show()

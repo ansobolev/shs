@@ -10,17 +10,14 @@
 
 import os
 import glob
-import numpy as np
-
 from calctypes import CalcType
 from errors import FileError, UnsupportedError
 from evolution import Evolution
 from geom import Geom
 from options import Options
-from plot import plotmde
 import sio
 from data import Data
-import vtkxml.xml_write as VTKxml
+from vtkxml.xml_write import VTK_XML_Serial_Unstructured
 
 
 class Calc(object):
@@ -29,10 +26,10 @@ class Calc(object):
     def __init__(self, *args, **kwargs):
         pass
 
+
 class SiestaCalc(Calc):
     """ Class for Siesta calculations
         Global variables:
-            SC.keys : all possible FDF keys for the calculation options (dict)
             SC.geom : a calculation model geometry (Geom class)
             SC.opts : calculation options (dict with values as FDFTypes objects)
     """
@@ -44,15 +41,17 @@ class SiestaCalc(Calc):
             :param steps: time step number (or an iterable made of time step numbers).
             Negative numbers are also supported.
             :return: SiestaCalc instance
-            """
+        """
         super(SiestaCalc, self).__init__()
+        self.label = None
         self.dir = calc_dir
         self.opts = Options({})
+        self.evol = None
         self.geom = Geom()
-        self.ctype = CalcType()
+        self.calc_type = CalcType()
         self.data = {}
+        self.steps = None
         if calc_type is not None:
-            self.dtype = calc_type
             self.read(calc_type, steps)
 
     def __len__(self):
@@ -70,77 +69,88 @@ class SiestaCalc(Calc):
         :param calc_type: calculation type (can be 'fdf', 'ani' or 'out')
         :param steps: number of steps needed
         """
-        act = {'fdf': self.readfdf,
-               'out': self.readout,
-               'ani': self.readani
+        act = {'fdf': self.read_fdf,
+               'out': self.read_out,
+               'ani': self.read_ani
                }
-        act.get(calc_type, self.readunsupported)(steps)
-    
-    def readfdf(self, steps):
-        fdfnl = glob.glob(os.path.join(self.dir, '*.fdf'))
-        if os.path.join(self.dir, 'CALC.fdf') in fdfnl:
-            fdfn = os.path.join(self.dir, 'CALC.fdf')
-        elif len(fdfnl) > 0:
-            fdfn = fdfnl[0]
+        act.get(calc_type, self.read_unsupported)(steps)
+
+    def read_fdf(self, _):
+        fdf_name_list = glob.glob(os.path.join(self.dir, '*.fdf'))
+        if os.path.join(self.dir, 'CALC.fdf') in fdf_name_list:
+            fdf_name = os.path.join(self.dir, 'CALC.fdf')
+        elif len(fdf_name_list) > 0:
+            fdf_name = fdf_name_list[0]
         else:
             raise FileError("Calc.ReadFDF: no fdf files in selected directory!")
-        print 'Calc.ReadFDF: Took %s as a FDF file\n' % (fdfn, )
-        fdff = sio.FDFFile(fdfn)
+        print 'Calc.ReadFDF: Took %s as a FDF file\n' % (fdf_name, )
+        fdf_file = sio.FDFFile(fdf_name)
         # Reading calculation options (in blocks?) 
-        self.opts = Options(fdff.d)
+        self.opts = Options(fdf_file.d)
 
         # Taking from opts only those needed by Geom:
         self.geom.read('fdf', self.opts.divide(self.geom.fdf_options()))
 
-        self.sl = self.opts['SystemLabel'].value
+        self.label = self.opts['SystemLabel'].value
         # Reading calculation type
         ctype = self.opts['MD.TypeOfRun'].value
-        self.ctype.read(self.opts.divide(self.ctype.fdf_options(ctype)))
+        self.calc_type.read(self.opts.divide(self.calc_type.fdf_options(ctype)))
 
-    def readout(self, steps):
-        'Reading calculation options and geometry from output files'
+    def read_out(self, steps):
+        """
+        Reading calculation options and geometry from output files
+        :param steps:
+        :return:
+        """
         outfns = '*.output'
         outf = sio.OUTFile(outfns, self.dir, steps)
         self.steps = outf.steps
-        self.evol = Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins':outf.spins})
+        self.evol = Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins': outf.spins})
 
-    def readani(self, steps):
-        'Reading calculation options and geometry from output files'
+    def read_ani(self, steps):
+        """
+        Reading calculation options and geometry from output files
+        :param steps:
+        :return:
+        """
         anifn = glob.glob(os.path.join(self.dir, '*.ANI'))
         anif = sio.ANIFile(anifn[0], steps)
-        self.sl = anif.sl
+        self.label = anif.sl
         self.steps = anif.steps
         self.evol = Evolution(anif.steps, anif.atoms, anif.vc, anif.aunit, anif.vcunit)
 
-    def readunsupported(self, steps):
+    @staticmethod
+    def read_unsupported(steps):
         raise UnsupportedError('Reading calculation options is supported only from fdf or out file')
 
 # Change ---
 
-    def write(self, calcdir):
+    def write(self, calc_dir):
         import shutil
-        if not os.path.isdir(calcdir):
-            print 'SiestaCalc.Write: Creating calc directory %s' % (calcdir)
-            os.makedirs(calcdir)
-        fn = os.path.join(calcdir, 'CALC.fdf')
-        self.opts.write(fn, includes = ['STRUCT.fdf', 'CTYPE.fdf'])
-        self.geom.write(calcdir)
-        self.ctype.write(calcdir)
+        if not os.path.isdir(calc_dir):
+            print 'SiestaCalc.Write: Creating calc directory %s' % calc_dir
+            os.makedirs(calc_dir)
+        fn = os.path.join(calc_dir, 'CALC.fdf')
+        self.opts.write(fn, includes=['STRUCT.fdf', 'CTYPE.fdf'])
+        self.geom.write(calc_dir)
+        self.calc_type.write(calc_dir)
         # Copying pseudos
-        for atype in self.geom.types['label']:
-            pseudo = atype + '.psf'
-            shutil.copy(os.path.join(self.dir,pseudo), calcdir)
+        for atom_type in self.geom.types.labels:
+            pseudo = atom_type + '.psf'
+            shutil.copy(os.path.join(self.dir, pseudo), calc_dir)
 
     def alter(self, altdata):
         self.opts.alter(altdata)
 
     # Get information ---
-    def get_info(self, info_type):
+    @staticmethod
+    def get_info(info_type):
         """ Gets information of desired type
 
         :param info_type:
         :return:
         """
+        pass
 
     def get_data(self, data_type):
         """ Returns data of desired type
@@ -148,9 +158,8 @@ class SiestaCalc(Calc):
         :param data_type:
         :return:
         """
-        DataClass = Data().get_type_by_name(data_type)
-        self.data[data_type] = DataClass(self)
-
+        data_class = Data().get_type_by_name(data_type)
+        self.data[data_type] = data_class(self)
 
     def animate(self):
         def sign(x):
@@ -158,76 +167,38 @@ class SiestaCalc(Calc):
         
         pvpath = os.path.join(self.dir, 'pview')
         os.mkdir(pvpath)
-        vtk_writer = VTKxml.VTK_XML_Serial_Unstructured()
+        vtk_writer = VTK_XML_Serial_Unstructured()
         for step, geom in self.evol:
             spins = geom.atoms['up'] - geom.atoms['dn']
 #            colors = geom.atoms['itype']
             colors = [sign(spins[i]) if typ == 2 else 0 for (i, typ) in enumerate(geom.atoms['itype'])]
-            vtk_writer.snapshot(os.path.join(pvpath, "%i.vtu" % (step,)), geom.atoms['crd'], colors = colors,\
-                                spins = spins)
+            vtk_writer.snapshot(os.path.join(pvpath, "%i.vtu" % (step,)), geom.atoms['crd'], colors=colors,
+                                spins=spins)
         vtk_writer.writePVD(os.path.join(pvpath, "SL.pvd"))
     
-    def plotmde(self,cols):
-        ''' Plots information found in MDE file.
-        Input:
-         -> cols (list) : a list of columns to be plotted
-        '''
-        if 'step' not in cols:
-            cols = ['step', ] + cols
-        plotmde(self.mde()[cols])
 
 # Dealing with LAMMPS dumps for sas
-class LammpsCalc(Calc):
-    ''' Class for Lammps calculations
+class LAMMPSCalc(Calc):
+    """ Class for Lammps calculations
         Global variables:
             SC.geom : a calculation model geometry (Geom class)
-    '''
+    """
 
-    def __init__(self, calc_dir, steps = None):
+    def __init__(self, calc_dir, steps=None, *args, **kwargs):
+        super(LAMMPSCalc, self).__init__(*args, **kwargs)
         self.dir = calc_dir
+        self.evol = None
         # Default geom
         self.geom = Geom()
-
         # reading calc
         self.read(steps)
 
 # Read ---
-    def read(self, steps):
-        ''' Reading model
+    def read(self, _):
+        """ Reading model
         Input:
-          -> steps - number of steps needed 
-        '''
-        lmpfn =  glob.glob(os.path.join(self.dir, '*.lmp'))
-        lmpf = sio.LMPFile(lmpfn[0])
-        self.evol = Evolution(lmpf.steps, lmpf.atoms, lmpf.vc, lmpf.aunit, lmpf.vcunit)
-
-# Get information ---
-    def rdf(self, partial = True, n = None):
-        ''' Get RDF of evolution
-        In:
-         -> partial (bool) - indicates whether we need partial RDF
-         -> n (tuple of index lists or None) - if partial, then indicates which atoms we need to find geometry of 
-        '''
-        title = ['R',]
-        total_rdf = []
-# get r_max
-        vc = np.diag(self.evol[0].vc)
-        rmax = np.min(vc/1.6)
-        if partial:
-            if n is None:
-# get the list of atom types (from the first geometry in evolution)
-                types = self.evol[0].types['label']
-                for i, ityp in enumerate(types):
-                    for jtyp in types[i:]:
-                        n1 = self.evol[0].filter('label', ityp)
-                        n2 = self.evol[0].filter('label', jtyp)
-                        title.append(ityp+'-'+jtyp)
-                        r, rdf = self.evol.rdf(rmax = rmax, n = (n1,n2))
-                        total_rdf.append(rdf)
-        else:
-            n = None
-            title.append('Total RDF')
-            r, rdf = self.evol.rdf(n)
-            total_rdf.append(rdf)
-        return title, r, total_rdf
-
+          -> steps - number of steps needed
+        """
+        lmp_file_name = glob.glob(os.path.join(self.dir, '*.lmp'))
+        lmp_file = sio.LMPFile(lmp_file_name[0])
+        self.evol = Evolution(lmp_file.steps, lmp_file.atoms, lmp_file.vc, lmp_file.aunit, lmp_file.vcunit)
