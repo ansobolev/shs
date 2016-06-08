@@ -9,8 +9,8 @@ import numpy.ma as ma
 
 import const
 import errors
+from io.xv import XVFile
 import options
-import sio
 from atomtype import AtomType
 
 from voronoi import dump
@@ -158,17 +158,13 @@ class Geom(object):
         If no or many XV files in directory, readxv returns -1
 
         """
-        xvf = glob.glob(os.path.join(calc_dir, '*.XV'))
-        if len(xvf) != 1:
-            print 'Geom.ReadXV: Either no or too many XV files in %s' % (dir, )
-            return -1
         # alat = 1. Bohr, because later we read absolute coordinates of lattice vectors in Bohr
         self.alat = 1.
         self.unit = 'Bohr'
-        xv = sio.XVFile(xvf[0])
-        self.vc = np.array(xv.vc)
+        xv = XVFile(calc_dir)
+        self.vc = np.array(xv.vectors)
         # get atomic positions (in Bohr, I assume)
-        self.atoms = np.rec.fromarrays([xv.crd, xv.v, xv.i_type], names='crd,v,itype', formats='|3f8,|3f8,|i2')
+        self.atoms = np.rec.fromarrays([xv.crd, xv.velocities, xv.i_type], names='crd,v,itype', formats='|3f8,|3f8,|i2')
         # now get types
         ityp, ind = np.unique(np.array(xv.i_type), return_index=True)
         iz = np.array(xv.z)[ind]

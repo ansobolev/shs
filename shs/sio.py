@@ -12,9 +12,11 @@ import re
 
 import const
 import errors
+from io.xv import XVFile
 
 
 # --- Methods ---
+
 
 
 def data2file(data, title, file_name):
@@ -175,31 +177,6 @@ def time_steps(blocks, time=None):         # filter of time
 # --- Classes ---
 
 
-class XVFile:
-    """ Class for reading XV file
-    """
-    def __init__(self, xvf):
-        self.f = open(xvf, 'r')
-        self.vc = []
-        self.i_type = []
-        self.z = []
-        self.crd = []
-        self.v = []
-        lines = self.f.readlines()
-        for line in lines[0:3]:
-            self.vc.append([float(x) for x in line.split()[0:3]])
-        for line in lines[4:]:
-            ls = line.split()
-            self.i_type.append(int(ls[0]))
-            self.z.append(int(ls[1]))
-            self.crd.append([float(x) for x in line.split()[2:5]])
-            self.v.append([float(x) for x in line.split()[5:]])        
-        
-    def __del__(self):
-        self.f.flush()
-        self.f.close()
-
-
 class LMPFile:
     
     def __init__(self, file_name):
@@ -252,10 +229,9 @@ class ANIFile:
         self.f = open(anif, 'r')
         # anif - the name of ANI file, we can get system label from here and use it for reading vc from XV
         self.sl = os.path.basename(anif).split('.')[0]
-        xvf = os.path.join(os.path.dirname(anif), self.sl + '.XV')
-        xv = XVFile(xvf)
+        xv = XVFile(os.path.dirname(anif))
         # vc in Bohr
-        vc = np.array(xv.vc)
+        vc = np.array(xv.vectors)
         self.vcunit = 'Bohr'
         nat = len(xv.crd)
         lines = self.f.readlines()
