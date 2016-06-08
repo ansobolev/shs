@@ -4,10 +4,8 @@
 # (c) Andrey Sobolev, 2013
 #
 
-import os
-import glob
-
-from shs import sio
+from shs.io.mde import MDEFile
+from shs.io.pdos import PDOSFile
 from abstract import PerEvolData
 
 
@@ -17,7 +15,7 @@ class MDEData(PerEvolData):
     _shortDoc = "MDE evolution"
 
     def getData(self, calc):
-        mde = sio.MDEFile(calc)
+        mde = MDEFile(calc)
         calc.nsteps = mde.n_steps
         self.parseData(mde.data)
 
@@ -34,7 +32,7 @@ class DOSData(PerEvolData):
     _shortDoc = "Density of states (DOS)"
 
     def getData(self, calc):
-        dos = sio.PDOSFile(calc)
+        dos = PDOSFile(calc)
         nspin = dos.get_nspin()
         ev = dos.get_energy_values()
         names = ['energy']

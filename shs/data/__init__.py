@@ -8,6 +8,7 @@ import per_atom
 import per_evol
 import per_type
 import per_step
+from abstract import AbstractData
 
 class Data(object):
     _types = ['Function', 'Histogram', 'Time evolution']
@@ -19,7 +20,10 @@ class Data(object):
     
         data_class_list = []
         for mod in data_modules:
-            data_class_list += inspect.getmembers(mod, lambda m: inspect.isclass(m) and not inspect.isabstract(m))
+            data_class_list += inspect.getmembers(mod,
+                                                  lambda m: inspect.isclass(m) and
+                                                            not inspect.isabstract(m) and
+                                                            issubclass(m, AbstractData))
         self._classes = dict(zip(self._types, [{} for _ in self._types]))
         self._name2class = dict()
         for name, cl in data_class_list:
