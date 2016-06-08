@@ -88,7 +88,7 @@ class MainFrame(wx.Frame):
             fdfn = dlg.GetPath()
             fdff = FDFFile(fdfn)
             # get options 
-            fdfo = Options(fdff.d)
+            fdfo = Options(fdff.fdf_dict)
             self.import_FDF(fdfo.opts)
         dlg.Destroy()
 

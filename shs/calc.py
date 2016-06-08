@@ -86,7 +86,7 @@ class SiestaCalc(Calc):
         print 'Calc.ReadFDF: Took %s as a FDF file\n' % (fdf_name, )
         fdf_file = sio.FDFFile(fdf_name)
         # Reading calculation options (in blocks?) 
-        self.opts = Options(fdf_file.d)
+        self.opts = Options(fdf_file.fdf_dict)
 
         # Taking from opts only those needed by Geom:
         self.geom.read('fdf', self.opts.divide(self.geom.fdf_options()))

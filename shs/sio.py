@@ -5,7 +5,6 @@
 """
 
 import os
-import string
 import re
 import glob
 
@@ -13,154 +12,178 @@ from collections import OrderedDict
 import xml.dom.minidom as xml
 
 import numpy as np
-import const as C
-import errors as Err
+import const
+import errors
 
 # --- Methods ---
 
-def data2file(data, title, fname):
-    ''' Writes data to file fname.
-    Input:
-      -> data (numpy array, list of numpy arrays) - data to be written
-      -> title (iterable object) - title corresponding to each column of data
-      -> fname (str) - name of file  
-    '''
-    file = open(fname, 'w')
+
+def data2file(data, title, file_name):
+    """
+    Writes data to file.
+    :param data: (numpy array, list of numpy arrays) - data to be written
+    :param title: (iterable object) - title corresponding to each column of data
+    :param file_name: (str) - name of file for datato be written to
+    :return:
+    """
+    f = open(file_name, 'w')
 # names - a list with names
-    if type(title) == type([]): 
+    if isinstance(title, list):
         names = title
     else:
-        raise Err.NotImplementedError('SIO.Data2File : As of now title must be a list!')
+        raise errors.NotImplementedError('SIO.Data2File : As of now title must be a list!')
    
     fmt = ''
     for i in range(len(names)):    
         fmt += ' {0[%i]:^8} ' % (i, )    
 
-    file.write(fmt.format(names) + '\n')
+    f.write(fmt.format(names) + '\n')
     d = np.column_stack(tuple(data))
-    np.savetxt(file, d, fmt='%-9.5f')
-    file.close()
+    np.savetxt(f, d, fmt='%-9.5f')
+    f.close()
 
 
-def ReadFDFLines(infile, head = ''):
-    '''Returns an FDF file and all the %include files as split strings
-       infile = input file
+def read_fdf_lines(infile, head=''):
+    """
+    Returns an FDF file and all the %include files as split strings
        (c) Inelastica package
-    '''
-    absfile = os.path.abspath(infile)
-    if head == '':                                                                                                                                                                  
-        head = os.path.split(absfile)[0]
+
+    :param infile: input file
+    :param head: a top-level directory
+    :return: a list of fdf file lines
+    """
+    if head == '':
+        head = os.path.split(os.path.abspath(infile))[0]
     else:
         infile = os.path.join(head, infile)                                                                                                                                                                                                                                                                             
 
-    file = open(infile,'r')                           
+    f = open(infile, 'r')
     lines = []
-    tmp = file.readline()                                                                                                                                                           
-    while tmp != '':                                                                                                                                                                
-        if len(tmp)>3:                                                                                                                                                              
-            tmp = string.split(tmp)                                                                                                                                                 
-            for ii,s in enumerate(tmp):  # Remove comments                                                                                                                          
-                if s[0]=="#":                                                                                                                                                       
-                    break                                                                                                                                                           
-            if s[0]=='#':                                                                                                                                                           
-                tmp = tmp[0:ii]                                                                                                                                                     
-            if len(tmp)>0:                                                                                                                                                          
-                if tmp[0] == '%include':                                                                                                                                            
-                    subfile = tmp[1]                                                                                                                                       
-                    tmp2 = ReadFDFLines(subfile, head=head)                                                                                                     
-                    lines += tmp2                                                                                                                                                   
+    line = f.readline()
+    # till the end of file
+    while line != '':
+        if len(line) > 3:
+            # throw away comments
+            comment_idx = line.find('#')
+            if comment_idx != -1:
+                line = line[:comment_idx]
+
+            line = line.split()
+
+            if len(line) > 0:
+                if line[0] == '%include':
+                    sub_file = line[1]
+                    sub_lines = read_fdf_lines(sub_file, head=head)
+                    lines += sub_lines
                 else:                                                                                                                                                               
-                    lines.append(tmp)                                                                                                                                               
-        tmp = file.readline()                                                                                                                                                       
-    file.close()
+                    lines.append(line)
+        line = f.readline()
+    f.close()
     return lines
 
-def any2dict(data):
-    ''' Converts list of FDF file lines to a dictionary of FDF file options 
-    '''  
-    fddict = OrderedDict()
-    is_block = False                                                                                                                                                                
-    for i, fdline in enumerate(data):
-        if (is_block):                                                                                                                                                              
-            if (fdline[0] == '%endblock'):                                                                                                                                          
-                is_block = False                                                                                                                                                    
-                continue                                                                                                                                                            
-            fddict[key].append(fdline)                                                                                                                                              
-            continue                                                                                                                                                                
-        key = fdline.pop(0)                                                                                                                                                         
-        if (key == '%block'):                                                                                                                                                       
-            is_block = True                                                                                                                                                         
-            key = fdline.pop(0)                                                                                                                                                     
-            fdline = []                                                                                                                                                             
-        fddict[key] = [i] + fdline                                                                                                                                                        
-    return fddict    
+
+def fdf_lines_to_dict(lines):
+    """
+    Converts list of FDF file lines to a dictionary of FDF file options
+    :param lines: a list of FDF file lines
+    :return: a dictionary of file options
+    """
+    fdf_dict = OrderedDict()
+    is_block = False
+    block_key = None
+    for i, fdf_line in enumerate(lines):
+        key = fdf_line[0]
+        if key == '%block':
+            is_block = True
+            block_key = fdf_line[1]
+            fdf_dict[block_key] = [i, ]
+            continue
+        if is_block:
+            if fdf_line[0] != '%endblock':
+                fdf_dict[block_key].append(fdf_line)
+            else:
+                is_block = False
+                block_key = None
+                continue
+        fdf_dict[key] = [i, ] + fdf_line[1:]
+    return fdf_dict
+
 
 # --- Iterators ---
 
-def findfiles(fileparts,top=None):
-    'Iterate on the files found by a list of file parts, (c) A.Vorontsov'
+def findfiles(file_parts, top=None):
+    """Iterate on the files found by a list of file parts, (c) A.Vorontsov"""
     import fnmatch
-    if top == None: top=os.getcwd()
+    if top is None:
+        top = os.getcwd()
 
-    for path, dirlist, filelist in os.walk(top):
-        for filepart in fileparts:
-            for name in fnmatch.filter(sorted(filelist),filepart):
-                yield os.path.join(path,name)
+    for path, dir_list, file_list in os.walk(top):
+        for file_part in file_parts:
+            for name in fnmatch.filter(sorted(file_list), file_part):
+                yield os.path.join(path, name)
 
-def openfiles(filenames):       # open files with different types
-    'Iterate on the file descriptors of different types, (c) A.Vorontsov'
-    import gzip, bz2
-    for name in filenames:
+
+def open_files(file_names):       # open files with different types
+    """Iterate on the file descriptors of different types, (c) A.Vorontsov"""
+    import gzip
+    import bz2
+
+    for name in file_names:
         if not os.path.isfile(name):
-            yield os.popen(name,'r')
+            yield os.popen(name, 'r')
         elif name.endswith(".gz"):
-            yield gzip.open(name,'r')
+            yield gzip.open(name, 'r')
         elif name.endswith(".bz2"):
-            yield bz2.BZ2File(name,'r')
+            yield bz2.BZ2File(name, 'r')
         else:
-            yield open(name,'r')
+            yield open(name, 'r')
 
-def catfiles(sources):   # make union stream
-    'Concatenate file contents, make a whole list of strings, (c) A.Vorontsov'
+
+def cat_files(sources):   # make union stream
+    """Concatenate file contents, make a whole list of strings, (c) A.Vorontsov"""
     for s in sources:
         for item in s:
             yield item
 
-def fileblocks(lines,separator):  # cut file with separator
-    'Cut file contents in blocks with separator, (c) A.Vorontsov'
-    dat=[]
-    istep = -1
+
+def file_blocks(lines, separator):  # cut file with separator
+    """Cut file contents in blocks with separator, (c) A.Vorontsov"""
+    dat = []
+    i_step = -1
     for line in lines:
-        if line.count(separator)<>0:
-            istep += 1
-            if dat<>[]:
-                yield istep, dat
-                dat=[]
-        if line<>'': dat+=[line]
+        if line.count(separator) != 0:
+            i_step += 1
+            if dat:
+                yield i_step, dat
+                dat = []
+        if line != '':
+            dat += [line]
 #    if dat<>[]:
 #        yield istep, dat
 
-def timesteps(blocks,time=None):         # filter of time
-    ''' Filters blocks generator by time steps 
-    '''
-    for istep, b in blocks:
+
+def time_steps(blocks, time=None):         # filter of time
+    """ Filters blocks generator by time steps
+    """
+    for i_step, b in blocks:
         if time is None:
-            yield istep, b
+            yield i_step, b
             continue
-        if istep in time:
-            yield istep, b
+        if i_step in time:
+            yield i_step, b
+
 
 # --- Classes ---
 
-class PDOSFile():
+class PDOSFile:
     """ Class for reading partial density of electronic states, use code
     """
     def __init__(self, calc):
         # get file name
         if os.path.isfile(os.path.join(calc.dir, 'pdos.xml')):
             self.file_name = os.path.join(calc.dir, 'pdos.xml')
-        elif os.path.isfile(os.path.join(calc.dir, calc.sl + '.PDOS')):
-            self.file_name = os.path.join(calc.dir, calc.sl + '.PDOS')
+        elif os.path.isfile(os.path.join(calc.dir, calc.label + '.PDOS')):
+            self.file_name = os.path.join(calc.dir, calc.label + '.PDOS')
         else:
             raise Exception('No possible DOS files found!')
         print 'calc.DOS : Took %s as DOS file' % (self.file_name, )
@@ -168,22 +191,25 @@ class PDOSFile():
 
     # Reading XML files (c) Inelastica package
 
-    def GetPDOSnspin(self):
-        "Returns an integer for the number of spins (variable nspin)"
-        node = self.dom.getElementsByTagName('nspin')[0] # First (and only) entry
+    def get_nspin(self):
+        """Returns an integer for the number of spins (variable nspin)"""
+        node = self.dom.getElementsByTagName('nspin')[0]  # First (and only) entry
         return int(node.childNodes[0].data)
 
-    def GetPDOSenergyValues(self):
+    def get_energy_values(self):
         # Read energy values
-        node = self.dom.getElementsByTagName('energy_values')[0] # First (and only) entry
+        node = self.dom.getElementsByTagName('energy_values')[0]  # First (and only) entry
         data = node.childNodes[0].data.split()
-        return np.array(data, dtype = np.float)
+        return np.array(data, dtype=np.float)
 
-    def GetPDOSfromOrbitals(self, species, ldict):
+    def get_PDOS_from_orbitals(self, species, ldict):
         nodes = self.dom.getElementsByTagName('orbital')
         names = []
         d = []
-        orbs = {0:'s', 1:'p', 2:'d', 3:'f'}
+        orbs = {0: 's',
+                1: 'p',
+                2: 'd',
+                3: 'f'}
         if not species:
             species = set([node.attributes['species'].value for node in nodes])
         if not ldict:
@@ -194,42 +220,44 @@ class PDOSFile():
 
         for sp, ls in ldict.iteritems():
             for l in ls:
-                data = [node.getElementsByTagName('data')[0].childNodes[0].data.split() for node in nodes \
+                data = [node.getElementsByTagName('data')[0].childNodes[0].data.split() for node in nodes
                         if node.attributes['species'].value == sp and int(node.attributes['l'].value) == l]
-                data = np.array(data, dtype = np.float)
+                data = np.array(data, dtype=np.float)
                 names.append(sp + '-' + orbs[l])
-                d.append(data.sum(axis = 0))
+                d.append(data.sum(axis=0))
         return names, d
 
 
-class FDFFile():
+class FDFFile:
     
-    def __init__(self, filename, mode = 'r'):
-        self.fn = filename
-        act = {'r' : self.readfdf,
-               'w' : self.writefdf}
+    def __init__(self, filename, mode='r'):
+        self.name = filename
+        self.file = None
+        self.fdf_dict = None
+        act = {'r': self.read_fdf,
+               'w': self.write_fdf}
         act.get(mode)()
     
-    def readfdf(self):
-        lines = ReadFDFLines(self.fn)
-        self.f = open(self.fn, 'r')
-        self.d = any2dict(lines)
+    def read_fdf(self):
+        lines = read_fdf_lines(self.name)
+        self.file = open(self.name, 'r')
+        self.fdf_dict = fdf_lines_to_dict(lines)
         
-    def writefdf(self):
-        self.f = open(self.fn, 'w')
+    def write_fdf(self):
+        self.file = open(self.name, 'w')
     
     def __del__(self):
-        self.f.flush()
-        self.f.close()
+        self.file.flush()
+        self.file.close()
        
 
-class XVFile():
-    ''' Class for reading XV file
-    '''
+class XVFile:
+    """ Class for reading XV file
+    """
     def __init__(self, xvf):
         self.f = open(xvf, 'r')
         self.vc = []
-        self.ityp = []
+        self.i_type = []
         self.z = []
         self.crd = []
         self.v = []
@@ -238,7 +266,7 @@ class XVFile():
             self.vc.append([float(x) for x in line.split()[0:3]])
         for line in lines[4:]:
             ls = line.split()
-            self.ityp.append(int(ls[0]))
+            self.i_type.append(int(ls[0]))
             self.z.append(int(ls[1]))
             self.crd.append([float(x) for x in line.split()[2:5]])
             self.v.append([float(x) for x in line.split()[5:]])        
@@ -248,17 +276,17 @@ class XVFile():
         self.f.close()
 
 
-class LMPFile():
+class LMPFile:
     
-    def __init__(self, lmpf):
-        self.f = open(lmpf, 'r')
+    def __init__(self, file_name):
+        self.file = open(file_name, 'r')
         self.steps = []
         self.vc = []
         self.atoms = []
         self.aunit = 'Bohr'
         self.vcunit = 'Bohr'
 
-        lines = self.f.readlines()
+        lines = self.file.readlines()
 # steps
         self.steps.append(int(lines[0].split('=')[1]))
 # number of atoms
@@ -269,23 +297,24 @@ class LMPFile():
         z = float(lines[7].split()[1])        
         self.vc.append(np.diag([x, y, z]))
         step = np.array([line.split() for line in lines[11:nat+11]])
-        i = step[:,0]
-        ityp = step[:,1]
-        label = np.array([C.PeriodicTable[typ] for typ in ityp.astype(np.int)])
-        crd = step[:,2:]
-        self.atoms.append(np.rec.fromarrays([crd,ityp,i,label], formats=['3f8','i4','i4', 'S2'], names=['crd','itype','id','label']))
+        i = step[:, 0]
+        ityp = step[:, 1]
+        label = np.array([const.PeriodicTable[typ] for typ in ityp.astype(np.int)])
+        crd = step[:, 2:]
+        self.atoms.append(np.rec.fromarrays([crd, ityp, i, label],
+                                            formats=['3f8', 'i4', 'i4', 'S2'],
+                                            names=['crd', 'itype', 'id', 'label']))
 
     def __del__(self):
-        self.f.flush()
-        self.f.close()
+        self.file.flush()
+        self.file.close()
 
-class MDEFile():
-    """ Class for reading MDE files
-    """
+
+class MDEFile:
 
     def __init__(self, calc):
-        """ MDE file data initialization
-
+        """
+        Class for reading MDE files
         :param calc: Siesta calculation
         """
         # get MDE file name
@@ -293,22 +322,22 @@ class MDEFile():
         if len(mde_names) != 1:
             raise ValueError('Calc.ReadMDE: Either no or too many MDE files in %s' % (dir, ))
         dt = {'names': ('step', 'temp', 'e_ks', 'e_tot', 'vol', 'p'),
-              'formats': ('i4','f4','f4','f4','f4','f4')
+              'formats': ('i4', 'f4', 'f4', 'f4', 'f4', 'f4')
               }
         self.file_name = mde_names[0]
         data = np.loadtxt(self.file_name, dtype=dt)
-        self.nsteps = len(data['step'])
-        print 'SIO.ReadMDE : Found %i steps' % (self.nsteps,)
-        data['step'] = np.arange(self.nsteps)
+        self.n_steps = len(data['step'])
+        print 'SIO.ReadMDE : Found %i steps' % (self.n_steps,)
+        data['step'] = np.arange(self.n_steps)
         self.data = data
 
 
-class ANIFile():
-    ''' Class for reading ANI file
-    '''
-# ANI-file is in Angstroms
+class ANIFile:
+    # ANI-file is in Angstroms
 
     def __init__(self, anif, stepnums):
+        """ Class for reading ANI file
+        """
         def sign(x):
             return 1 if x < 0 else 0
         
@@ -319,36 +348,38 @@ class ANIFile():
         self.atoms = []
         self.vc = []
         self.f = open(anif, 'r')
-# anif - the name of ANI file, we can get system label from here and use it for reading vc from XV        
+        # anif - the name of ANI file, we can get system label from here and use it for reading vc from XV
         self.sl = os.path.basename(anif).split('.')[0]
-        xvf = os.path.join(os.path.dirname(anif),self.sl + '.XV')
+        xvf = os.path.join(os.path.dirname(anif), self.sl + '.XV')
         xv = XVFile(xvf)
-# vc in Bohr
+        # vc in Bohr
         vc = np.array(xv.vc)
         self.vcunit = 'Bohr'
         nat = len(xv.crd)
         lines = self.f.readlines()
         if nat != int(lines[0]):
-            raise Err.FileError('SIO.ANIFile: Number of atoms in XV and ANI files MUST be equal!')
-        nsteps  = len(lines)/(nat + 2)
+            raise errors.FileError('SIO.ANIFile: Number of atoms in XV and ANI files MUST be equal!')
+        nsteps = len(lines) / (nat + 2)
         print 'SIO.ANIFile : Found %i steps' % (nsteps,)
-# Steps
-        if any(x<0 for x in stepnums):
+        # Steps
+        if any(x < 0 for x in stepnums):
             stepnums = [istep+sign(istep)*nsteps for istep in stepnums]
         self.steps = stepnums        
-# crd in Angstroms
+        # crd in Angstroms
         for istep in stepnums:
-# ANI file offset
+            # ANI file offset
             offset = istep * (nat + 2)
             step = np.array([line.split() for line in lines[offset+2:offset+nat+2]])
             self.vc.append(vc)
-            crd = step[:,1:]
-            typ = step[:,0]
+            crd = step[:, 1:]
+            typ = step[:, 0]
             i = np.arange(1, nat+1)
             types = np.unique(typ)
-            label2ityp = dict(zip(types,xrange(1, len(types) + 1)))
+            label2ityp = dict(zip(types, xrange(1, len(types) + 1)))
             ityp = np.array([label2ityp[l] for l in typ])
-            self.atoms.append(np.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','i4','S2'], names=['crd','itype','id','label']))
+            self.atoms.append(np.rec.fromarrays([crd, ityp, i, typ],
+                                                formats=['3f8', 'i4', 'i4', 'S2'],
+                                                names=['crd', 'itype', 'id', 'label']))
         self.aunit = 'Ang'
         
     def __del__(self):
@@ -356,35 +387,34 @@ class ANIFile():
         self.f.close()
 
 
-
-class OUTFile():
+class OUTFile:
     
-    def __init__(self, outfns, dir, stepnums):
-        ''' Reading data from stdout siesta file format
-        Input:
-         -> outfns - a list of output file name patterns
-         -> dir - a calc directory
-         -> stepnums - a list of step numbers (int).
-           If negative, then numbers count from the end  
-        '''
+    def __init__(self, outfns, calc_dir, stepnums):
+        """
+        Reading data from stdout siesta file format
+        :param outfns: a list of output file name patterns
+        :param calc_dir: a calc directory
+        :param stepnums: a list of step numbers (int). If negative, then numbers count from the end
+        """
         import itertools
+
         def sign(x):
             return 1 if x < 0 else 0
         
         if not hasattr(outfns, '__iter__'):
             outfns = [outfns, ]
-        filenames = findfiles(outfns, top = dir)
+        filenames = findfiles(outfns, top=calc_dir)
         print 'SiestaIO.OUTFile: Found OUT files:'
         for fn in filenames:          
             print '                  -> %s' % (fn,)
         
-        filenames = findfiles(outfns, top = dir)
-        files = openfiles(filenames)
-        lines = catfiles(files)
-        blocks = fileblocks(lines, 'Begin')
-        if any(x<0 for x in stepnums):
+        filenames = findfiles(outfns, top=calc_dir)
+        files = open_files(filenames)
+        lines = cat_files(files)
+        blocks = file_blocks(lines, 'Begin')
+        if any(x < 0 for x in stepnums):
             s, blocks = itertools.tee(blocks, 2)
-            nsteps = sum(1 for x in s)
+            nsteps = sum(1 for _ in s)
             print 'SiestaIO.OUTFile: Number of steps found -> %i' % (nsteps,)
             stepnums = [istep+sign(istep)*nsteps for istep in stepnums]
         self.steps = stepnums
@@ -392,13 +422,14 @@ class OUTFile():
         self.vc = []
         self.spins = []
         self.forces = []
-        for istep, block in timesteps(blocks, self.steps):
+        for istep, block in time_steps(blocks, self.steps):
             read_atoms = False
             read_vc = False
             read_spins = False
             read_forces = False
+            forces_list = []
             for line in block:
-# getting coordinates block
+                # getting coordinates block
                 if line.find('outcoor: Atomic coordinates') != -1:
                     read_atoms = True
                     at_list = []
@@ -407,7 +438,7 @@ class OUTFile():
                         read_atoms = False
                         continue
                     at_list.append(line.split())
-# getting cell vectors block
+                # getting cell vectors block
                 if line.find('outcell: Unit cell vectors') != -1:
                     read_vc = True
                     vc_list = []
@@ -416,7 +447,7 @@ class OUTFile():
                         read_vc = False
                         continue
                     vc_list.append(line.split())
-# getting spins block
+                # getting spins block
                 if line.find('Atomic and Orbital Populations') != -1:
                     read_spins = True
                     spins_list = []
@@ -425,7 +456,7 @@ class OUTFile():
                         read_spins = False
                         continue
                     spins_list.append(line.split())
-# getting forces block
+                # getting forces block
                 if line.find('Atomic forces') != -1:
                     read_forces = True
                     forces_list = []
@@ -440,22 +471,26 @@ class OUTFile():
 #            self.forces.append(self.list2forces(forces_list))
 
     def list2atoms(self, at_list):
-# find unit of measurement
+        # find unit of measurement
         head = at_list.pop(0)
         au = re.search(r'\(.+?\)', str(head))
         self.aunit = au.group(0)[1:-1]
         a = np.array(at_list)
-        crd = a[:,0:3]
-        ityp = a[:,3]
-        i = a[:,4]
-        typ = a[:,5]
+        crd = a[:, 0:3]
+        ityp = a[:, 3]
+        i = a[:, 4]
+        typ = a[:, 5]
         try:
-            return np.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','i4','S2'], names=['crd','itype','id','label'])
+            return np.rec.fromarrays([crd, ityp, i, typ],
+                                     formats=['3f8', 'i4', 'i4', 'S2'],
+                                     names=['crd', 'itype', 'id', 'label'])
         except (ValueError,):
-            return np.rec.fromarrays([crd,ityp,i,typ], formats=['3f8','i4','S2','i4'], names=['crd','itype','label','id'])
+            return np.rec.fromarrays([crd, ityp, i, typ],
+                                     formats=['3f8', 'i4', 'S2', 'i4'],
+                                     names=['crd', 'itype', 'label', 'id'])
 
     def list2vc(self, vc_list):
-# find unit of measurement
+        # find unit of measurement
         head = vc_list.pop(0)
         vcu = re.search(r'\(.+?\)', str(head))
         self.vcunit = vcu.group(0)[1:-1]
@@ -463,22 +498,24 @@ class OUTFile():
 
     def list2forces(self, forces_list):
         forces = [line[1:] for line in forces_list[1:]]
-        return np.rec.fromarrays([np.array(forces).astype('float')], names = 'forces', formats = '3f8' )
+        return np.rec.fromarrays([np.array(forces).astype('float')],
+                                 names='forces',
+                                 formats='3f8')
 
     def list2spins(self, spins_list, typ):
-        'Now supports only collinear spin'
-# as mulliken charges come in tables by species, let's find how many atoms of each species 
-# are there in our model           
+        """Now supports only collinear spin"""
+        # as mulliken charges come in tables by species, let's find how many atoms of each species
+        # are there in our model
         from collections import defaultdict
         nat = len(typ)
         ntyp = defaultdict(int)
         for x in typ:
             ntyp[x] += 1        
-# now we know the number of atoms (both of each type and total)
-# initializing arrays
+        # now we know the number of atoms (both of each type and total)
+        # initializing arrays
         up = np.zeros(nat, dtype='float')
         dn = np.zeros(nat, dtype='float')
-# TODO: read orbital partitioning of charge        
+        # TODO: read orbital partitioning of charge
         species = []
         orbs = []
         species.append(spins_list[4][1])
@@ -487,11 +524,11 @@ class OUTFile():
             try:
                 int(spins_line[0])
                 break
-            except:
+            except ValueError:
                 o += 1
         orbs.append(o)
         ind = 7
-        for i in range(1,len(ntyp)):
+        for i in range(1, len(ntyp)):
             ind += orbs[i-1]*(ntyp[species[i-1]]+1)
             species.append(spins_list[ind][1])
             o = 0
@@ -499,30 +536,30 @@ class OUTFile():
                 try:
                     int(spins_line[0])
                     break
-                except:
+                except ValueError:
                     o += 1
             orbs.append(o)
-# found number of species and orb lines, now go get spins (up & dn differently)
+        # found number of species and orb lines, now go get spins (up & dn differently)
         ind = 6 + orbs[0]
         for i in range(len(ntyp)):
             nl = orbs[i]*ntyp[species[i]]
             s = np.array(spins_list[ind:ind+nl:orbs[i]])
-            ats = s[:,0].astype('int')
-            spins = s[:,1].astype('float')
+            ats = s[:, 0].astype('int')
+            spins = s[:, 1].astype('float')
             up[ats-1] = spins
             try:
                 ind += nl + 3 + orbs[i+1]
-            except:
+            except IndexError:
                 ind += nl + 4
         ind += 3 + orbs[0]
         for i in range(len(ntyp)):
-            nl = orbs[i]*ntyp[species[i]]
+            nl = orbs[i] * ntyp[species[i]]
             s = np.array(spins_list[ind:ind+nl:orbs[i]])
-            ats = s[:,0].astype('int')
-            spins = s[:,1].astype('float')
+            ats = s[:, 0].astype('int')
+            spins = s[:, 1].astype('float')
             dn[ats-1] = spins
             try:
                 ind += nl + 3 + orbs[i+1]
-            except:
+            except IndexError:
                 pass
-        return np.rec.fromarrays([up, dn], formats=['f4','f4'], names=['up','dn'])
+        return np.rec.fromarrays([up, dn], formats=['f4', 'f4'], names=['up', 'dn'])

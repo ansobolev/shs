@@ -168,9 +168,9 @@ class Geom(object):
         xv = sio.XVFile(xvf[0])
         self.vc = np.array(xv.vc)
         # get atomic positions (in Bohr, I assume)
-        self.atoms = np.rec.fromarrays([xv.crd, xv.v, xv.ityp], names='crd,v,itype', formats='|3f8,|3f8,|i2')
+        self.atoms = np.rec.fromarrays([xv.crd, xv.v, xv.i_type], names='crd,v,itype', formats='|3f8,|3f8,|i2')
         # now get types
-        ityp, ind = np.unique(np.array(xv.ityp), return_index=True)
+        ityp, ind = np.unique(np.array(xv.i_type), return_index=True)
         iz = np.array(xv.z)[ind]
         ilabel = np.array([const.PeriodicTable[z] for z in iz])
         self.names = np.rec.fromarrays([ityp, iz, ilabel], names='i,z,label', formats='|i1,|i2,|S2')

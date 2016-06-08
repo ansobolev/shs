@@ -81,10 +81,10 @@ class Options(object):
             -> Default : None 
         '''
         ofile = SIO.FDFFile(fn, 'w')
-        ofile.f.write('%s\n' % (str(self)))
+        ofile.file.write('%s\n' % (str(self)))
         if includes is not None:
             for ifn in includes:
-                ofile.f.write('%%include %s\n' % (ifn, ))
+                ofile.file.write('%%include %s\n' % (ifn,))
 
     def alter(self, altdata):
         ''' Altering Options.opts dictionary with altdata
@@ -136,10 +136,10 @@ class Options_old():
             -> Default : None 
         '''
         ofile = SIO.FDFFile(fn, 'w')
-        ofile.f.write('%s\n' % (str(self)))
+        ofile.file.write('%s\n' % (str(self)))
         if includes is not None:
             for ifn in includes:
-                ofile.f.write('%%include %s\n' % (ifn, ))
+                ofile.file.write('%%include %s\n' % (ifn,))
                 
     def alter(self, altdata):
         ''' Altering Options.opts dictionary with altdata

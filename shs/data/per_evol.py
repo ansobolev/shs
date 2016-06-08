@@ -18,7 +18,7 @@ class MDEData(PerEvolData):
 
     def getData(self, calc):
         mde = sio.MDEFile(calc)
-        calc.nsteps = mde.nsteps
+        calc.nsteps = mde.n_steps
         self.parseData(mde.data)
 
     def parseData(self, data):
@@ -35,13 +35,13 @@ class DOSData(PerEvolData):
 
     def getData(self, calc):
         dos = sio.PDOSFile(calc)
-        nspin = dos.GetPDOSnspin()
-        ev = dos.GetPDOSenergyValues()
+        nspin = dos.get_nspin()
+        ev = dos.get_energy_values()
         names = ['energy']
         data = []
-        raw_names, raw_data = dos.GetPDOSfromOrbitals(species=[],
-                                                      ldict={}
-                                                      )
+        raw_names, raw_data = dos.get_PDOS_from_orbitals(species=[],
+                                                         ldict={}
+                                                         )
         if nspin == 2:
             for n, d in zip(raw_names, raw_data):
                 names.append(n + '_up')
