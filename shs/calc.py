@@ -10,6 +10,8 @@
 
 import os
 import glob
+
+from io.fdf import FDFFile
 from calctypes import CalcType
 from errors import FileError, UnsupportedError
 from evolution import Evolution
@@ -84,7 +86,7 @@ class SiestaCalc(Calc):
         else:
             raise FileError("Calc.ReadFDF: no fdf files in selected directory!")
         print 'Calc.ReadFDF: Took %s as a FDF file\n' % (fdf_name, )
-        fdf_file = sio.FDFFile(fdf_name)
+        fdf_file = FDFFile(fdf_name)
         # Reading calculation options (in blocks?) 
         self.opts = Options(fdf_file.fdf_dict)
 

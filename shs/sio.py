@@ -175,29 +175,6 @@ def time_steps(blocks, time=None):         # filter of time
 # --- Classes ---
 
 
-class FDFFile:
-    
-    def __init__(self, filename, mode='r'):
-        self.name = filename
-        self.file = None
-        self.fdf_dict = None
-        act = {'r': self.read_fdf,
-               'w': self.write_fdf}
-        act.get(mode)()
-    
-    def read_fdf(self):
-        lines = read_fdf_lines(self.name)
-        self.file = open(self.name, 'r')
-        self.fdf_dict = fdf_lines_to_dict(lines)
-        
-    def write_fdf(self):
-        self.file = open(self.name, 'w')
-    
-    def __del__(self):
-        self.file.flush()
-        self.file.close()
-       
-
 class XVFile:
     """ Class for reading XV file
     """
@@ -234,11 +211,11 @@ class LMPFile:
         self.vcunit = 'Bohr'
 
         lines = self.file.readlines()
-# steps
+        # steps
         self.steps.append(int(lines[0].split('=')[1]))
-# number of atoms
+        # number of atoms
         nat = int(lines[2].split()[0])
-# lattice vectors 
+        # lattice vectors
         x = float(lines[5].split()[1])
         y = float(lines[6].split()[1])
         z = float(lines[7].split()[1])        

@@ -3,6 +3,7 @@
 
 from collections import OrderedDict
 import fdftypes as T
+from io.fdf import FDFFile
 import sio as SIO
 import const as Const
 ''' Calculation options should be stored here
@@ -80,7 +81,7 @@ class Options(object):
           - includes -- a list of FDF files to include (using %%include directive)
             -> Default : None 
         '''
-        ofile = SIO.FDFFile(fn, 'w')
+        ofile = FDFFile(fn, 'w')
         ofile.file.write('%s\n' % (str(self)))
         if includes is not None:
             for ifn in includes:
@@ -135,7 +136,7 @@ class Options_old():
           - includes -- a list of FDF files to include (using %%include directive)
             -> Default : None 
         '''
-        ofile = SIO.FDFFile(fn, 'w')
+        ofile = FDFFile(fn, 'w')
         ofile.file.write('%s\n' % (str(self)))
         if includes is not None:
             for ifn in includes:

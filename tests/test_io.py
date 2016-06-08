@@ -8,6 +8,7 @@
 # ---------------------------------------------
 from unittest import TestCase
 from shs.sio import read_fdf_lines, fdf_lines_to_dict
+from shs.io.fdf import FDFFile
 
 
 class TestReadFDFLines(TestCase):
@@ -49,4 +50,25 @@ class TestFDFLinesToDict(TestCase):
         self.assertEqual(species[1], ['1', '6', 'C'])
 
 
+class TestFDFFile(TestCase):
+    example = '../examples/fdf/CALC.fdf'
+
+    def setUp(self):
+        self.fdf_dict = FDFFile(self.example).fdf_dict
+
+    def test_fdf_dict(self):
+        self.assertIsInstance(self.fdf_dict, dict)
+        self.assertIn('SystemLabel', self.fdf_dict.keys())
+        system_label = self.fdf_dict['SystemLabel']
+        self.assertIsInstance(system_label, list)
+        self.assertEqual(system_label[0], 1)
+        self.assertEqual(system_label[1], 'FeC')
+        self.assertIn('MD.TypeOfRun', self.fdf_dict.keys())
+        type_of_run = self.fdf_dict['MD.TypeOfRun']
+        self.assertEqual(type_of_run[1], 'NoseParrinelloRahman')
+        self.assertIn('ChemicalSpeciesLabel', self.fdf_dict.keys())
+        species = self.fdf_dict['ChemicalSpeciesLabel']
+        self.assertIsInstance(species[1], list)
+        self.assertEqual(len(species[1:]), 2)
+        self.assertEqual(species[1], ['1', '6', 'C'])
 
