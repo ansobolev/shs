@@ -11,6 +11,7 @@
 import os
 import glob
 
+from io.out import OUTFile
 from io.fdf import FDFFile
 from calctypes import CalcType
 from errors import FileError, UnsupportedError
@@ -105,7 +106,7 @@ class SiestaCalc(Calc):
         :return:
         """
         outfns = '*.output'
-        outf = sio.OUTFile(outfns, self.dir, steps)
+        outf = OUTFile(outfns, self.dir, steps)
         self.steps = outf.steps
         self.evol = Evolution(outf.steps, outf.atoms, outf.vc, outf.aunit, outf.vcunit, {'spins': outf.spins})
 

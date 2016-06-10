@@ -28,7 +28,7 @@ class PDOSFile:
 
     # Reading XML files (c) Inelastica package
 
-    def get_nspin(self):
+    def get_n_spin(self):
         """Returns an integer for the number of spins (variable nspin)"""
         node = self.dom.getElementsByTagName('nspin')[0]  # First (and only) entry
         return int(node.childNodes[0].data)
@@ -39,7 +39,7 @@ class PDOSFile:
         data = node.childNodes[0].data.split()
         return np.array(data, dtype=np.float)
 
-    def get_PDOS_from_orbitals(self, species, ldict):
+    def get_partial_dos(self, species, ldict):
         nodes = self.dom.getElementsByTagName('orbital')
         names = []
         d = []

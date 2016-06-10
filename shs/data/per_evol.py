@@ -33,13 +33,11 @@ class DOSData(PerEvolData):
 
     def getData(self, calc):
         dos = PDOSFile(calc)
-        nspin = dos.get_nspin()
+        nspin = dos.get_n_spin()
         ev = dos.get_energy_values()
         names = ['energy']
         data = []
-        raw_names, raw_data = dos.get_PDOS_from_orbitals(species=[],
-                                                         ldict={}
-                                                         )
+        raw_names, raw_data = dos.get_partial_dos(species=[], ldict={})
         if nspin == 2:
             for n, d in zip(raw_names, raw_data):
                 names.append(n + '_up')
