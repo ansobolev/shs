@@ -4,8 +4,8 @@
 # (c) Andrey Sobolev, 2013
 #
 
-from shs.io.mde import MDEFile
-from shs.io.pdos import PDOSFile
+from shs.files.mde import MDEFile
+from shs.files.pdos import PDOSFile
 from abstract import PerEvolData
 
 

@@ -8,9 +8,9 @@
 # ---------------------------------------------
 from unittest import TestCase
 from shs.sio import read_fdf_lines, fdf_lines_to_dict
-from shs.io.fdf import FDFFile
-from shs.io.xv import XVFile
-from shs.io.out import OUTFile
+from shs.files.fdf import FDFFile
+from shs.files.xv import XVFile
+from shs.files.out import OUTFile
 
 
 class TestReadFDFLines(TestCase):
@@ -98,16 +98,16 @@ class TestOUTFile(TestCase):
     calc_dir = '../examples/FeCANI'
 
     def setUp(self):
-        self.xv_file = XVFile(self.calc_dir)
+        self.out_file = OUTFile(self.calc_dir, '*.output')
 
-    def test_xv_file(self):
-        self.assertIn('FeC.XV', self.xv_file.name)
-        vectors = self.xv_file.vectors
+    def test_out_file(self):
+        self.assertIn('FeC.XV', self.out_file.name)
+        vectors = self.out_file.vectors
         self.assertAlmostEqual(vectors[0][0], 26.9191, delta=0.0001)
-        i_type = self.xv_file.i_type
+        i_type = self.out_file.i_type
         self.assertEqual(len(i_type), 200)
         self.assertEqual(i_type[2], 1)
-        z = self.xv_file.z
+        z = self.out_file.z
         self.assertEqual(z[1], 26)
-        crd = self.xv_file.crd
+        crd = self.out_file.crd
         self.assertAlmostEqual(crd[2][0], -0.2977, delta=0.0001)

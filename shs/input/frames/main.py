@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import wx
 
-from shs.io.fdf import FDFFile
+from shs.files.fdf import FDFFile
 from shs.options import Options
 from shs.geom import Geom
 

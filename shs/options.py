@@ -3,7 +3,7 @@
 
 from collections import OrderedDict
 import fdftypes as T
-from io.fdf import FDFFile
+from .files.fdf import FDFFile
 import sio as SIO
 import const as Const
 ''' Calculation options should be stored here

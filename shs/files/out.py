@@ -14,7 +14,7 @@ from sio import find_files, open_files, cat_files, file_blocks, time_steps
 
 class OUTFile:
 
-    def __init__(self, name_patterns, calc_dir, step_numbers):
+    def __init__(self, name_patterns, calc_dir, step_numbers=None):
         """
         Reading data from stdout siesta file format
         :param name_patterns: a list of output file name patterns
@@ -37,6 +37,7 @@ class OUTFile:
         files = open_files(file_names)
         lines = cat_files(files)
         blocks = file_blocks(lines, 'Begin')
+        print blocks
         if any(x < 0 for x in step_numbers):
             s, blocks = itertools.tee(blocks, 2)
             nsteps = sum(1 for _ in s)

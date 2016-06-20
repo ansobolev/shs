@@ -11,8 +11,8 @@
 import os
 import glob
 
-from io.out import OUTFile
-from io.fdf import FDFFile
+from .files.out import OUTFile
+from .files.fdf import FDFFile
 from calctypes import CalcType
 from errors import FileError, UnsupportedError
 from evolution import Evolution

@@ -11,7 +11,7 @@ import os
 
 import const
 import errors
-from io.xv import XVFile
+from files.xv import XVFile
 
 
 # --- Methods ---

@@ -9,7 +9,7 @@ import numpy.ma as ma
 
 import const
 import errors
-from io.xv import XVFile
+from .files.xv import XVFile
 import options
 from atomtype import AtomType
 
@@ -22,6 +22,7 @@ try:
 except ImportError:
     import voronoi.numpy.voronoi as vn
     print 'Failure finding pyvoro module, resorting to scipy.spatial.Delaunay'
+
 
 class Geom(object):
     """ Class for storing model geometry, model in Voronoi calc

@@ -20,7 +20,7 @@ class XVFile:
         """
 
         xv_files = glob.glob(os.path.join(calc_dir, '*.XV'))
-        assert len(xv_files) == 1, 'io.XVFile: Either no or too many XV files in %s' % (calc_dir, )
+        assert len(xv_files) == 1, 'files.XVFile: Either no or too many XV files in %s' % (calc_dir, )
         self.name = xv_files[0]
         self.file = open(self.name, 'r')
         self.vectors = []
