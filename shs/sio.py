@@ -40,7 +40,7 @@ def data2file(data, title, file_name):
     f.close()
 
 
-def read_fdf_lines(infile, head=''):
+def read_fdf_file(infile, head=''):
     """
     Returns an FDF file and all the %include files as split strings
        (c) Inelastica package
@@ -54,11 +54,14 @@ def read_fdf_lines(infile, head=''):
     else:
         infile = os.path.join(head, infile)                                                                                                                                                                                                                                                                             
 
-    f = open(infile, 'r')
-    lines = []
-    line = f.readline()
-    # till the end of file
-    while line != '':
+    with open(infile, 'r') as f:
+        lines = read_fdf_lines(f.readlines(), head)
+    return lines
+
+
+def read_fdf_lines(lines, head=''):
+    fdf_lines = []
+    for line in lines:
         if len(line) > 3:
             # throw away comments
             comment_idx = line.find('#')
@@ -70,13 +73,11 @@ def read_fdf_lines(infile, head=''):
             if len(line) > 0:
                 if line[0] == '%include':
                     sub_file = line[1]
-                    sub_lines = read_fdf_lines(sub_file, head=head)
-                    lines += sub_lines
-                else:                                                                                                                                                               
-                    lines.append(line)
-        line = f.readline()
-    f.close()
-    return lines
+                    sub_lines = read_fdf_file(sub_file, head=head)
+                    fdf_lines += sub_lines
+                else:
+                    fdf_lines.append(line)
+    return fdf_lines
 
 
 def fdf_lines_to_dict(lines):
@@ -101,23 +102,23 @@ def fdf_lines_to_dict(lines):
             else:
                 is_block = False
                 block_key = None
-                continue
+            continue
         fdf_dict[key] = [i, ] + fdf_line[1:]
+    print fdf_dict
     return fdf_dict
 
 
 # --- Iterators ---
 
-def find_files(file_parts, top=None):
+def find_files(file_name, top=None):
     """Iterate on the files found by a list of file parts, (c) A.Vorontsov"""
     import fnmatch
     if top is None:
         top = os.getcwd()
 
     for path, dir_list, file_list in os.walk(top):
-        for file_part in file_parts:
-            for name in fnmatch.filter(sorted(file_list), file_part):
-                yield os.path.join(path, name)
+        for name in fnmatch.filter(sorted(file_list), file_name):
+            yield os.path.join(path, name)
 
 
 def open_files(file_names):       # open files with different types
@@ -155,8 +156,8 @@ def file_blocks(lines, separator):  # cut file with separator
                 dat = []
         if line != '':
             dat += [line]
-#    if dat<>[]:
-#        yield istep, dat
+    if dat:
+        yield i_step, dat
 
 
 def time_steps(blocks, time=None):         # filter of time

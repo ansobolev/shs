@@ -6,50 +6,61 @@
 # See http://github.com/ansobolev/shs for details
 #
 # ---------------------------------------------
-import numpy as np
 import re
+import os
+from datetime import datetime
+import numpy as np
 
-from sio import find_files, open_files, cat_files, file_blocks, time_steps
+from shs.sio import find_files, open_files, cat_files, file_blocks, time_steps, read_fdf_lines, fdf_lines_to_dict
 
 
 class OUTFile:
 
-    def __init__(self, name_patterns, calc_dir, step_numbers=None):
+    def __init__(self, calc_dir, file_name, step_numbers=None):
         """
         Reading data from stdout siesta file format
-        :param name_patterns: a list of output file name patterns
+        :param file_name: a name of an OUT file
         :param calc_dir: a calc directory
         :param step_numbers: a list of step numbers (int). If negative, then numbers count from the end
         """
-        import itertools
-
         def sign(x):
             return 1 if x < 0 else 0
 
-        if not hasattr(name_patterns, '__iter__'):
-            name_patterns = [name_patterns, ]
-        file_names = find_files(name_patterns, top=calc_dir)
-        print 'SiestaIO.OUTFile: Found OUT files:'
-        for fn in file_names:
-            print '                  -> %s' % (fn,)
-
-        file_names = find_files(name_patterns, top=calc_dir)
+        file_names = list(find_files(file_name, top=calc_dir))
+        if len(file_names) != 1:
+            raise ValueError, 'files.OUTFile: Either no or many OUT files found in the current calculation directory'
+        self.calc_dir = calc_dir
+        self.name = file_names[0]
+        print 'files.OUTFile: Found OUT file: %s' % self.name
         files = open_files(file_names)
         lines = cat_files(files)
-        blocks = file_blocks(lines, 'Begin')
-        print blocks
+        blocks = list(file_blocks(lines, 'Begin'))
+
+        self.n_steps = len(blocks) - 1
+        print 'files.OUTFile: Number of steps found -> %i' % self.n_steps
+
+        if step_numbers is None:
+            step_numbers = range(self.n_steps)
         if any(x < 0 for x in step_numbers):
-            s, blocks = itertools.tee(blocks, 2)
-            nsteps = sum(1 for _ in s)
-            print 'SiestaIO.OUTFile: Number of steps found -> %i' % (nsteps,)
-            step_numbers = [i_step + sign(i_step) * nsteps for i_step in step_numbers]
+            step_numbers = [i_step + sign(i_step) * self.n_steps for i_step in step_numbers]
         self.steps = step_numbers
+        self.run_info = {}
+        self.fdf_dict = None
+        self.finished = False
+        self.energies = {}
         self.atoms = []
         self.aunit = None
         self.vc = []
         self.vcunit = None
         self.spins = []
         self.forces = []
+
+        # parsing start block
+        self._parse_start_block(blocks[0])
+
+        # parsing end block
+        self._parse_end_block(blocks[-1])
+
         for i_step, block in time_steps(blocks, self.steps):
             read_atoms = False
             read_vc = False
@@ -97,6 +108,36 @@ class OUTFile:
             self.vc.append(self.list2vc(vc_list))
             self.spins.append(list2spins(spins_list, self.atoms[-1]['label']))
 #            self.forces.append(self.list2forces(forces_list))
+
+    def _parse_start_block(self, block):
+        lines = block[1]
+        self.run_info['version'] = lines[0].split(':')[1].strip()
+        self.run_info['arch'] = lines[1].split(':')[1].strip()
+        self.run_info['fflags'] = lines[2].split(':')[1].strip()
+        self.run_info['is_parallel'] = (lines[3].split()[0] == 'PARALLEL')
+        self.run_info['nodes'] = int(lines[5].split()[3])
+        self.run_info['start_time'] = datetime.strptime(lines[6].split('n:')[1].strip(), '%d-%b-%Y  %H:%M:%S')
+        self.run_info['end_time'] = None
+
+        fdf_beg = [i for i, s in enumerate(lines) if 'Dump of input data file' in s][0]
+        fdf_end = [i for i, s in enumerate(lines) if 'End of input data file' in s][0]
+        self.fdf_dict = fdf_lines_to_dict(read_fdf_lines(lines[fdf_beg + 1:fdf_end], head=self.calc_dir))
+
+    def _parse_end_block(self, block):
+        lines = block[1]
+        self.finished = ('End of run' in lines[-1])
+        if self.finished:
+            self.run_info['end_time'] = datetime.strptime(lines[-1].split('n:')[1].strip(), '%d-%b-%Y  %H:%M:%S')
+            self.run_info['elapsed'] = self.run_info['end_time'] - self.run_info['start_time']
+        else:
+            self.run_info['elapsed'] = datetime.fromtimestamp(os.path.getmtime(file)) - self.run_info['start_time']
+            return -1
+        idx = [i for i, s in enumerate(lines) if 'Maximum dynamic memory allocated' in s][0 if self.n_steps != 1 else 1]
+        lines = lines[idx:]
+        e_idx = [i for i, s in enumerate(lines) if 'Final energy' in s][0] + 1
+        e_labels = ['band', 'kinetic', 'hartree', 'ext_field', 'xc', 'ion-el', 'ion-ion', 'kinion', 'total']
+        self.energies = {label: float(lines[e_idx + i].split('=')[1]) for i, label in enumerate(e_labels)}
+
 
     def list2atoms(self, at_list):
         # find unit of measurement

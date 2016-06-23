@@ -7,7 +7,7 @@
 #
 # ---------------------------------------------
 from unittest import TestCase
-from shs.sio import read_fdf_lines, fdf_lines_to_dict
+from shs.sio import read_fdf_file, read_fdf_lines, fdf_lines_to_dict
 from shs.files.fdf import FDFFile
 from shs.files.xv import XVFile
 from shs.files.out import OUTFile
@@ -19,7 +19,7 @@ class TestReadFDFLines(TestCase):
 
     def test_read_fdf_lines(self):
 
-        lines = read_fdf_lines(self.example)
+        lines = read_fdf_file(self.example)
         labels = [line[0] if line[0] != '%block' else line[1] for line in lines]
         self.assertIn('SystemName', labels)
         self.assertIn('WriteMDhistory', labels)
@@ -32,10 +32,11 @@ class TestFDFLinesToDict(TestCase):
     example = '../examples/fdf/CALC.fdf'
 
     def setUp(self):
-        self.lines = read_fdf_lines(self.example)
+        self.lines = read_fdf_file(self.example)
 
     def test_fdf_lines_to_dict(self):
         fdf_dict = fdf_lines_to_dict(self.lines)
+
         self.assertIsInstance(fdf_dict, dict)
         self.assertIn('SystemLabel', fdf_dict.keys())
         system_label = fdf_dict['SystemLabel']
@@ -98,7 +99,7 @@ class TestOUTFile(TestCase):
     calc_dir = '../examples/FeCANI'
 
     def setUp(self):
-        self.out_file = OUTFile(self.calc_dir, '*.output')
+        self.out_file = OUTFile(self.calc_dir, '*.0.output')
 
     def test_out_file(self):
         self.assertIn('FeC.XV', self.out_file.name)

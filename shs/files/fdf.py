@@ -6,7 +6,7 @@
 # See http://github.com/ansobolev/shs for details
 #
 # ---------------------------------------------
-from sio import read_fdf_lines, fdf_lines_to_dict
+from shs.sio import read_fdf_file, fdf_lines_to_dict
 
 
 class FDFFile:
@@ -20,7 +20,7 @@ class FDFFile:
         act.get(mode)()
 
     def read_fdf(self):
-        lines = read_fdf_lines(self.name)
+        lines = read_fdf_file(self.name)
         self.file = open(self.name, 'r')
         self.fdf_dict = fdf_lines_to_dict(lines)
 
