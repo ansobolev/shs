@@ -104,7 +104,6 @@ def fdf_lines_to_dict(lines):
                 block_key = None
             continue
         fdf_dict[key] = [i, ] + fdf_line[1:]
-    print fdf_dict
     return fdf_dict
 
 

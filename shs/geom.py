@@ -39,7 +39,7 @@ class Geom(object):
             'LatticeConstant': ['m', None],
             'LatticeVectors': ['b', None],
             'AtomicCoordinatesFormat': ['s', None],
-            'AtomicCoordinatesFormatOut': ['s', None],
+            # 'AtomicCoordinatesFormatOut': ['s', None],
             'AtomicCoordinatesAndAtomicSpecies': ['b', None]}
 
     def __init__(self, calc_type=None, data=None):
@@ -117,7 +117,10 @@ class Geom(object):
         acas = np.array(self.opts['AtomicCoordinatesAndAtomicSpecies'].value)
         crd = acas[:, 0:3]
         typ = acas[:, 3]
-        self.atoms = np.rec.fromarrays([crd, typ], names='crd, itype', formats='|3f8,|i2')
+        i_sorted = np.argsort(self.names['i'])
+        typ_pos = np.searchsorted(self.names['i'][i_sorted], typ)
+        labels = self.names['label'][typ_pos]
+        self.atoms = np.rec.fromarrays([crd, typ, labels], names='crd, itype, label', formats='|3f8,|i2,|S2')
         # converting crd array to self.alat units
         # crd units dictionary
         cud = {'Ang': 'Ang',

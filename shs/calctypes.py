@@ -7,6 +7,7 @@ import os, copy
 
 import options as Opts
 
+
 class CalcType():
     ''' Generic class for all calculation types
     '''
@@ -17,7 +18,7 @@ class CalcType():
 
     def __init__(self):
         self.ctype = ''
-        self.opts = {}
+        self.opts = None
         
     def read(self, opts):
         self.ctype = opts['MD.TypeOfRun'].value
@@ -28,7 +29,7 @@ class CalcType():
         ct = ctd[self.ctype](opts)
         self.keys = ct.keys
         self.opts = ct.opts
-        
+
     def write(self, calcdir):
         ''' Writes calculation type options to CTYPE.fdf file in calcdir 
         Input:
@@ -46,7 +47,6 @@ class CalcType():
         ct = ctd[ctype]({})
         return ct.keys.keys()
         
-    
     def alter(self, ctype, steps = None, temp = None, press = None, optdict = None):
         ''' Alters calculation type with given data
         Input:
@@ -93,6 +93,7 @@ class CalcType():
         self.opts.opts = data
         print ''
 
+
 class CG(CalcType):
     keys = {'MD.NumCGSteps' : ['n', 50],
             'MD.MaxForceTol' : ['m', '0.04 eV/Ang'],
@@ -119,6 +120,7 @@ class MD(CalcType):
             self.opts = data
         else:
             self.opts = Opts.Options(data)
+
 
 class NPR(MD):
     keys = {'MD.TargetPressure' : ['m', '0.0 GPa'],
